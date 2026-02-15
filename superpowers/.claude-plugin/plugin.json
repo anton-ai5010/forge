@@ -1,0 +1,13 @@
+{
+  "name": "forge",
+  "description": "Project knowledge layer and workflow automation for Claude Code - systematic development practices, context management, and intelligent documentation",
+  "version": "4.3.0",
+  "author": {
+    "name": "Forge Contributors",
+    "email": "noreply@forge.dev"
+  },
+  "homepage": "https://github.com/obra/forge",
+  "repository": "https://github.com/obra/forge",
+  "license": "MIT",
+  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows"]
+}
