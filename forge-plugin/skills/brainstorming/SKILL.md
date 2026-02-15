@@ -15,6 +15,10 @@ Start by understanding the current project context, then ask questions one at a 
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
 </HARD-GATE>
 
+<FORGE-GATE>
+You MUST read docs/library/ spec.json files BEFORE exploring the project in any other way. If you find yourself running `find`, `ls`, `tree`, or reading source code files before reading docs/library/ — you are violating this gate. STOP and read docs/library/ first.
+</FORGE-GATE>
+
 ## Anti-Pattern: "This Is Too Simple To Need A Design"
 
 Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but you MUST present it and get approval.
@@ -23,7 +27,14 @@ Every project goes through this process. A todo list, a single-function utility,
 
 You MUST create a task for each of these items and complete them in order:
 
-1. **Explore project context** — Read docs/map.json (project structure, red zones), docs/conventions.json (project rules), docs/state.json (current state, pending tasks), library/*/spec.json (external dependencies). Check recent commits for context.
+1. **Load FORGE context (MANDATORY FIRST STEP)** — Before doing ANYTHING else, read these files in this exact order:
+   - `docs/map.json` — project structure and red zones
+   - `docs/conventions.json` — project rules
+   - `docs/state.json` — current state and pending tasks
+   - ALL `docs/library/*/spec.json` files — complete project knowledge
+
+   DO NOT read source code. DO NOT scan the filesystem. DO NOT read .kiro/, .claude/, or any other config directories. Everything you need to know about the project is in docs/library/. If docs/map.json does not exist, tell the user to run /forge:init first and STOP.
+
 2. **Confirm understanding of goal** — Restate what you believe the user wants to build and ask for confirmation before proceeding
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
