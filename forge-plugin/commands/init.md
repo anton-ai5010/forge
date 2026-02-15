@@ -27,6 +27,29 @@ Type 'regenerate' to confirm, or any other key to cancel.
 
 Wait for user confirmation. If not confirmed, stop.
 
+## Pre-Check: Clean Conflicting Configs
+
+Check for conflicting documentation systems:
+
+```bash
+ls -d .kiro/ 2>/dev/null
+```
+
+**If .kiro/ exists:**
+```
+⚠️  Found .kiro/ directory (Gotolab/Kiro documentation system)
+
+FORGE and Kiro may conflict — both manage project documentation.
+
+Recommendation: Keep only one system.
+
+Remove .kiro/? (yes/no)
+```
+
+Wait for user input:
+- If "yes" — remove .kiro/ directory
+- If "no" — proceed with warning: "Keeping both .kiro/ and docs/. Be aware they may conflict."
+
 ## Step 1: Scan Project Structure
 
 Scan the project to understand its layout:
@@ -233,7 +256,55 @@ For each file in directory:
 Write spec.json in English, machine-readable format (in docs/library/{directory}/).
 Write README.md in Russian (or user's language), simple format (in {directory}/ itself).
 
-## Step 10: Confirm Completion
+## Step 10: Configure CLAUDE.md
+
+Ensure CLAUDE.md has FORGE context at the beginning:
+
+```bash
+# Check if CLAUDE.md exists
+ls CLAUDE.md 2>/dev/null
+```
+
+**FORGE context block to add:**
+```markdown
+# FORGE Project Context
+
+This project uses FORGE documentation system. Before any work:
+
+1. Read `docs/map.json` — project structure and red zones
+2. Read `docs/conventions.json` — project rules
+3. Read `docs/state.json` — current state and pending tasks
+4. Read ALL `docs/library/*/spec.json` — complete project knowledge
+
+DO NOT scan the filesystem, read source code, or explore .kiro/ before reading docs/library/. Everything you need to know about the project is in docs/library/.
+
+After completing any task, run `/forge:sync` to update documentation.
+
+Available commands: /forge:brainstorm, /forge:write-plan, /forge:execute-plan, /forge:sync, /forge:discover
+```
+
+**If CLAUDE.md does not exist:**
+- Create CLAUDE.md with the FORGE context block
+
+**If CLAUDE.md exists:**
+- Read current contents
+- Check if it already contains "FORGE Project Context"
+- If yes — skip (no duplication)
+- If no — prepend FORGE context block BEFORE existing content
+
+Example result when CLAUDE.md exists:
+```markdown
+# FORGE Project Context
+
+This project uses FORGE documentation system. Before any work:
+...
+
+---
+
+{existing CLAUDE.md content here}
+```
+
+## Step 11: Confirm Completion
 
 Report to user:
 
