@@ -1,0 +1,20 @@
+{
+  "name": "forge-marketplace",
+  "description": "Forge — project knowledge layer and workflow automation for Claude Code",
+  "owner": {
+    "name": "Anton",
+    "email": "noreply@forge.dev"
+  },
+  "plugins": [
+    {
+      "name": "forge",
+      "description": "Project knowledge layer and workflow automation for Claude Code — systematic development practices, context management, and intelligent documentation",
+      "version": "1.0.0",
+      "source": "./forge-plugin",
+      "author": {
+        "name": "Anton",
+        "email": "noreply@forge.dev"
+      }
+    }
+  ]
+}
