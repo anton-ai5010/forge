@@ -98,21 +98,31 @@ Add description to `{folder}/README.md` in the project folder.
 
 **Format:** Each file gets one bullet point — filename in bold + dash + simple explanation.
 
-**Good README.md entries:**
-```markdown
-- **macd.py** — считает индикатор MACD. Показывает момент когда быстрая средняя цена пересекает медленную — это сигнал на покупку или продажу.
-- **rsi.py** — считает индекс относительной силы. Число от 0 до 100 — если выше 70, актив перекуплен, ниже 30 — перепродан. ⚠️ Красная зона.
-- **utils.py** — вспомогательные функции: округление цен, форматирование дат, конвертация таймфреймов.
-```
+**How to write good README.md entries:**
 
-**Bad README.md entries:**
-```markdown
-- **macd.py** — модуль для расчёта MACD индикатора
-- **rsi.py** — имплементация RSI
-- **utils.py** — утилиты
-```
+Each file description must answer TWO questions:
+- What does this file DO? (action, not technical classification)
+- What does the USER get from it? (practical result)
 
-Bad потому что: слишком коротко, не объясняет что это и зачем, использует технические термины без пояснения.
+Transform technical descriptions into practical ones:
+- ❌ "Главная точка входа ML-прогнозов" → техническая классификация, ничего не объясняет
+- ✅ "Предсказывает результаты матчей — получает две команды и дату, возвращает вероятности победы, тотала и обе забьют" → понятно что делает и что получаешь
+
+- ❌ "Ансамбль из 9 моделей с калибровкой" → что такое ансамбль? что такое калибровка?
+- ✅ "Комбинирует 9 разных моделей для более точного прогноза — как спросить мнение у 9 экспертов и взять среднее"
+
+- ❌ "Построение 131 ML-признака из истории матчей" → что за признаки?
+- ✅ "Собирает 131 характеристику команд из истории: форму за последние матчи, силу дома и на выезде, историю личных встреч, статистику голов"
+
+- ❌ "Генетическая оптимизация параметров стратегии ставок"
+- ✅ "Автоматически подбирает лучшие настройки для ставок — перебирает тысячи вариантов и находит самый прибыльный"
+
+**Rules:**
+- No English technical terms without explanation (calibration, ensemble, temporal split — explain or don't use)
+- If a concept needs explanation, use analogy: "как спросить 9 экспертов", "как фильтр в инстаграме"
+- Each description 1-2 sentences MAX
+- Start with verb: "Предсказывает...", "Собирает...", "Подбирает...", "Обучает..."
+- If file is red_zone, explain WHY in simple words: "⚠️ Не трогать — от этого файла зависят реальные ставки"
 
 **Folder header:** Each README.md starts with a heading and 1-2 sentence description of what this folder is about:
 ```markdown
@@ -250,12 +260,13 @@ If directory now empty, remove directory entry from map.json.
 
 ### README.md Format
 - Russian language
-- Human-readable — write for a friend who doesn't code
-- Start with folder heading and 1-2 sentence folder description
-- Each file: bold name + dash + simple explanation (1-2 sentences)
-- No code, no English jargon, no technical terms without explanation
-- Red zone files marked with ⚠️ and reason
-- Explain WHY things matter, not just WHAT they do
+- Write for a friend who doesn't code
+- Start each description with a VERB (what it does)
+- Answer: what does it DO and what does the USER get?
+- No raw technical terms — explain or use analogies
+- 1-2 sentences per file, no more
+- Folder header: 1-2 sentences explaining the folder's purpose in simple words
+- Red zone files: ⚠️ + simple explanation why it's protected
 
 ## Report Back
 
@@ -326,6 +337,20 @@ Clear intent, exact signature, specific output, actual dependencies.
 ```
 
 Vague intent, unclear signature, generic output, non-specific dependencies.
+
+**Good README.md entry:**
+```markdown
+- **predictor.py** — предсказывает результаты матчей. Получает две команды и дату, возвращает вероятности: кто победит, будет ли больше 2.5 голов, забьют ли обе команды.
+```
+
+Clear action (предсказывает), explains what user gets (вероятности победы, тотала, обе забьют).
+
+**Bad README.md entry:**
+```markdown
+- **predictor.py** — главная точка входа ML-прогнозов. Поддерживает одиночную модель и ансамбль.
+```
+
+Bad потому что: техническая классификация вместо объяснения, не понятно что файл реально делает, слово "ансамбль" не объяснено.
 
 ## Remember
 
