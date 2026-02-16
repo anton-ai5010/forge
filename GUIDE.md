@@ -304,6 +304,82 @@ Claude: Я проанализировал ваш план и нашёл след
 Какой вариант?
 ```
 
+### /forge:validate
+
+**Что делает:** Проверяет соответствие текущего кода плану реализации и документации. Находит расхождения: что должно быть по плану но не реализовано, что реализовано но не задокументировано, что изменено но не обновлено в docs/library/.
+
+**Когда использовать:** После реализации фичи, перед мержем, перед code review, когда что-то кажется несогласованным.
+
+**Пример:**
+```
+Вы: /forge:validate
+
+Claude: [Читает docs/map.json, state.json, library/*/spec.json]
+[Загружает последний план из docs/plans/]
+[Проверяет код против плана]
+[Проверяет документацию против кода]
+
+FORGE Validation Summary
+════════════════════════
+
+Validated: 2026-02-15 14:32
+Project: trading-bot
+
+Plan Compliance
+───────────────
+Plan: docs/plans/2026-02-15-api-caching.md
+✅ Implemented: 10/12 tasks
+⚠️ Partial: 1 task
+❌ Missing: 1 task
+
+Discrepancies:
+⚠️ Task 8: Cache monitoring
+   File: src/cache/metrics.py
+   Expected: hit_rate, miss_rate, eviction_count methods
+   Found: Only hit_rate implemented
+   Missing: miss_rate, eviction_count
+
+❌ Task 12: Documentation not synced
+   Expected: docs/library/ updated
+   Found: Missing spec.json entries for:
+     - src/cache/redis_client.py
+     - src/cache/metrics.py
+
+Documentation Coverage
+──────────────────────
+✅ Documented: 42/45 files
+⚠️ Undocumented: 3 files
+   - src/cache/redis_client.py (NEW)
+   - src/cache/metrics.py (NEW)
+   - src/decorators/cache.py (MODIFIED)
+
+map.json Accuracy
+─────────────────
+⚠️ Count mismatch: cache/
+   map.json: 2 files
+   Actual: 3 files
+
+═══════════════════════════════════════
+Overall Status: ⚠️ ISSUES FOUND
+═══════════════════════════════════════
+
+Actions Needed:
+1. Implement missing methods in src/cache/metrics.py
+2. Run /forge:sync to update documentation
+
+Next Steps:
+- Complete Task 8 implementation OR
+- Update plan if requirements changed OR
+- Run /forge:sync to document completed work
+```
+
+**Что проверяется:**
+- **План vs Код:** Все ли задачи из плана реализованы? Есть ли файлы, функции, классы упомянутые в плане?
+- **Документация vs Код:** Все ли файлы задокументированы в spec.json? Актуальны ли зависимости (imports)?
+- **map.json:** Совпадают ли счётчики файлов с реальностью? Существуют ли файлы из красных зон?
+
+**Важно:** Команда READ-ONLY — только проверяет и отчитывается, ничего не изменяет. Чтобы исправить найденные проблемы, используйте `/forge:sync` или правьте код вручную.
+
 ## Workflow
 
 ### Старт нового проекта
@@ -322,11 +398,17 @@ Claude: Я проанализировал ваш план и нашёл след
 **Шаг 3: Реализация**
 Выбираете способ выполнения (Subagent-Driven, Batch, Autonomous) → Claude пишет код с тестами.
 
-**Шаг 4: Sync**
+**Шаг 4: Validate**
+```
+/forge:validate
+```
+Проверьте что всё соответствует плану и задокументировано.
+
+**Шаг 5: Sync**
 ```
 /forge:sync
 ```
-Обновите документацию после завершения.
+Обновите документацию после завершения (если validate нашёл проблемы).
 
 ### Добавление новой фичи
 
@@ -386,11 +468,26 @@ Task 2: Создать конфиг для Redis
 [Повторяет цикл]
 ```
 
-**4. Finish — завершение**
+**4. Validate — проверка перед завершением**
 ```
 Claude: Все задачи выполнены. Тесты проходят (24/24).
 
-Что вы хотите сделать?
+Запускаю валидацию перед завершением.
+
+Вы: /forge:validate
+
+Claude: [Проверяет код против плана и документации]
+
+✓ Plan compliance: 12/12 tasks implemented
+✓ Documentation coverage: 100%
+✓ map.json accurate
+
+Overall Status: ✅ ALL CLEAR
+```
+
+**5. Finish — завершение**
+```
+Claude: Что вы хотите сделать?
 
 1. Слить в main локально
 2. Запушить и создать Pull Request
@@ -696,6 +793,18 @@ TDD для скиллов — пишете тест (сценарий давле
 ### Что если я изменил код но забыл запустить sync?
 
 Ничего страшного. Запустите `/forge:sync` когда вспомните — он посмотрит на git diff с момента последнего sync и обновит документацию.
+
+### Как узнать что код соответствует плану и документации?
+
+Используйте `/forge:validate`. Эта команда проверяет:
+- Все ли задачи из плана реализованы
+- Все ли файлы задокументированы в docs/library/
+- Актуальны ли зависимости (imports) в spec.json
+- Совпадают ли счётчики файлов в map.json с реальностью
+
+Validate только проверяет и отчитывается, ничего не меняет. Если нашлись проблемы — исправьте код вручную или запустите `/forge:sync` для обновления документации.
+
+**Когда запускать:** Перед мержем, перед code review, после реализации фичи, когда что-то кажется несогласованным.
 
 ### Можно ли редактировать файлы в docs/ вручную?
 
