@@ -17,6 +17,8 @@ Do NOT invoke any implementation skill, write any code, scaffold any project, or
 
 <FORGE-GATE>
 You MUST read docs/library/ spec.json files BEFORE exploring the project in any other way. If you find yourself running `find`, `ls`, `tree`, or reading source code files before reading docs/library/ — you are violating this gate. STOP and read docs/library/ first.
+
+You MUST generate and get approval for requirements BEFORE proposing any design approaches. If you find yourself proposing architecture before requirements are approved — STOP.
 </FORGE-GATE>
 
 ## Anti-Pattern: "This Is Too Simple To Need A Design"
@@ -37,9 +39,37 @@ You MUST create a task for each of these items and complete them in order:
 
 2. **Confirm understanding of goal** — Restate what you believe the user wants to build and ask for confirmation before proceeding
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
+3.5. **Define requirements** — Based on the clarifying questions, generate a numbered list of requirements. Each requirement has:
+   - **ID** (R1, R2, R3...)
+   - **Description** — what must be true when this feature is done
+   - **Acceptance criteria** — specific, testable conditions (not vague "should work well")
+   - **Priority** — must-have / nice-to-have
+
+   Format:
+   ```
+   Requirements
+
+   Must-Have
+
+   R1: [description]
+   AC: [specific testable condition]
+
+   R2: [description]
+   AC: [specific testable condition]
+
+   Nice-to-Have
+
+   R5: [description]
+   AC: [specific testable condition]
+   ```
+
+   Present requirements to user and get explicit approval: "Эти requirements верны? Что добавить/убрать?"
+
+   DO NOT proceed to design (step 4) until requirements are approved.
+
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` and commit
+6. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` and commit. Design doc MUST include Requirements section at the beginning (copy approved requirements from step 3.5)
 7. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
@@ -49,6 +79,8 @@ digraph brainstorming {
     "Explore project context" [shape=box];
     "Confirm understanding of goal" [shape=box];
     "Ask clarifying questions" [shape=box];
+    "Define requirements" [shape=box];
+    "User approves requirements?" [shape=diamond];
     "Propose 2-3 approaches" [shape=box];
     "Present design sections" [shape=box];
     "User approves design?" [shape=diamond];
@@ -57,7 +89,10 @@ digraph brainstorming {
 
     "Explore project context" -> "Confirm understanding of goal";
     "Confirm understanding of goal" -> "Ask clarifying questions";
-    "Ask clarifying questions" -> "Propose 2-3 approaches";
+    "Ask clarifying questions" -> "Define requirements";
+    "Define requirements" -> "User approves requirements?";
+    "User approves requirements?" -> "Define requirements" [label="no, revise"];
+    "User approves requirements?" -> "Propose 2-3 approaches" [label="yes"];
     "Propose 2-3 approaches" -> "Present design sections";
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
@@ -77,6 +112,27 @@ digraph brainstorming {
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
 - Focus on understanding: purpose, constraints, success criteria
 
+**Defining requirements:**
+- After clarifying questions, synthesize answers into concrete requirements
+- Each requirement must be:
+  - **Specific** — not vague ("fast", "user-friendly"), but measurable ("respond in <200ms", "3 clicks max")
+  - **Testable** — you can write a test to verify it's met
+  - **Prioritized** — must-have vs nice-to-have
+- Acceptance criteria must be objective: "When X happens, Y should be true"
+- Example of good requirement:
+  ```
+  R1: Cache API responses to reduce backend load
+  AC: 95% of requests to /api/indicators/* return cached data when called within 5 minutes
+  Priority: must-have
+  ```
+- Example of bad requirement (too vague):
+  ```
+  R1: Make API fast
+  AC: Should work well
+  ```
+- Present ALL requirements to user and get explicit approval before moving to design
+- If user suggests changes, revise requirements and get approval again
+
 **Exploring approaches:**
 - Propose 2-3 different approaches with trade-offs
 - Present options conversationally with your recommendation and reasoning
@@ -94,6 +150,12 @@ digraph brainstorming {
 
 **Documentation:**
 - Write the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md`
+- Design document structure:
+  1. **Requirements** section (copy approved requirements from step 3.5)
+  2. **Architecture** section (system design, components)
+  3. **Data Flow** section (how data moves through the system)
+  4. **Error Handling** section (how failures are handled)
+  5. **Testing** section (test strategy)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 

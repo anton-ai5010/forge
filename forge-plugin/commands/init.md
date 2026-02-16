@@ -304,7 +304,87 @@ This project uses FORGE documentation system. Before any work:
 {existing CLAUDE.md content here}
 ```
 
-## Step 11: Confirm Completion
+## Step 11: Create Steering Docs
+
+Create two files that capture high-level project context.
+
+### docs/product.md
+
+Ask the user these questions:
+
+```
+I'll create high-level steering documentation.
+
+First, product context:
+
+1. Зачем этот проект существует? Какую проблему решает?
+2. Кто пользователь? (ты сам, команда, клиенты, публичный сервис)
+3. Что значит успех? (ключевые метрики или цели)
+```
+
+Wait for user's answers.
+
+Create `docs/product.md`:
+
+```markdown
+# Product Context
+
+## Purpose
+{ответ на вопрос 1}
+
+## Users
+{ответ на вопрос 2}
+
+## Success Metrics
+{ответ на вопрос 3}
+```
+
+### docs/tech.md
+
+Analyze the project using `docs/map.json` and `docs/conventions.json` to automatically generate:
+
+Create `docs/tech.md`:
+
+```markdown
+# Technical Context
+
+## Stack
+{language, frameworks, databases — extract from conventions.json language field and infer from project structure}
+
+## Why This Stack
+{infer reasoning from project structure — e.g. "Python + FastAPI for async web, SQLite for simplicity, Redis for caching"}
+
+## Constraints
+{known limitations — e.g. "Single server deployment", "API rate limits", "No paid dependencies"}
+
+## Key Decisions
+{from conventions.json decisions field — e.g. "pandas not polars: existing codebase uses pandas, migration not worth it"}
+```
+
+**Stack inference rules:**
+- Check conventions.json language field
+- Scan for config files (package.json, requirements.txt, Cargo.toml, go.mod)
+- Infer frameworks from imports in source files
+- Identify databases from connection strings or ORM usage
+
+**Why This Stack inference:**
+- Match common patterns (FastAPI=async, Flask=simplicity, Django=batteries-included)
+- Consider project size and complexity
+- Note if using popular combinations
+
+**Constraints:**
+Ask user: "Are there any technical constraints I should document? (e.g., deployment limits, budget, dependencies)"
+
+If user provides constraints, add them. Otherwise leave section minimal or remove it.
+
+**Key Decisions:**
+- Extract from conventions.json decisions field if present
+- If empty, leave as placeholder: "Document architectural decisions here as project evolves"
+
+**Skip if exists:**
+If `docs/product.md` or `docs/tech.md` already exist, skip this step entirely (no regeneration).
+
+## Step 12: Confirm Completion
 
 Report to user:
 
@@ -317,11 +397,14 @@ Created:
 - docs/state.json
 - docs/history.log
 - docs/library/ ({N} directories documented)
+- docs/product.md (product context)
+- docs/tech.md (technical context)
 
 Next steps:
 - Run `/forge:sync` after making changes to keep docs current
 - Check docs/map.json to verify red zones are correct
 - Update docs/conventions.json with project-specific patterns
+- Edit docs/product.md and docs/tech.md as project evolves
 
 Your project now has context documentation. Claude can understand your project structure without reading all source files (~2k tokens instead of ~40k+).
 ```
