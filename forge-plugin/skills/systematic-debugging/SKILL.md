@@ -113,6 +113,8 @@ You MUST complete each phase before proceeding to the next.
 
    See `root-cause-tracing.md` in this directory for the complete backward tracing technique.
 
+   **If Serena MCP is available** — use `find_symbol` and `find_references` instead of grep for tracing. Semantic search finds actual usages, not string matches.
+
    **Quick version:**
    - Where does bad value originate?
    - What called this with bad value?

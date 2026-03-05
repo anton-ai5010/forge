@@ -146,6 +146,7 @@ You now have complete project context:
 - Need details about specific file: read `docs/library/[folder]/spec.json` first
 - spec.json insufficient: only then read the actual source file
 - Implementing or modifying: read affected files directly
+- **If Serena MCP is available** — use `find_symbol` / `get_file_structure` for navigating to specific functions and classes instead of reading entire files
 
 ## Token Budget
 
