@@ -51,6 +51,54 @@ Collect list of:
 - Modified files (M status)
 - Deleted files (D status)
 
+## Step 1.5: Check Connected Infrastructure
+
+Если у проекта есть серверная часть — проверь её состояние.
+
+**Определи есть ли инфраструктура:**
+- `docker-compose.yml` / `Dockerfile` — есть ли контейнеры?
+- `.env` / конфиги — есть ли адреса серверов, SSH, БД?
+- `docs/tech.md` / `CLAUDE.md` — описана ли инфраструктура?
+- MCP серверы (Playwright и др.) — можно ли проверить UI?
+
+**Если Docker (локальный или удалённый):**
+```bash
+# Локальный
+docker compose ps 2>/dev/null
+docker compose logs --tail=20 2>/dev/null
+
+# Удалённый (если SSH доступен)
+ssh server "cd /path/to/project && docker compose ps" 2>/dev/null
+ssh server "cd /path/to/project && docker compose logs --tail=20" 2>/dev/null
+```
+
+**Если есть БД:**
+- Проверь что схема соответствует моделям в коде
+- Миграции применены?
+- Новые таблицы/колонки из этой сессии?
+
+**Если есть web UI (и доступен Playwright MCP):**
+- Открой главную страницу, проверь что не сломано
+- Сделай скриншот для документации если нужно
+
+**Что документировать из инфраструктуры:**
+
+Добавь в `docs/state.json` поле `infrastructure`:
+```json
+{
+  "infrastructure": {
+    "docker_status": "running|stopped|error",
+    "services": ["api", "db", "redis"],
+    "last_checked": "2026-04-04",
+    "issues": ["redis container keeps restarting"]
+  }
+}
+```
+
+Добавь проблемы инфраструктуры в отчёт пользователю (Step 6).
+
+**Если инфраструктуры нет** — пропусти этот шаг.
+
 ## Step 2: Launch Documentation Updater Subagent
 
 Dispatch sonnet subagent to update documentation:
@@ -294,6 +342,11 @@ Updated:
 - docs/state.json (current task: {task})
 - docs/dead-ends.md ({updated|skipped})
 - docs/history.log (appended)
+
+Infrastructure: {checked|no infrastructure|skipped}
+{if checked:}
+- Docker: {N} containers ({running/stopped/error})
+- Issues: {list or "none"}
 
 Documentation is current as of {commit_sha_short}.
 
