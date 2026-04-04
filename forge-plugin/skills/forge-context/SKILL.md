@@ -244,6 +244,33 @@ Stop and load FORGE context first when you think:
 
 **FORGE documentation first. Source code second.**
 
+## Разведка окружения
+
+После загрузки документации проекта, но ДО начала работы — проверь какие
+инструменты доступны в текущей среде. Это определяет КАК ты будешь работать.
+
+**MCP серверы — проверь что подключено:**
+- **Serena** — символьный анализ кода (find_symbol, get_symbols_overview).
+  Если есть — используй вместо grep для навигации по коду.
+- **Playwright** — браузерная автоматизация. Если есть — можешь открыть
+  и проверить UI проекта, сделать скриншоты, протестировать интерфейс.
+- **Context7** — документация библиотек. Если есть — проверяй актуальный
+  API вместо угадывания.
+- **Другие MCP** — оцени что из них полезно для текущей задачи.
+
+**Плагины и скиллы Claude Code:**
+- Какие скиллы доступны помимо Forge? (code-review, frontend-design и др.)
+- Если задача попадает под описание доступного скилла — используй его.
+
+**Инфраструктура:**
+- Docker / docker-compose — можно ли поднять проект?
+- SSH к серверам — есть ли удалённые ресурсы?
+- Базы данных — есть ли прямой доступ?
+
+Не нужно использовать всё подряд — только то, что реально помогает
+в текущей задаче. Но ты ДОЛЖЕН знать что доступно, чтобы выбирать
+лучший инструмент, а не ограничиваться grep и cat.
+
 ## After Loading Context
 
 Once context loaded:
@@ -251,7 +278,8 @@ Once context loaded:
 2. Check if work relates to red zones from map.json
 3. Review dead ends — avoid documented failed approaches
 4. Follow patterns from conventions.json
-5. Proceed with relevant skill (brainstorming, executing-plans, etc.)
+5. Check available environment (MCP servers, plugins, infrastructure)
+6. Proceed with relevant skill (brainstorming, executing-plans, etc.)
 
 Example acknowledgment:
 ```
