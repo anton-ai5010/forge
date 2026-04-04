@@ -188,6 +188,72 @@ Update `docs/state.json`:
 }
 ```
 
+## Step 3.5: Update dead-ends.md
+
+Ask user about failed approaches:
+
+```
+Были ли подходы, которые не сработали в этой сессии?
+
+Они будут сохранены в docs/dead-ends.md, чтобы Claude не повторял их.
+
+Примеры:
+- "Пробовал websockets для уведомлений — слишком сложно, polling работает лучше"
+- "Мокал базу данных в тестах — привело к ложным срабатываниям"
+
+Опишите что не сработало (или 'нет' чтобы пропустить):
+```
+
+Wait for user input.
+
+**If user says 'нет', 'none', 'skip' or similar — skip to Step 4.**
+
+**If user describes a failed approach:**
+
+Ask follow-up:
+
+```
+К какой области/компоненту это относится?
+(например: тесты, авторизация, база данных, UI)
+```
+
+Wait for user input. Collect area.
+
+```
+Что делать вместо этого? Какой вывод?
+(например: "использовать polling вместо websockets", "тестировать на реальной БД")
+```
+
+Wait for user input. Collect conclusion.
+
+Read or create `docs/dead-ends.md`:
+
+```bash
+ls docs/dead-ends.md 2>/dev/null
+```
+
+**If not exists**, create with header:
+
+```markdown
+# Dead Ends
+
+Подходы которые были опробованы и не сработали. Claude должен читать этот файл перед началом работы и НЕ повторять эти подходы.
+```
+
+**Append** new entry under the area section (create section if not exists):
+
+```markdown
+## {area}
+
+### {short description}
+- **Дата:** {today's_date}
+- **Что пробовали:** {user's description of what was tried}
+- **Почему не сработало:** {extracted from user's input}
+- **Вывод:** {what to do instead}
+```
+
+If user has multiple failed approaches, repeat the questions for each one.
+
 ## Step 4: Update history.log
 
 Append one line to `docs/history.log`:
@@ -226,6 +292,7 @@ Updated:
   - Deleted: {L} file entries
 - docs/map.json (updated counts)
 - docs/state.json (current task: {task})
+- docs/dead-ends.md ({updated|skipped})
 - docs/history.log (appended)
 
 Documentation is current as of {commit_sha_short}.

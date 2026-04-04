@@ -133,12 +133,41 @@ Example:
 
 **Now you know:** Where user left off, what's in progress, what comes next.
 
+### Step 3.5: Read dead-ends.md (if exists)
+
+```bash
+cat docs/dead-ends.md 2>/dev/null
+```
+
+If file exists and is not empty (beyond the header), read it carefully.
+
+Understand:
+- Which approaches were already tried and failed
+- Why they failed
+- What should be done instead
+
+**This is critical:** If a user's request could lead you toward a documented dead end, warn them proactively and suggest the alternative from the "Вывод" field.
+
+Example:
+```markdown
+## Тесты
+
+### Мокирование базы данных
+- **Дата:** 2026-03-15
+- **Что пробовали:** Мокали PostgreSQL в интеграционных тестах
+- **Почему не сработало:** Моки не ловили реальные ошибки миграций, тесты проходили но прод падал
+- **Вывод:** Использовать testcontainers с реальной PostgreSQL
+```
+
+**Now you know:** Don't mock the database in tests — use testcontainers instead.
+
 ### Step 4: Context Loaded — Ready to Work
 
 You now have complete project context:
 - ✓ Structure (from map.json)
 - ✓ Conventions (from conventions.json)
 - ✓ Current state (from state.json)
+- ✓ Dead ends (from dead-ends.md) — approaches to avoid
 
 **Do NOT read source files yet.** You have enough context to understand the project.
 
@@ -157,7 +186,8 @@ Loading FORGE context vs reading source code:
 | Read map.json | ~300 | Structure + red zones |
 | Read conventions.json | ~500 | Patterns + decisions |
 | Read state.json | ~200 | Current work context |
-| **Total FORGE** | **~1k** | **Complete project understanding** |
+| Read dead-ends.md | ~100-500 | Failed approaches to avoid |
+| **Total FORGE** | **~1-2k** | **Complete project understanding** |
 | | | |
 | Read all source files | ~40k+ | Same understanding + unnecessary detail |
 
@@ -219,8 +249,9 @@ Stop and load FORGE context first when you think:
 Once context loaded:
 1. Acknowledge current task from state.json
 2. Check if work relates to red zones from map.json
-3. Follow patterns from conventions.json
-4. Proceed with relevant skill (brainstorming, executing-plans, etc.)
+3. Review dead ends — avoid documented failed approaches
+4. Follow patterns from conventions.json
+5. Proceed with relevant skill (brainstorming, executing-plans, etc.)
 
 Example acknowledgment:
 ```
@@ -251,7 +282,7 @@ Ready to continue. What would you like to work on?
 - FORGE context = structured understanding (~1-2k tokens)
 - Source code = raw details (~40k+ tokens)
 - Load context first, read source only when needed
-- map.json shows structure, conventions.json shows patterns, state.json shows progress
+- map.json shows structure, conventions.json shows patterns, state.json shows progress, dead-ends.md shows what NOT to do
 - spec.json answers "what does this file do?"
 - Source code answers "how exactly does it work?"
 - Most tasks need "what", not "how"

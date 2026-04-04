@@ -141,6 +141,18 @@ For each source directory (e.g., `indicators/`, `strategies/`, `utils/`):
 mkdir -p docs/library/{directory_name}
 ```
 
+## Step 4.5: Create dead-ends.md
+
+Create `docs/dead-ends.md` — file for tracking failed approaches:
+
+```markdown
+# Dead Ends
+
+Подходы которые были опробованы и не сработали. Claude должен читать этот файл перед началом работы и НЕ повторять эти подходы.
+```
+
+This file will be populated during `/forge:sync` when user reports failed approaches.
+
 ## Step 5: Generate map.json
 
 Create `docs/map.json`:
@@ -274,7 +286,8 @@ This project uses FORGE documentation system. Before any work:
 1. Read `docs/map.json` — project structure and red zones
 2. Read `docs/conventions.json` — project rules
 3. Read `docs/state.json` — current state and pending tasks
-4. Read ALL `docs/library/*/spec.json` — complete project knowledge
+4. Read `docs/dead-ends.md` — approaches that were tried and failed (DO NOT repeat them)
+5. Read ALL `docs/library/*/spec.json` — complete project knowledge
 
 DO NOT scan the filesystem, read source code, or explore .kiro/ before reading docs/library/. Everything you need to know about the project is in docs/library/.
 
@@ -396,6 +409,7 @@ Created:
 - docs/conventions.json ({language})
 - docs/state.json
 - docs/history.log
+- docs/dead-ends.md (failed approaches tracker)
 - docs/library/ ({N} directories documented)
 - docs/product.md (product context)
 - docs/tech.md (technical context)
