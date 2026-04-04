@@ -19,6 +19,13 @@ Systematic project-wide code quality review with parallel agents. Produces a str
 - After rapid prototyping phase — time to solidify
 - Project conventions exist but aren't consistently followed
 
+### Разведка окружения
+
+Перед началом работы проверь доступные инструменты и используй лучшие:
+- **MCP серверы:** Serena (символьный анализ кода вместо grep), Playwright (проверка UI), Context7 (актуальная документация библиотек), другие — оцени пользу
+- **Плагины/скиллы** Claude Code помимо Forge — задействуй где уместно
+- **Инфраструктура:** Docker (поднять и проверить проект), SSH, доступ к БД
+
 ## The Process
 
 ### Phase 1: Gather Context

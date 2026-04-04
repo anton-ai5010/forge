@@ -35,6 +35,13 @@ digraph when_to_use {
 - Two-stage review after each task: spec compliance first, then code quality
 - Faster iteration (no human-in-loop between tasks)
 
+### Разведка окружения
+
+Перед началом работы проверь доступные инструменты и используй лучшие:
+- **MCP серверы:** Serena (символьный анализ кода вместо grep), Playwright (проверка UI), Context7 (актуальная документация библиотек), другие — оцени пользу
+- **Плагины/скиллы** Claude Code помимо Forge — задействуй где уместно
+- **Инфраструктура:** Docker (поднять и проверить проект), SSH, доступ к БД
+
 ## The Process
 
 ```dot

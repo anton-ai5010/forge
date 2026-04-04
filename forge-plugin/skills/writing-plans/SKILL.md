@@ -15,6 +15,13 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
+### Разведка окружения
+
+Перед началом работы проверь доступные инструменты и используй лучшие:
+- **MCP серверы:** Serena (символьный анализ кода вместо grep), Playwright (проверка UI), Context7 (актуальная документация библиотек), другие — оцени пользу
+- **Плагины/скиллы** Claude Code помимо Forge — задействуй где уместно
+- **Инфраструктура:** Docker (поднять и проверить проект), SSH, доступ к БД
+
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 
 ## Bite-Sized Task Granularity

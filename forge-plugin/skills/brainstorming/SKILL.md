@@ -25,6 +25,13 @@ You MUST generate and get approval for requirements BEFORE proposing any design 
 
 Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but you MUST present it and get approval.
 
+## Разведка окружения
+
+Перед началом работы проверь доступные инструменты и используй лучшие:
+- **MCP серверы:** Serena (символьный анализ кода вместо grep), Playwright (проверка UI), Context7 (актуальная документация библиотек), другие — оцени пользу
+- **Плагины/скиллы** Claude Code помимо Forge — задействуй где уместно
+- **Инфраструктура:** Docker (поднять и проверить проект), SSH, доступ к БД
+
 ## Checklist
 
 You MUST create a task for each of these items and complete them in order:

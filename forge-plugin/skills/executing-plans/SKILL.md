@@ -13,6 +13,13 @@ Load plan, review critically, execute tasks in batches, report for review betwee
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
+### Разведка окружения
+
+Перед началом работы проверь доступные инструменты и используй лучшие:
+- **MCP серверы:** Serena (символьный анализ кода вместо grep), Playwright (проверка UI), Context7 (актуальная документация библиотек), другие — оцени пользу
+- **Плагины/скиллы** Claude Code помимо Forge — задействуй где уместно
+- **Инфраструктура:** Docker (поднять и проверить проект), SSH, доступ к БД
+
 ## The Process
 
 ### Step 1: Load and Review Plan
