@@ -5,6 +5,11 @@ description: Use when the user asks to clean up, refactor, lint, or improve code
 
 # Code Cleanup
 
+## Автозагруженный контекст — ключевые решения (не противоречить):
+!`cat docs/decisions.md 2>/dev/null || echo "нет decisions.md"`
+
+---
+
 ## Overview
 
 Systematic project-wide code quality review with parallel agents. Produces a structured report before making any changes.

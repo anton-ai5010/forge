@@ -5,6 +5,16 @@ description: "You MUST use this before any creative work - creating features, bu
 
 # Brainstorming Ideas Into Designs
 
+## Автозагруженный контекст
+
+### Провальные подходы (не повторять):
+!`for f in docs/dead-ends/*.md; do [ -f "$f" ] && echo "=== $(basename $f) ===" && cat "$f"; done 2>/dev/null || echo "нет dead-ends"`
+
+### Ключевые решения:
+!`cat docs/decisions.md 2>/dev/null || echo "нет decisions.md"`
+
+---
+
 ## Overview
 
 Help turn ideas into fully formed designs and specs through natural collaborative dialogue.
