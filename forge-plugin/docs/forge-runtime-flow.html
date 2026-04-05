@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Forge Plugin — Runtime Flow</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: #0d1117; color: #e6edf3; }
+  h1 { color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 12px; }
+  h2 { color: #79c0ff; margin-top: 48px; }
+  .mermaid { background: #161b22; border-radius: 8px; padding: 20px; margin: 16px 0; }
+  pre { background: #161b22; border-radius: 8px; padding: 16px; overflow-x: auto; color: #8b949e; font-size: 14px; line-height: 1.6; }
+  hr { border: none; border-top: 1px solid #30363d; margin: 40px 0; }
+</style>
+</head>
+<body>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'dark' });</script>
+
+<h1>Forge Plugin — Runtime Flow</h1>
+<p>Как плагин работает: хуки, инжекция контекста, вызов скиллов, потоки данных.</p>
+
+<hr>
+
+<h2>1. Session Lifecycle</h2>
+<div class="mermaid">
+flowchart TB
+    subgraph SESSION_START["Session Start"]
+        A["Claude Code запускается"] --> B{"SessionStart hook"}
+        B --> C["session-start.sh"]
+        C --> D["Читает using-forge/SKILL.md"]
+        D --> E["Инжектит в контекст Claude"]
+        E --> F["Claude знает:<br/>какие скиллы есть<br/>когда их вызывать<br/>правила приоритетов"]
+    end
+
+    subgraph EVERY_PROMPT["Каждый промт"]
+        G["Пользователь пишет"] --> H{"UserPromptSubmit hook"}
+        H --> I["context-inject.sh"]
+        I --> J{"docs/index.md есть?"}
+        J -- Нет --> K["Hook молчит"]
+        J -- Да --> L["Собирает контекст"]
+        L --> L1["index.md ~400 tok"]
+        L --> L2["dead-ends список"]
+        L --> L3["git log -3"]
+        L --> L4["branch name"]
+        L1 & L2 & L3 & L4 --> M["Инжектит в промт"]
+    end
+
+    subgraph CLAUDE["Claude думает"]
+        M --> N["Получает: сообщение + using-forge + context"]
+        N --> O{"Подходит скилл?"}
+        O -- "Да" --> P["Вызывает Skill tool"]
+        O -- "Нет" --> Q["Отвечает напрямую"]
+    end
+
+    SESSION_START --> EVERY_PROMPT
+    EVERY_PROMPT --> CLAUDE
+</div>
+
+<hr>
+
+<h2>2. Context Injection — что видит Claude</h2>
+<div class="mermaid">
+flowchart LR
+    subgraph AUTO["Авто-инжект"]
+        direction TB
+        IC1["using-forge skill<br/>~800 tok"]
+        IC2["index.md<br/>Goal + Task + State<br/>~400 tok"]
+        IC3["Dead-ends<br/>список файлов"]
+        IC4["Git branch<br/>+ 3 коммита"]
+    end
+
+    subgraph MSG["Сообщение"]
+        UM["Добавь JWT авторизацию"]
+    end
+
+    AUTO --> CL["Claude видит ВСЁ"]
+    MSG --> CL
+</div>
+
+<hr>
+
+<h2>3. Skill Decision Tree</h2>
+<div class="mermaid">
+flowchart TB
+    A["Задача получена"] --> B{"Новая фича?"}
+    B -- Да --> C["brainstorming"]
+    B -- Нет --> D{"Баг?"}
+    D -- Да --> E["systematic-debugging"]
+    D -- Нет --> F{"Есть план?"}
+    F -- Да --> G["execute-plan"]
+    F -- Нет --> H{"Код готов?"}
+    H -- Да --> I["validate"]
+    H -- Нет --> J["другие скиллы"]
+
+    C --> C1["dead-ends + decisions"]
+    C1 --> C2["Сократический диалог"]
+    C2 --> C3{"Дизайн одобрен?"}
+    C3 -- Нет --> C2
+    C3 -- Да --> C4["write-plan"]
+    C4 --> C5["docs/plans/*.md"]
+    C5 --> G
+
+    G --> EX1["Задача из плана"]
+    EX1 --> EX2["TDD: test → RED"]
+    EX2 --> EX3["code → GREEN"]
+    EX3 --> EX4["refactor"]
+    EX4 --> EX5{"Ещё задачи?"}
+    EX5 -- Да --> EX1
+    EX5 -- Нет --> EX6["sync → обновляет docs/"]
+</div>
+
+<hr>
+
+<h2>4. Subagent-Driven Development</h2>
+<div class="mermaid">
+sequenceDiagram
+    participant U as Пользователь
+    participant M as Main Claude
+    participant S as Subagent
+    participant R as Reviewer
+
+    U->>M: /forge:execute-plan
+    M->>M: Читает docs/plans/plan.md
+
+    rect rgb(30, 50, 30)
+    Note over M,S: Задача 1
+    M->>S: Промт + контекст задачи
+    S->>S: TDD: test → code → refactor
+    S-->>M: Результат + diff
+    M->>R: Review 1: спека
+    R-->>M: OK
+    M->>R: Review 2: качество
+    R-->>M: OK
+    end
+
+    rect rgb(30, 30, 50)
+    Note over M,S: Задача 2
+    M->>S: Новый subagent, чистый контекст
+    S->>S: TDD: test → code → refactor
+    S-->>M: Результат + diff
+    M->>R: Review 1 + 2
+    R-->>M: OK
+    end
+
+    M->>M: /forge:sync
+    M-->>U: Отчёт
+</div>
+
+<hr>
+
+<h2>5. Data Flow — кто читает/пишет docs/</h2>
+<div class="mermaid">
+flowchart TB
+    subgraph HOOKS["Hooks"]
+        H1["session-start.sh<br/>READ: using-forge/SKILL.md"]
+        H2["context-inject.sh<br/>READ: index.md, dead-ends, git"]
+    end
+
+    subgraph READ["Скиллы ЧИТАЮТ"]
+        SR1["brainstorming<br/>← dead-ends, decisions, library"]
+        SR2["forge-context<br/>← index.md, map.json, conventions"]
+        SR3["executing-plans<br/>← plans/*.md"]
+        SR4["systematic-debugging<br/>← dead-ends"]
+    end
+
+    subgraph WRITE["Скиллы ПИШУТ"]
+        SW1["write-plan<br/>→ plans/YYYY-MM-DD-name.md"]
+        SW2["session-awareness<br/>→ index.md, dead-ends, journal"]
+        SW3["sync<br/>→ index.md, status.md, map.json"]
+        SW4["init<br/>→ ВСЮ структуру docs/"]
+    end
+
+    subgraph DOCS["docs/"]
+        D1["index.md"]
+        D2["dead-ends/"]
+        D3["plans/"]
+        D4["decisions.md"]
+        D5["journal.md"]
+        D6["library/"]
+        D7["map.json"]
+    end
+
+    HOOKS -.->|read| DOCS
+    READ -.->|read| DOCS
+    WRITE ==>|write| DOCS
+</div>
+
+<hr>
+
+<h2>6. Token Economy</h2>
+<pre>
+┌─────────────────────────────────────────────────┐
+│              БЕЗ FORGE                          │
+│                                                 │
+│  Читает исходники:  40,000+ токенов             │
+│  Контекст теряется между сессиями               │
+│  Повторяет ошибки                               │
+│  Каждая сессия — с нуля                         │
+└─────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────┐
+│              С FORGE                            │
+│                                                 │
+│  SessionStart:                                  │
+│    using-forge          ~800 tok  (один раз)    │
+│                                                 │
+│  Каждый промт:                                  │
+│    index.md             ~400 tok                │
+│    dead-ends список      ~50 tok                │
+│    git log + branch      ~30 tok                │
+│    ────────────────────────────                  │
+│    ИТОГО:               ~480 tok                │
+│                                                 │
+│  Экономия: ~98.8% токенов                       │
+└─────────────────────────────────────────────────┘
+</pre>
+
+<hr>
+
+<h2>7. Timeline — типичная сессия</h2>
+<pre>
+Время   Событие                              Контекст Claude
+──────  ─────────────────────────────────     ─────────────────────
+t=0     Claude Code запускается               пусто
+        ↓ SessionStart hook                   + using-forge (~800 tok)
+
+t=1     "хочу JWT авторизацию"
+        ↓ UserPromptSubmit hook               + index.md + dead-ends + git
+        ↓ Claude → brainstorming              + brainstorming skill
+        ↓ Читает dead-ends, decisions         + контекст проекта
+        ↓ Задаёт вопросы                      уточняет...
+
+t=5     Дизайн одобрен
+        ↓ → writing-plans                     + writing-plans skill
+        ↓ План → docs/plans/                  docs/ обновлён
+
+t=6     "выполняй"
+        ↓ → executing-plans                   + executing-plans skill
+        ↓ Задача 1: TDD                       subagent (чистый)
+        ↓ Review → OK
+        ↓ Задача 2: TDD                       новый subagent
+        ↓ Review → OK
+
+t=15    Всё готово
+        ↓ /forge:sync                         обновляет docs/
+        ↓ session-awareness                   → journal.md
+
+t=16    /forge:validate                       read-only аудит
+        ↓ "соответствует плану" ✓
+
+t=17    "мержим"
+        ↓ finishing-a-development-branch       тесты → merge/PR
+</pre>
+
+</body>
+</html>
