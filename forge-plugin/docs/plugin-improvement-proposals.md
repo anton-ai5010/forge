@@ -181,6 +181,50 @@
 
 ---
 
+## 11. Rename Forge internal docs to `.forge/`
+
+**Pain:** Forge occupies `docs/` for its internal context (index.md, dead-ends, plans, journal). This conflicts with the industry standard where `docs/` is **public documentation** for users and contributors (getting-started, API reference, guides, architecture, changelog, FAQ).
+
+**Proposal:** Rename Forge's internal context directory from `docs/` to `.forge/`.
+
+**What changes:**
+- `/forge:init` creates `.forge/` instead of `docs/`
+- `context-inject.sh` reads `.forge/index.md` instead of `docs/index.md`
+- All skills referencing `docs/` update to `.forge/`
+- `docs/` is freed for standard public documentation:
+
+```
+.forge/                    # Forge internal context (hidden, machine-readable)
+├── index.md               # ~400 token project summary for Claude
+├── dead-ends/             # Failed approaches
+├── plans/                 # Implementation plans
+├── decisions.md           # Architectural decisions
+├── journal.md             # Session history
+├── library/               # Per-directory specs
+└── ...
+
+docs/                      # Public documentation (industry standard)
+├── getting-started.md
+├── installation.md
+├── configuration.md
+├── api/
+├── guides/
+├── architecture.md
+├── contributing.md
+├── changelog.md
+└── faq.md
+```
+
+**Benefits:**
+- No conflict with standard `docs/` convention
+- Hidden directory (`.forge/`) signals "internal/tooling" — not for end users
+- GitHub Pages and documentation generators (Docusaurus, MkDocs, VitePress) expect `docs/` — now they work out of the box
+- `.gitignore` can selectively ignore `.forge/` parts (journal, dead-ends) without affecting public docs
+
+**Impact:** High — touches hooks, all skills, init command, CLAUDE2.md template. Should be done as a coordinated migration with backward compatibility (check for both `docs/index.md` and `.forge/index.md` during transition).
+
+---
+
 ## Notes
 
 - Each skill should follow Forge conventions: `skills/{name}/SKILL.md` with YAML frontmatter
