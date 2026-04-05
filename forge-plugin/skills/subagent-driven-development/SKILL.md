@@ -250,7 +250,7 @@ Done!
 
 **FORGE documentation:**
 - **forge:forge-context** - Subagents read docs/library/[folder]/spec.json before work
-- **forge:sync** - Manual update for state.json at end of session
+- **forge:sync** - Manual update for docs/ at end of session
 - **forge-documenter** agent - Automatic doc update after each task's review
 
 **Alternative workflow:**

@@ -1,5 +1,5 @@
 ---
-description: Initialize FORGE project documentation - creates docs/ structure with map.json, conventions.json, state.json, and library/ mirror
+description: Initialize FORGE project documentation - creates docs/ structure with index.md, status.md, decisions.md, dead-ends/, journal.md, and library/ mirror
 ---
 
 # FORGE Initialization
@@ -9,27 +9,33 @@ description: Initialize FORGE project documentation - creates docs/ structure wi
 ## Pre-Check: Documentation Already Exists?
 
 ```bash
-ls docs/map.json 2>/dev/null
+ls docs/index.md 2>/dev/null
 ```
 
 **If exists:**
 ```
 FORGE documentation already exists at docs/
 
-Regenerating will overwrite:
-- docs/map.json
-- docs/conventions.json
-- docs/state.json
-- docs/library/
+Regenerating will overwrite all docs/ files.
 
 Type 'regenerate' to confirm, or any other key to cancel.
 ```
 
 Wait for user confirmation. If not confirmed, stop.
 
-## Pre-Check: Clean Conflicting Configs
+## Pre-Check: Legacy Structure
 
-Check for conflicting documentation systems:
+```bash
+ls docs/state.json 2>/dev/null
+```
+
+**If state.json exists but no index.md** — this is a legacy FORGE project. Migrate:
+1. Read state.json, history.log, dead-ends.md
+2. Create new structure with data from old files
+3. Remove old files after migration
+4. Tell user: "Migrated from legacy FORGE structure to v2."
+
+## Pre-Check: Clean Conflicting Configs
 
 ```bash
 ls -d .kiro/ 2>/dev/null
@@ -37,25 +43,13 @@ ls -d .kiro/ 2>/dev/null
 
 **If .kiro/ exists:**
 ```
-⚠️  Found .kiro/ directory (Gotolab/Kiro documentation system)
-
-FORGE and Kiro may conflict — both manage project documentation.
-
-Recommendation: Keep only one system.
-
+Found .kiro/ directory. FORGE and Kiro may conflict.
 Remove .kiro/? (yes/no)
 ```
 
-Wait for user input:
-- If "yes" — remove .kiro/ directory
-- If "no" — proceed with warning: "Keeping both .kiro/ and docs/. Be aware they may conflict."
-
 ## Step 1: Scan Project Structure
 
-Scan the project to understand its layout:
-
 ```bash
-# Get all directories (excluding common ignore patterns)
 find . -type d \
   ! -path "*/node_modules/*" \
   ! -path "*/.git/*" \
@@ -65,7 +59,6 @@ find . -type d \
   ! -path "*/venv/*" \
   -print
 
-# Count files per directory
 find . -type f \
   ! -path "*/node_modules/*" \
   ! -path "*/.git/*" \
@@ -76,367 +69,237 @@ find . -type f \
   -printf "%h\n" | sort | uniq -c
 ```
 
-Analyze structure to identify main source directories.
-
 ## Step 2: Identify Red Zones
 
-Ask user which files should be marked as red zones:
-
 ```
-I've scanned your project. Which files are critical and should be marked as red zones?
+Which files are critical (red zones)?
 
-Red zones are files that:
-- Production systems depend on (exact behavior matters)
-- Are complex and fragile (high risk of breaking)
-- Require careful review before modification
+Red zones: production code, complex algorithms, fragile integrations.
 
-Examples: core algorithms, production configs, data models
-
-List file paths (one per line), or 'none' if no red zones yet:
+List file paths (one per line), or 'none':
 ```
-
-Wait for user input. Collect list of red zone files.
 
 ## Step 3: Identify Language and Conventions
 
-Ask user about project conventions:
-
 ```
-What language/framework is this project using?
-
-Examples: python, typescript, rust, go, java
+Language/framework?
 ```
 
-Wait for language input.
-
 ```
-What naming conventions does this project follow?
-
-Common patterns:
-1. snake_case files, PascalCase classes (Python)
-2. camelCase files, PascalCase classes (TypeScript)
-3. snake_case everything (Rust)
-4. Custom conventions
-
-Describe your project's conventions, or 'default' for language defaults:
+Naming conventions? (default = language defaults)
 ```
-
-Wait for conventions input.
 
 ## Step 4: Create Directory Structure
 
-Create FORGE documentation structure:
-
 ```bash
-# Create main docs directory
 mkdir -p docs/plans
 mkdir -p docs/library
-
-# Create library subdirectories mirroring project structure
-# For each source directory found in Step 1
+mkdir -p docs/dead-ends
+mkdir -p docs/journal-archive
 ```
 
-For each source directory (e.g., `indicators/`, `strategies/`, `utils/`):
+For each source directory:
 ```bash
 mkdir -p docs/library/{directory_name}
 ```
 
-## Step 4.5: Create dead-ends.md
-
-Create `docs/dead-ends.md` — file for tracking failed approaches:
-
-```markdown
-# Dead Ends
-
-Подходы которые были опробованы и не сработали. Claude должен читать этот файл перед началом работы и НЕ повторять эти подходы.
-```
-
-This file will be populated during `/forge:sync` when user reports failed approaches.
-
 ## Step 5: Generate map.json
-
-Create `docs/map.json`:
 
 ```json
 {
-  "project": "{project_name_from_git_or_folder}",
+  "project": "{project_name}",
   "directories": {
-    "{dir1}/": { "files": {count}, "red_zone_files": {count} },
-    "{dir2}/": { "files": {count}, "red_zone_files": {count} }
+    "{dir}/": { "files": 0, "red_zone_files": 0 }
   },
-  "red_zones": [
-    "{file_paths_from_step_2}"
-  ]
+  "red_zones": []
 }
 ```
 
-Count files accurately for each directory. Count red_zone_files per directory.
-
 ## Step 6: Generate conventions.json
-
-Create `docs/conventions.json`:
 
 ```json
 {
-  "language": "{from_step_3}",
+  "language": "{language}",
   "naming": {
-    "files": "{based_on_language_or_user_input}",
-    "classes": "{based_on_language_or_user_input}",
-    "functions": "{based_on_language_or_user_input}",
-    "constants": "{based_on_language_or_user_input}"
+    "files": "{convention}",
+    "classes": "{convention}",
+    "functions": "{convention}",
+    "constants": "{convention}"
   },
-  "structure": {
-    "{dir1}": "{describe purpose based on contents}",
-    "{dir2}": "{describe purpose based on contents}"
-  },
+  "structure": {},
   "patterns": {},
   "decisions": {}
 }
 ```
 
-Fill in naming conventions based on language defaults or user input.
-Analyze directory contents to infer structure descriptions.
-
-## Step 7: Generate state.json
-
-Create `docs/state.json`:
-
-```json
-{
-  "current_task": "FORGE initialization complete",
-  "progress": "Ready for development",
-  "last_session": "{today's_date}",
-  "last_session_summary": "Initialized FORGE documentation structure",
-  "pending": [],
-  "recent_changes": [
-    "docs/map.json — created",
-    "docs/conventions.json — created",
-    "docs/state.json — created"
-  ]
-}
-```
-
-Use current date for last_session.
-
-## Step 8: Create history.log
-
-Create `docs/history.log`:
+## Step 7: Ask Project Goal
 
 ```
-{date} | FORGE initialization | Created project documentation structure
+Цель проекта в одно предложение?
+Пример: "Магазин цифровых товаров на Yandex Market с автовыдачей ключей"
 ```
 
-Append-only log file for session history.
+Wait for input. This goes into index.md.
 
-## Step 9: Generate library/ Documentation
+## Step 8: Generate index.md
 
-For each source directory, create two files:
+```markdown
+# Project: {project_name}
+{цель проекта из Step 7}
 
-**{directory}/README.md** (in the project folder itself):
+## Stage
+Phase: init | Progress: 0%
+Blocked: нет
+
+## Current
+Task: Проект инициализирован, готов к разработке
+Branch: {current git branch}
+Modified: -
+
+## Session (live)
+Started: {time}
+Goal: Инициализация FORGE
+
+Done:
+- FORGE документация создана
+
+Now: Готов к работе
+Next: -
+
+Errors:
+-
+
+## Last Session
+{date} — Инициализация FORGE документации
+
+## Docs
+- status.md — что работает, что сломано
+- decisions.md — технические решения
+- dead-ends/ — провальные подходы по темам
+- journal.md — последние сессии
+```
+
+## Step 9: Generate status.md
+
+```markdown
+# Status
+
+## Working
+- FORGE documentation initialized
+
+## Broken
+-
+
+## Blocked
+-
+```
+
+## Step 10: Generate decisions.md
+
+```markdown
+# Decisions
+
+<!-- Ключевые технические решения. Формат:
+## Что решили
+Date: дата
+Context: почему встал вопрос
+Considered: какие варианты
+Decision: что выбрали и почему
+Revisit if: когда пересмотреть
+-->
+```
+
+## Step 11: Generate journal.md
+
+```markdown
+# Journal
+
+## {date} — Инициализация
+Did: Создана FORGE документация для проекта
+Result: docs/ структура готова
+Next: Начать разработку
+```
+
+## Step 12: Generate library/ Documentation
+
+For each source directory:
+
+**{directory}/README.md** (in project folder):
 ```markdown
 # {Directory Name}
-
-{Simple description of what this directory contains}
-
-{List files with brief descriptions}
+{Simple description}
+{List files with descriptions}
 ```
-
-Write in simple language, no code. For human readability. This file lives in the project folder so developers see it when browsing code.
 
 **docs/library/{directory}/spec.json:**
 ```json
 {
-  "purpose": "{What this directory is for}",
+  "purpose": "{what this directory is for}",
   "files": {
     "{filename}": {
-      "intent": "{What this file does and WHY it exists}",
-      "inputs": ["{parameters or data it receives}"],
-      "outputs": "{What it returns or produces}",
-      "depends_on": ["{modules or files it imports}"],
-      "red_zone": {true_if_in_red_zones_list}
+      "intent": "{what and why}",
+      "inputs": [],
+      "outputs": "",
+      "depends_on": [],
+      "red_zone": false
     }
   }
 }
 ```
 
-For each file in directory:
-- Read file to understand its purpose
-- Extract function signatures or class definitions for inputs/outputs
-- Identify imports for depends_on
-- Check if file is in red zones list
+Read each file to understand purpose, extract signatures, imports.
 
-Write spec.json in English, machine-readable format (in docs/library/{directory}/).
-Write README.md in Russian (or user's language), simple format (in {directory}/ itself).
-
-## Step 10: Configure CLAUDE.md
-
-Ensure CLAUDE.md has FORGE context at the beginning:
-
-```bash
-# Check if CLAUDE.md exists
-ls CLAUDE.md 2>/dev/null
-```
-
-**FORGE context block to add:**
-```markdown
-# FORGE Project Context
-
-This project uses FORGE documentation system. Before any work:
-
-1. Read `docs/map.json` — project structure and red zones
-2. Read `docs/conventions.json` — project rules
-3. Read `docs/state.json` — current state and pending tasks
-4. Read `docs/dead-ends.md` — approaches that were tried and failed (DO NOT repeat them)
-5. Read ALL `docs/library/*/spec.json` — complete project knowledge
-
-DO NOT scan the filesystem, read source code, or explore .kiro/ before reading docs/library/. Everything you need to know about the project is in docs/library/.
-
-After completing any task, run `/forge:sync` to update documentation.
-
-Available commands: /forge:brainstorm, /forge:write-plan, /forge:execute-plan, /forge:sync, /forge:discover
-```
-
-**If CLAUDE.md does not exist:**
-- Create CLAUDE.md with the FORGE context block
-
-**If CLAUDE.md exists:**
-- Read current contents
-- Check if it already contains "FORGE Project Context"
-- If yes — skip (no duplication)
-- If no — prepend FORGE context block BEFORE existing content
-
-Example result when CLAUDE.md exists:
-```markdown
-# FORGE Project Context
-
-This project uses FORGE documentation system. Before any work:
-...
-
----
-
-{existing CLAUDE.md content here}
-```
-
-## Step 11: Create Steering Docs
-
-Create two files that capture high-level project context.
+## Step 13: Create Steering Docs
 
 ### docs/product.md
 
-Ask the user these questions:
-
 ```
-I'll create high-level steering documentation.
-
-First, product context:
-
-1. Зачем этот проект существует? Какую проблему решает?
-2. Кто пользователь? (ты сам, команда, клиенты, публичный сервис)
-3. Что значит успех? (ключевые метрики или цели)
-```
-
-Wait for user's answers.
-
-Create `docs/product.md`:
-
-```markdown
-# Product Context
-
-## Purpose
-{ответ на вопрос 1}
-
-## Users
-{ответ на вопрос 2}
-
-## Success Metrics
-{ответ на вопрос 3}
+Product context questions:
+1. Зачем проект? Какую проблему решает?
+2. Кто пользователь?
+3. Что значит успех?
 ```
 
 ### docs/tech.md
 
-Analyze the project using `docs/map.json` and `docs/conventions.json` to automatically generate:
+Auto-generate from project analysis: stack, constraints, key decisions.
 
-Create `docs/tech.md`:
+## Step 14: Configure CLAUDE.md
+
+Add FORGE context block to CLAUDE.md:
 
 ```markdown
-# Technical Context
+# FORGE Project Context
 
-## Stack
-{language, frameworks, databases — extract from conventions.json language field and infer from project structure}
+This project uses FORGE documentation system. Before any work:
 
-## Why This Stack
-{infer reasoning from project structure — e.g. "Python + FastAPI for async web, SQLite for simplicity, Redis for caching"}
+1. Read `docs/index.md` — project goal, stage, current state, session context
+2. Read `docs/map.json` — project structure and red zones
+3. Read `docs/conventions.json` — project rules
+4. Check `ls docs/dead-ends/` — failed approaches by topic
+5. Read `docs/library/*/spec.json` — file-level knowledge (on demand)
 
-## Constraints
-{known limitations — e.g. "Single server deployment", "API rate limits", "No paid dependencies"}
+DO NOT scan the filesystem or read source code before reading docs/. Everything you need is in docs/.
 
-## Key Decisions
-{from conventions.json decisions field — e.g. "pandas not polars: existing codebase uses pandas, migration not worth it"}
+After completing any task, run `/forge:sync` to update documentation.
 ```
 
-**Stack inference rules:**
-- Check conventions.json language field
-- Scan for config files (package.json, requirements.txt, Cargo.toml, go.mod)
-- Infer frameworks from imports in source files
-- Identify databases from connection strings or ORM usage
-
-**Why This Stack inference:**
-- Match common patterns (FastAPI=async, Flask=simplicity, Django=batteries-included)
-- Consider project size and complexity
-- Note if using popular combinations
-
-**Constraints:**
-Ask user: "Are there any technical constraints I should document? (e.g., deployment limits, budget, dependencies)"
-
-If user provides constraints, add them. Otherwise leave section minimal or remove it.
-
-**Key Decisions:**
-- Extract from conventions.json decisions field if present
-- If empty, leave as placeholder: "Document architectural decisions here as project evolves"
-
-**Skip if exists:**
-If `docs/product.md` or `docs/tech.md` already exist, skip this step entirely (no regeneration).
-
-## Step 12: Confirm Completion
-
-Report to user:
+## Step 15: Confirm Completion
 
 ```
-✓ FORGE documentation initialized
+FORGE documentation initialized
 
 Created:
+- docs/index.md (project entry point)
+- docs/status.md (what works/broken/blocked)
+- docs/decisions.md (technical decisions)
+- docs/dead-ends/ (failed approaches by topic)
+- docs/journal.md (session history)
 - docs/map.json ({N} directories, {M} red zones)
 - docs/conventions.json ({language})
-- docs/state.json
-- docs/history.log
-- docs/dead-ends.md (failed approaches tracker)
 - docs/library/ ({N} directories documented)
-- docs/product.md (product context)
-- docs/tech.md (technical context)
+- docs/product.md, docs/tech.md
 
-Next steps:
-- Run `/forge:sync` after making changes to keep docs current
-- Check docs/map.json to verify red zones are correct
-- Update docs/conventions.json with project-specific patterns
-- Edit docs/product.md and docs/tech.md as project evolves
-
-Your project now has context documentation. Claude can understand your project structure without reading all source files (~2k tokens instead of ~40k+).
+Your project now has context documentation.
+Claude reads ~400 tokens of index.md instead of ~40k+ source code.
 ```
-
-## Idempotency
-
-If docs/ already exists, require explicit confirmation before regenerating.
-Regeneration overwrites all files - warn user about losing manual edits.
-
-## Error Handling
-
-**No git repository:**
-- Proceed anyway, use folder name as project name
-
-**Empty project:**
-- Create minimal docs structure
-- Warn: "Project appears empty - create some code first"
-
-**Permission errors:**
-- Report which files couldn't be created
-- Suggest checking permissions on project directory

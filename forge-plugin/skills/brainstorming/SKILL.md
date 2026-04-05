@@ -39,7 +39,8 @@ You MUST create a task for each of these items and complete them in order:
 1. **Load FORGE context (MANDATORY FIRST STEP)** — Before doing ANYTHING else, read these files in this exact order:
    - `docs/map.json` — project structure and red zones
    - `docs/conventions.json` — project rules
-   - `docs/state.json` — current state and pending tasks
+   - `docs/index.md` — project goal, stage, current task, session state
+   - `docs/dead-ends/` — check `ls` for failed approaches related to this topic
    - ALL `docs/library/*/spec.json` files — complete project knowledge
 
    DO NOT read source code. DO NOT scan the filesystem. DO NOT read .kiro/, .claude/, or any other config directories. Everything you need to know about the project is in docs/library/. If docs/map.json does not exist, tell the user to run /forge:init first and STOP.

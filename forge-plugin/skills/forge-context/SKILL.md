@@ -1,316 +1,155 @@
 ---
 name: forge-context
-description: Use at session start when project has docs/map.json — loads project structure, conventions, and current state for context-aware development
+description: Use at session start when project has docs/index.md — loads project context, stage, and current state for context-aware development
 ---
 
 # FORGE Project Context
 
 ## Overview
 
-Load complete project context from documentation files instead of reading source code.
+Load project context from docs/index.md instead of reading source code.
 
-**Core principle:** 2k tokens of structured documentation > 40k tokens of source code reading.
+**Core principle:** ~400 tokens of index.md > 40k tokens of source reading.
 
-**Use when:** Project has `docs/map.json` (created by `/forge:init`).
+**Use when:** Project has `docs/index.md` (created by `/forge:init`).
 
 ## When to Use
 
-```dot
-digraph when_to_use {
-    "Session starts" [shape=ellipse];
-    "Check docs/map.json exists?" [shape=diamond];
-    "Load FORGE context" [shape=box];
-    "Suggest /forge:init" [shape=box];
-    "Proceed with skills" [shape=ellipse];
+**Always check at session start.** If docs/index.md exists, load context before doing anything else.
 
-    "Session starts" -> "Check docs/map.json exists?";
-    "Check docs/map.json exists?" -> "Load FORGE context" [label="yes"];
-    "Check docs/map.json exists?" -> "Suggest /forge:init" [label="no"];
-    "Load FORGE context" -> "Proceed with skills";
-    "Suggest /forge:init" -> "Proceed with skills";
-}
-```
-
-**Always check at session start.** If docs/map.json exists, load context before doing anything else.
+If docs/index.md does not exist, check for legacy docs/map.json. If neither exists, suggest `/forge:init`.
 
 ## The Process
 
-### Step 1: Read map.json
+### Step 1: Read index.md (ALWAYS FIRST)
 
 ```bash
-cat docs/map.json
+cat docs/index.md
 ```
 
-Understand:
-- Project structure (which directories exist)
-- File counts per directory
-- Red zones (critical files requiring extra care)
+This single file tells you:
+- **Project goal** — what we're building
+- **Stage** — how far along, what phase, any blockers
+- **Current task** — what we're working on RIGHT NOW
+- **Session state** — what was done, what's next (live-updated)
+- **Last session** — continuity from previous work
+- **Docs pointers** — where to find details
 
-Example:
-```json
-{
-  "project": "trading-bot",
-  "directories": {
-    "indicators/": { "files": 5, "red_zone_files": 1 },
-    "strategies/": { "files": 3, "red_zone_files": 2 },
-    "utils/": { "files": 6, "red_zone_files": 0 }
-  },
-  "red_zones": [
-    "indicators/rsi.py",
-    "strategies/production_strategy.py"
-  ]
-}
-```
+**After reading index.md you know enough to start working.**
 
-**Now you know:** Project has 3 main directories, 14 total files, 3 are red zones.
+### Step 2: Read detail files ON DEMAND
 
-### Step 2: Read conventions.json
+Only read what's relevant to the current request:
+
+| Need | Read |
+|---|---|
+| Project structure, red zones | `docs/map.json` |
+| Coding patterns, naming rules | `docs/conventions.json` |
+| What works / what's broken | `docs/status.md` |
+| Failed approaches for topic X | `docs/dead-ends/X.md` (check `ls docs/dead-ends/` first) |
+| Why we chose approach Y | `docs/decisions.md` |
+| What happened last sessions | `docs/journal.md` (top entries) |
+| File-level details | `docs/library/[folder]/spec.json` |
+
+**Do NOT read all files at once.** Follow the pointers from index.md.
+
+### Step 3: Check dead-ends (if working on a specific topic)
 
 ```bash
-cat docs/conventions.json
+ls docs/dead-ends/ 2>/dev/null
 ```
 
-Understand:
-- Language/framework
-- Naming conventions (files, classes, functions, constants)
-- Directory structure rules
-- Common patterns for adding new features
-- Past architectural decisions
-
-Example:
-```json
-{
-  "language": "python",
-  "naming": {
-    "files": "snake_case",
-    "classes": "PascalCase",
-    "functions": "snake_case"
-  },
-  "structure": {
-    "indicators": "Each indicator is a pure function in its own file",
-    "strategies": "Each strategy inherits BaseStrategy"
-  },
-  "patterns": {
-    "new_indicator": "Create file in indicators/, add export to __init__.py, add test"
-  },
-  "decisions": {
-    "pandas_not_polars": "Existing codebase uses pandas, migration not worth it"
-  }
-}
-```
-
-**Now you know:** How to write code that fits the project's style and patterns.
-
-### Step 3: Read state.json
-
-```bash
-cat docs/state.json
-```
-
-Understand:
-- Current task (what user is working on)
-- Progress (how far along they are)
-- Pending items (what's left to do)
-- Recent changes (what was modified last session)
-
-Example:
-```json
-{
-  "current_task": "Add MACD indicator",
-  "progress": "3/5 tasks done",
-  "last_session": "2026-02-15",
-  "last_session_summary": "Added MACD calculation, wrote tests",
-  "pending": [
-    "Connect MACD to RSI strategy",
-    "Add backtest for MACD"
-  ],
-  "recent_changes": [
-    "indicators/macd.py — new file",
-    "tests/test_macd.py — new file"
-  ]
-}
-```
-
-**Now you know:** Where user left off, what's in progress, what comes next.
-
-### Step 3.5: Read dead-ends.md (if exists)
-
-```bash
-cat docs/dead-ends.md 2>/dev/null
-```
-
-If file exists and is not empty (beyond the header), read it carefully.
-
-Understand:
-- Which approaches were already tried and failed
-- Why they failed
-- What should be done instead
-
-**This is critical:** If a user's request could lead you toward a documented dead end, warn them proactively and suggest the alternative from the "Вывод" field.
-
-Example:
-```markdown
-## Тесты
-
-### Мокирование базы данных
-- **Дата:** 2026-03-15
-- **Что пробовали:** Мокали PostgreSQL в интеграционных тестах
-- **Почему не сработало:** Моки не ловили реальные ошибки миграций, тесты проходили но прод падал
-- **Вывод:** Использовать testcontainers с реальной PostgreSQL
-```
-
-**Now you know:** Don't mock the database in tests — use testcontainers instead.
+If a file matches your current topic — read it BEFORE starting work.
+This prevents repeating failed approaches.
 
 ### Step 4: Context Loaded — Ready to Work
 
-You now have complete project context:
-- ✓ Structure (from map.json)
-- ✓ Conventions (from conventions.json)
-- ✓ Current state (from state.json)
-- ✓ Dead ends (from dead-ends.md) — approaches to avoid
+You now have:
+- Project goal and stage (from index.md)
+- Current task and session state (from index.md)
+- Dead ends for current topic (from dead-ends/)
+- Whatever detail files were relevant
 
-**Do NOT read source files yet.** You have enough context to understand the project.
+**Do NOT read source files yet.** Read `docs/library/[folder]/spec.json` first.
+Only read source when implementing or modifying.
 
-**When to read source:**
-- Need details about specific file: read `docs/library/[folder]/spec.json` first
-- spec.json insufficient: only then read the actual source file
-- Implementing or modifying: read affected files directly
-- **If Serena MCP is available** — use `find_symbol` / `get_file_structure` for navigating to specific functions and classes instead of reading entire files
-
-## Token Budget
-
-Loading FORGE context vs reading source code:
-
-| Approach | Tokens | Coverage |
-|----------|--------|----------|
-| Read map.json | ~300 | Structure + red zones |
-| Read conventions.json | ~500 | Patterns + decisions |
-| Read state.json | ~200 | Current work context |
-| Read dead-ends.md | ~100-500 | Failed approaches to avoid |
-| **Total FORGE** | **~1-2k** | **Complete project understanding** |
-| | | |
-| Read all source files | ~40k+ | Same understanding + unnecessary detail |
-
-**20-40x token efficiency.** You get the same understanding for fraction of the cost.
-
-## Detailed Context: library/ spec.json
-
-When you need details about specific directory:
-
-```bash
-cat docs/library/indicators/spec.json
-```
-
-Example:
-```json
-{
-  "purpose": "Technical analysis indicators — pure functions",
-  "files": {
-    "macd.py": {
-      "intent": "Calculate MACD indicator (fast EMA - slow EMA + signal)",
-      "inputs": ["df: DataFrame", "fast: int=12", "slow: int=26"],
-      "outputs": "DataFrame with macd, signal, histogram columns",
-      "depends_on": ["pandas"],
-      "red_zone": false
-    },
-    "rsi.py": {
-      "intent": "Calculate RSI using Wilder's smoothing method",
-      "inputs": ["df: DataFrame", "period: int=14"],
-      "outputs": "DataFrame with rsi column",
-      "depends_on": ["pandas"],
-      "red_zone": true,
-      "red_zone_reason": "Production strategy depends on exact calculation"
-    }
-  }
-}
-```
-
-**Now you know:** What each file does, its inputs/outputs, dependencies, red zone status.
-
-**Still need source?** Read it. But most questions answered by spec.json.
-
-## Red Flags
-
-Stop and load FORGE context first when you think:
-
-| Thought | Reality |
-|---------|---------|
-| "Let me explore the codebase" | Stop. Read docs/map.json first. |
-| "I need to understand the project structure" | Stop. Read docs/map.json first. |
-| "What files exist here?" | Stop. Read docs/map.json first. |
-| "What's the naming convention?" | Stop. Read docs/conventions.json first. |
-| "What was I working on?" | Stop. Read docs/state.json first. |
-| "I should read some code to understand" | Stop. Read docs/library/[folder]/spec.json first. |
-
-**FORGE documentation first. Source code second.**
+**If Serena MCP is available** — use `find_symbol` / `get_symbols_overview` for navigating code instead of reading entire files.
 
 ## Разведка окружения
 
-После загрузки документации проекта, но ДО начала работы — проверь какие
-инструменты доступны в текущей среде. Это определяет КАК ты будешь работать.
+После загрузки контекста — проверь доступные инструменты:
 
-**MCP серверы — проверь что подключено:**
-- **Serena** — символьный анализ кода (find_symbol, get_symbols_overview).
-  Если есть — используй вместо grep для навигации по коду.
-- **Playwright** — браузерная автоматизация. Если есть — можешь открыть
-  и проверить UI проекта, сделать скриншоты, протестировать интерфейс.
-- **Context7** — документация библиотек. Если есть — проверяй актуальный
-  API вместо угадывания.
-- **Другие MCP** — оцени что из них полезно для текущей задачи.
+**MCP серверы:**
+- **Serena** — символьный анализ кода вместо grep
+- **Playwright** — проверка UI, скриншоты
+- **Context7** — актуальная документация библиотек
+- Другие — оцени пользу для текущей задачи
 
-**Плагины и скиллы Claude Code:**
-- Какие скиллы доступны помимо Forge? (code-review, frontend-design и др.)
-- Если задача попадает под описание доступного скилла — используй его.
+**Плагины/скиллы** Claude Code помимо Forge — задействуй где уместно
 
-**Инфраструктура:**
-- Docker / docker-compose — можно ли поднять проект?
-- SSH к серверам — есть ли удалённые ресурсы?
-- Базы данных — есть ли прямой доступ?
+**Инфраструктура:** Docker, SSH к серверам, доступ к БД
 
-Не нужно использовать всё подряд — только то, что реально помогает
-в текущей задаче. Но ты ДОЛЖЕН знать что доступно, чтобы выбирать
-лучший инструмент, а не ограничиваться grep и cat.
+## Token Budget
+
+| What | Tokens | When |
+|------|--------|------|
+| index.md | ~400 | Always |
+| dead-ends/<topic>.md | ~100-300 | When working on that topic |
+| status.md | ~200 | When asking about project state |
+| decisions.md | ~300 | When making architectural choices |
+| journal.md (top entry) | ~150 | When need session continuity |
+| map.json | ~300 | When need structure overview |
+| conventions.json | ~500 | When writing new code |
+| **Typical session** | **400-800** | **index.md + 1-2 detail files** |
+
+## docs/ Structure
+
+```
+docs/
+├── index.md              # Entry point — goal, stage, session state (LIVE)
+├── status.md             # What works / broken / blocked
+├── decisions.md          # Key decisions and WHY
+├── dead-ends/            # Failed approaches BY TOPIC
+│   └── <topic>.md        # One file per domain
+├── journal.md            # Last 5-7 sessions with details
+├── journal-archive/      # Older sessions (never auto-read)
+├── map.json              # Project structure, red zones
+├── conventions.json      # Coding rules, patterns
+├── plans/                # Implementation plans
+└── library/              # File-level specs
+    └── */spec.json
+```
 
 ## After Loading Context
 
-Once context loaded:
-1. Acknowledge current task from state.json
+1. Acknowledge current task and stage from index.md
 2. Check if work relates to red zones from map.json
-3. Review dead ends — avoid documented failed approaches
-4. Follow patterns from conventions.json
+3. Check dead-ends for current topic — avoid failed approaches
+4. Follow patterns from conventions.json when writing code
 5. Check available environment (MCP servers, plugins, infrastructure)
-6. Proceed with relevant skill (brainstorming, executing-plans, etc.)
+6. Proceed with relevant skill
 
 Example acknowledgment:
 ```
-I've loaded your project context:
+Project: trading-bot (Python) — Phase: MVP, 7/12 tasks
+Current: Adding MACD indicator
+Last session: Wrote calculation, tests passing, need backtest
 
-Project: trading-bot (Python)
-Structure: 3 directories, 14 files
-Red zones: 3 files (rsi.py, production_strategy.py, model.py)
-Current task: Add MACD indicator (3/5 tasks done)
-Pending: Connect MACD to RSI strategy, Add backtest
-
-Ready to continue. What would you like to work on?
+Ready to continue.
 ```
 
 ## Integration
 
-**Called by:**
-- **using-forge** skill (at session start if docs/map.json exists)
+**Called by:** using-forge skill (at session start if docs/index.md exists)
 
-**Before using:**
-- Project must have been initialized with `/forge:init`
+**Works with:** session-awareness skill (maintains index.md live during work)
 
-**After using:**
-- Suggest `/forge:sync` when user completes work
+**Before using:** Project must have been initialized with `/forge:init`
 
 ## Remember
 
-- FORGE context = structured understanding (~1-2k tokens)
-- Source code = raw details (~40k+ tokens)
-- Load context first, read source only when needed
-- map.json shows structure, conventions.json shows patterns, state.json shows progress, dead-ends.md shows what NOT to do
-- spec.json answers "what does this file do?"
-- Source code answers "how exactly does it work?"
-- Most tasks need "what", not "how"
+- index.md is the SINGLE entry point — always start here
+- Detail files are read ON DEMAND, not all at once
+- dead-ends/ is split by topic — `ls` first, read only relevant file
+- session-awareness keeps index.md alive during work
+- If context compresses — re-read index.md to restore

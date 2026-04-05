@@ -89,7 +89,7 @@ At session start, check if project has `docs/map.json`.
 **If docs/map.json exists:**
 1. Read `docs/map.json` — project structure and red zones
 2. Read `docs/conventions.json` — project rules and patterns
-3. Read `docs/state.json` — current task, progress, pending items
+3. Read `docs/index.md` — project goal, stage, current task, session state
 4. You now have full project context. Proceed with skill checks.
 
 **If docs/map.json does not exist:**

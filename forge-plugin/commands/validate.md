@@ -29,7 +29,7 @@ Read project documentation:
 
 ```bash
 cat docs/map.json
-cat docs/state.json
+cat docs/index.md
 ```
 
 For each directory in `docs/library/`:
@@ -41,7 +41,7 @@ cat docs/library/*/spec.json
 Store in memory:
 - Expected file structure (from map.json)
 - Expected file purposes (from spec.json files)
-- Current task status (from state.json)
+- Current task and stage (from index.md)
 
 ## Step 2: Find Active Plan
 
