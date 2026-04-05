@@ -98,6 +98,22 @@ Suggest: "This project doesn't have FORGE documentation yet. Run `/forge:init` t
 **After completing any task:**
 Suggest: "Run `/forge:sync` to update project documentation."
 
+## Available Skills
+
+| Skill | Purpose |
+|-------|---------|
+| forge:brainstorming | Pre-implementation design/requirements exploration |
+| forge:ui-ux-design | UI/UX design system: styles, palettes, fonts, UX guidelines, chart types |
+| forge:test-driven-development | RED-GREEN-REFACTOR cycle enforcement |
+| forge:systematic-debugging | 4-phase root cause investigation |
+| forge:writing-plans | Bite-sized implementation plans from spec |
+| forge:executing-plans | Run plans with review checkpoints |
+| forge:verification-before-completion | Evidence before claims |
+| forge:code-cleanup | Refactor and simplify code |
+| forge:session-awareness | Track session state and context |
+| forge:project-unblocker | Unblock stuck sessions |
+| forge:finishing-a-development-branch | Complete branch merge/PR |
+
 ## Skill Types
 
 **Rigid** (TDD, debugging): Follow exactly. Don't adapt away discipline.
