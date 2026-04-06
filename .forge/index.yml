@@ -1,0 +1,53 @@
+project: forge-plugin
+goal: "Плагин для Claude Code, автоматизирующий рабочие процессы разработки через систему скиллов и L0/L1/L2 контекста"
+stage: maintenance
+progress: 100%
+blocked: нет
+version: "5.2.0"
+stack: [javascript, python, markdown, claude-code-plugin]
+
+now:
+  task: "Режим поддержки. Баги и улучшения — по мере использования на других проектах"
+  branch: master
+
+catalog:
+  map:
+    path: .forge/map.yml
+    tags: [structure, files, dirs, where, create, navigate]
+
+  conventions:
+    path: .forge/conventions.yml
+    tags: [naming, format, style, commit, pattern, rules]
+
+  status:
+    path: .forge/status.yml
+    tags: [working, broken, blocked, health, state]
+
+  decisions:
+    path: .forge/decisions.yml
+    tags: [why, architecture, choice, tradeoff, rationale]
+
+  dead-ends:
+    path: .forge/dead-ends.yml
+    tags: [failed, tried, broken, doesnt-work, avoid, mistake]
+
+  journal:
+    path: .forge/journal.yml
+    tags: [history, last-session, previous, yesterday, when, resume]
+
+  learnings:
+    path: .forge/learnings.yml
+    tags: [lesson, learning, pattern, insight, remember, learned]
+
+session:
+  started: "2026-04-06"
+  goal: "Ревизия состояния проекта"
+  done:
+    - "FORGE документация создана"
+    - "Конфиг, ideas, графы закоммичены и запушены"
+    - "Мусор в ideas/ почищен (пустой файл, дубликат)"
+  now: "Состояние отражено в репо"
+  next: ""
+  errors: []
+
+last_session: "2026-04-06 — Ревизия: коммит конфига, ideas, графов, чистка мусора"
