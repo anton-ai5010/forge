@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FORGE Plugin — System Graph</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a0f;
+    --bg-panel: #111118;
+    --bg-panel-hover: #1a1a24;
+    --border: #2a2a3a;
+    --border-glow: #3a3a5a;
+    --text: #c8c8d8;
+    --text-dim: #6a6a7a;
+    --text-bright: #eaeaf4;
+    --cmd: #4a9eff;
+    --cmd-glow: #4a9eff40;
+    --skill: #22d98c;
+    --skill-glow: #22d98c40;
+    --agent: #ff8844;
+    --agent-glow: #ff884440;
+    --hook: #b366ff;
+    --hook-glow: #b366ff40;
+    --doc: #5a5a6a;
+    --doc-glow: #5a5a6a30;
+    --edge-invoke: #4a9eff60;
+    --edge-dispatch: #ff884460;
+    --edge-data: #5a5a6a30;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #graph-container { width: 100%; height: 100%; position: relative; }
+  svg { width: 100%; height: 100%; display: block; }
+
+  .node-group { cursor: grab; }
+  .node-group:active { cursor: grabbing; }
+  .node-group.dimmed { opacity: 0.08; transition: opacity 0.3s; }
+  .node-group.highlighted { opacity: 1; transition: opacity 0.15s; }
+  .node-group:not(.dimmed):not(.highlighted) { transition: opacity 0.3s; }
+
+  .node-ring { fill: none; stroke-width: 2; opacity: 0.4; }
+  .node-core { stroke-width: 1.5; transition: filter 0.2s; }
+  .node-group:hover .node-core, .node-group.active .node-core { filter: brightness(1.3); }
+
+  .node-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 500; fill: var(--text);
+    text-anchor: middle; pointer-events: none;
+    paint-order: stroke; stroke: var(--bg); stroke-width: 3px;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .node-type-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7px; font-weight: 700; text-anchor: middle;
+    pointer-events: none; text-transform: uppercase; letter-spacing: 1px;
+  }
+
+  .edge { fill: none; stroke-linecap: round; }
+  .edge.dimmed { opacity: 0.03; transition: opacity 0.3s; }
+  .edge.highlighted { transition: opacity 0.15s; }
+  .edge:not(.dimmed):not(.highlighted) { transition: opacity 0.3s; }
+  .edge-invoke { stroke: var(--edge-invoke); stroke-width: 2; }
+  .edge-dispatch { stroke: var(--edge-dispatch); stroke-width: 2; stroke-dasharray: 6 3; }
+  .edge-data { stroke: var(--edge-data); stroke-width: 1; stroke-dasharray: 3 4; }
+  .edge.highlighted.edge-invoke { stroke: var(--cmd); stroke-width: 2.5; opacity: 0.8; }
+  .edge.highlighted.edge-dispatch { stroke: var(--agent); stroke-width: 2.5; opacity: 0.8; }
+  .edge.highlighted.edge-data { stroke: var(--doc); stroke-width: 1.5; opacity: 0.5; }
+  marker path { opacity: 0.7; }
+
+  #legend {
+    position: fixed; top: 20px; left: 20px;
+    background: var(--bg-panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 20px; z-index: 10;
+    backdrop-filter: blur(12px); min-width: 200px;
+  }
+  #legend h3 {
+    font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 700;
+    color: var(--text-bright); margin-bottom: 12px;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+    font-size: 12px; font-family: 'JetBrains Mono', monospace;
+    color: var(--text-dim); cursor: pointer; padding: 3px 6px;
+    border-radius: 6px; transition: background 0.2s;
+  }
+  .legend-item:hover { background: var(--bg-panel-hover); color: var(--text); }
+  .legend-item.legend-disabled { opacity: 0.3; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend-line { width: 24px; height: 2px; flex-shrink: 0; border-radius: 1px; }
+  .legend-divider { height: 1px; background: var(--border); margin: 10px 0; }
+
+  #detail-panel {
+    position: fixed; top: 20px; right: 20px; width: 340px;
+    background: var(--bg-panel); border: 1px solid var(--border);
+    border-radius: 12px; z-index: 10; backdrop-filter: blur(12px);
+    transform: translateX(380px);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden; max-height: calc(100vh - 40px); overflow-y: auto;
+  }
+  #detail-panel.visible { transform: translateX(0); }
+  #detail-panel::-webkit-scrollbar { width: 4px; }
+  #detail-panel::-webkit-scrollbar-track { background: transparent; }
+  #detail-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .detail-header {
+    padding: 20px 20px 16px; border-bottom: 1px solid var(--border); position: relative;
+  }
+  .detail-header .type-tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;
+  }
+  .detail-header h2 { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-bright); }
+  .detail-header .purpose { font-size: 13px; color: var(--text-dim); margin-top: 6px; line-height: 1.5; }
+
+  .detail-close {
+    position: absolute; top: 16px; right: 16px; width: 28px; height: 28px;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: transparent; color: var(--text-dim); font-size: 14px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .detail-close:hover { border-color: var(--text-dim); color: var(--text); background: var(--bg-panel-hover); }
+
+  .detail-section { padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .detail-section:last-child { border-bottom: none; }
+  .detail-section h4 {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim); margin-bottom: 8px;
+  }
+  .detail-section ul { list-style: none; padding: 0; }
+  .detail-section li {
+    font-size: 12px; font-family: 'JetBrains Mono', monospace; color: var(--text);
+    display: flex; align-items: center; gap: 8px; cursor: pointer;
+    border-radius: 4px; padding: 4px 6px; margin: 0 -6px; transition: background 0.15s;
+  }
+  .detail-section li:hover { background: var(--bg-panel-hover); }
+  .detail-section li .link-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  #title-bar {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--bg-panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 24px; z-index: 10;
+    backdrop-filter: blur(12px); text-align: center;
+    display: flex; align-items: center; gap: 16px;
+  }
+  #title-bar h1 { font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; color: var(--text-bright); letter-spacing: 2px; text-transform: uppercase; }
+  #title-bar .stats { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); }
+
+  #tooltip {
+    position: fixed; pointer-events: none;
+    background: var(--bg-panel); border: 1px solid var(--border-glow);
+    border-radius: 8px; padding: 10px 14px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text);
+    z-index: 100; opacity: 0; transition: opacity 0.15s;
+    max-width: 280px; line-height: 1.5;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  #tooltip.visible { opacity: 1; }
+
+  #search-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10; }
+  #search-input {
+    background: var(--bg-panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 18px 10px 38px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--text); width: 260px; outline: none;
+    transition: border-color 0.2s, width 0.3s;
+  }
+  #search-input:focus { border-color: var(--border-glow); width: 320px; }
+  #search-input::placeholder { color: var(--text-dim); }
+  #search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-dim); font-size: 13px; pointer-events: none; }
+</style>
+</head>
+<body>
+
+<div id="graph-container"><svg id="graph"></svg></div>
+
+<div id="legend">
+  <h3>FORGE System</h3>
+  <div class="legend-item" data-type="command"><div class="legend-dot" style="background: var(--cmd)"></div><span>Commands (10)</span></div>
+  <div class="legend-item" data-type="skill"><div class="legend-dot" style="background: var(--skill)"></div><span>Skills (18)</span></div>
+  <div class="legend-item" data-type="agent"><div class="legend-dot" style="background: var(--agent)"></div><span>Agents (3)</span></div>
+  <div class="legend-item" data-type="hook"><div class="legend-dot" style="background: var(--hook)"></div><span>Hooks (2)</span></div>
+  <div class="legend-item" data-type="doc"><div class="legend-dot" style="background: var(--doc)"></div><span>Docs (11)</span></div>
+  <div class="legend-divider"></div>
+  <div class="legend-item" data-edge="invoke"><div class="legend-line" style="background: var(--cmd)"></div><span>Вызывает</span></div>
+  <div class="legend-item" data-edge="dispatch"><div class="legend-line" style="background: var(--agent); background-image: repeating-linear-gradient(90deg, var(--agent) 0 6px, transparent 6px 9px)"></div><span>Диспатчит агента</span></div>
+  <div class="legend-item" data-edge="data"><div class="legend-line" style="background: var(--doc); opacity: 0.5; background-image: repeating-linear-gradient(90deg, var(--doc) 0 3px, transparent 3px 7px)"></div><span>Читает/пишет</span></div>
+</div>
+
+<div id="detail-panel">
+  <div class="detail-header">
+    <button class="detail-close" id="detail-close-btn">&times;</button>
+    <div class="type-tag" id="detail-type-tag"></div>
+    <h2 id="detail-title"></h2>
+    <div class="purpose" id="detail-purpose"></div>
+  </div>
+  <div id="detail-body"></div>
+</div>
+
+<div id="search-box">
+  <span id="search-icon">&#x2315;</span>
+  <input type="text" id="search-input" placeholder="Поиск нод... ( / )">
+</div>
+
+<div id="title-bar">
+  <h1>FORGE Plugin Graph</h1>
+  <span class="stats">44 nodes &middot; ~70 edges</span>
+</div>
+
+<div id="tooltip">
+  <div id="tt-name"></div>
+  <div id="tt-type"></div>
+  <div id="tt-desc"></div>
+</div>
+
+<script>
+const NODES = [
+  // Commands
+  { id: "cmd:start", label: "start", type: "command", purpose: "Загрузка полного контекста проекта", purposeRu: "Читает index.md, status.md, decisions.md, dead-ends, journal.md, git log" },
+  { id: "cmd:brainstorm", label: "brainstorm", type: "command", purpose: "Дизайн и требования перед реализацией", purposeRu: "Точка входа для любой новой работы" },
+  { id: "cmd:writing-plans", label: "writing-plans", type: "command", purpose: "Создание плана по задачам", purposeRu: "Bite-sized задачи с точными файлами и кодом" },
+  { id: "cmd:execute-plan", label: "execute-plan", type: "command", purpose: "Запуск плана с чекпоинтами", purposeRu: "Batch execution в отдельной сессии" },
+  { id: "cmd:discover", label: "discover", type: "command", purpose: "Поиск скилов в маркетплейсе", purposeRu: "Ищет скилы под технологии из плана" },
+  { id: "cmd:init", label: "init", type: "command", purpose: "Инициализация FORGE документации", purposeRu: "Создаёт docs/, CLAUDE.md, structure.md" },
+  { id: "cmd:sync", label: "sync", type: "command", purpose: "Синхронизация docs/ с кодом", purposeRu: "Структура → документация → журнал" },
+  { id: "cmd:validate", label: "validate", type: "command", purpose: "Проверка код vs план vs docs", purposeRu: "Read-only, ничего не меняет" },
+  { id: "cmd:cleanup", label: "cleanup", type: "command", purpose: "Анализ качества кода", purposeRu: "Dead code, naming, duplication, complexity" },
+  { id: "cmd:unblocker", label: "unblocker", type: "command", purpose: "Помощь когда застрял", purposeRu: "Сканирует проект, вытаскивает задачи" },
+
+  // Skills
+  { id: "skill:brainstorming", label: "brainstorming", type: "skill", purpose: "Исследование требований и дизайна", purposeRu: "Вопросы → требования → дизайн → план" },
+  { id: "skill:writing-plans", label: "writing-plans", type: "skill", purpose: "Детальный план реализации", purposeRu: "2-5 мин задачи, TDD, точные файлы" },
+  { id: "skill:executing-plans", label: "executing-plans", type: "skill", purpose: "Batch execution с review", purposeRu: "3 задачи → чекпоинт → следующие 3" },
+  { id: "skill:subagent-dev", label: "subagent-dev", type: "skill", purpose: "Субагенты + двойной review", purposeRu: "Реализатор → spec review → code review → docs" },
+  { id: "skill:git-worktrees", label: "git-worktrees", type: "skill", purpose: "Изолированные рабочие пространства", purposeRu: "Создаёт worktree для фича-веток" },
+  { id: "skill:finishing-branch", label: "finishing-branch", type: "skill", purpose: "Завершение ветки разработки", purposeRu: "Merge / PR / keep / discard" },
+  { id: "skill:forge-context", label: "forge-context", type: "skill", purpose: "Загрузка контекста из docs/", purposeRu: "~400 токенов вместо 40k+ исходников" },
+  { id: "skill:session-awareness", label: "session-awareness", type: "skill", purpose: "Запись состояния сессии", purposeRu: "Обновляет index.md, dead-ends, decisions" },
+  { id: "skill:tdd", label: "test-driven-dev", type: "skill", purpose: "RED → GREEN → REFACTOR", purposeRu: "Сначала тест, потом код, всегда" },
+  { id: "skill:debugging", label: "systematic-debug", type: "skill", purpose: "Root cause анализ", purposeRu: "Фазы: причина → гипотеза → тест → фикс" },
+  { id: "skill:verification", label: "verification", type: "skill", purpose: "Доказательства перед утверждениями", purposeRu: "Запусти → прочитай → проверь → утверждай" },
+  { id: "skill:code-cleanup", label: "code-cleanup", type: "skill", purpose: "Системный анализ качества", purposeRu: "Параллельные агенты анализа" },
+  { id: "skill:parallel-agents", label: "parallel-agents", type: "skill", purpose: "Параллельный запуск агентов", purposeRu: "2+ независимых задач одновременно" },
+  { id: "skill:request-review", label: "request-review", type: "skill", purpose: "Запрос code review", purposeRu: "Готовит контекст и запускает ревьюера" },
+  { id: "skill:receive-review", label: "receive-review", type: "skill", purpose: "Обработка feedback от review", purposeRu: "Техническая оценка, не слепое согласие" },
+  { id: "skill:project-unblocker", label: "project-unblocker", type: "skill", purpose: "Глубокое сканирование проекта", purposeRu: "Извлекает задачи через реакции" },
+  { id: "skill:writing-skills", label: "writing-skills", type: "skill", purpose: "Создание новых скилов TDD", purposeRu: "RED → GREEN → REFACTOR для SKILL.md" },
+  { id: "skill:using-forge", label: "using-forge", type: "skill", purpose: "Мета: как находить и запускать скилы", purposeRu: "Flowchart выбора скила" },
+
+  // Agents
+  { id: "agent:code-reviewer", label: "code-reviewer", type: "agent", purpose: "Review кода vs план и стандарты", purposeRu: "Critical / Important / Suggestion" },
+  { id: "agent:documenter", label: "forge-documenter", type: "agent", purpose: "Обновление spec.json и README", purposeRu: "Sonnet, читает код, пишет docs/" },
+  { id: "agent:structure", label: "structure-enforcer", type: "agent", purpose: "Контроль структуры проекта", purposeRu: "Перемещает файлы, обновляет импорты" },
+
+  // Hooks
+  { id: "hook:session-start", label: "SessionStart", type: "hook", purpose: "Инициализация сессии", purposeRu: "Инжектит using-forge SKILL.md" },
+  { id: "hook:prompt-submit", label: "UserPromptSubmit", type: "hook", purpose: "Авто-инъекция контекста", purposeRu: "index.md + dead-ends + git log в каждый промпт" },
+
+  // Docs
+  { id: "doc:index", label: "index.md", type: "doc", purpose: "Точка входа проекта", purposeRu: "Цель, стадия, текущая задача, сессия" },
+  { id: "doc:map", label: "map.json", type: "doc", purpose: "Структура и red zones", purposeRu: "Директории, счётчики файлов" },
+  { id: "doc:conventions", label: "conventions.json", type: "doc", purpose: "Правила именования", purposeRu: "Файлы, классы, функции, паттерны" },
+  { id: "doc:status", label: "status.md", type: "doc", purpose: "Что работает / сломано", purposeRu: "Working / Broken / Blocked" },
+  { id: "doc:decisions", label: "decisions.md", type: "doc", purpose: "Технические решения", purposeRu: "Контекст, варианты, выбор, когда пересмотреть" },
+  { id: "doc:dead-ends", label: "dead-ends/", type: "doc", purpose: "Провальные подходы", purposeRu: "По темам: auth, db, ui, api..." },
+  { id: "doc:journal", label: "journal.md", type: "doc", purpose: "История сессий", purposeRu: "Последние 7, остальные в архив" },
+  { id: "doc:plans", label: "plans/", type: "doc", purpose: "Планы реализации", purposeRu: "Дизайн-доки и task-планы" },
+  { id: "doc:library", label: "library/spec.json", type: "doc", purpose: "Спеки файлов", purposeRu: "Intent, inputs, outputs, depends_on" },
+  { id: "doc:structure", label: "structure.md", type: "doc", purpose: "Эталон структуры проекта", purposeRu: "Какие директории должны быть" },
+  { id: "doc:claude-md", label: "CLAUDE.md", type: "doc", purpose: "Инструкции для Claude Code", purposeRu: "Стек, воркфлоу, правила, конвенции" },
+];
+
+const EDGES = [
+  // Commands -> Skills
+  { source: "cmd:brainstorm", target: "skill:brainstorming", type: "invoke" },
+  { source: "cmd:writing-plans", target: "skill:writing-plans", type: "invoke" },
+  { source: "cmd:execute-plan", target: "skill:executing-plans", type: "invoke" },
+  { source: "cmd:cleanup", target: "skill:code-cleanup", type: "invoke" },
+  { source: "cmd:unblocker", target: "skill:project-unblocker", type: "invoke" },
+  { source: "cmd:start", target: "skill:forge-context", type: "invoke" },
+  // Skills -> Skills
+  { source: "skill:brainstorming", target: "skill:writing-plans", type: "invoke" },
+  { source: "skill:writing-plans", target: "skill:executing-plans", type: "invoke" },
+  { source: "skill:writing-plans", target: "skill:subagent-dev", type: "invoke" },
+  { source: "skill:executing-plans", target: "skill:git-worktrees", type: "invoke" },
+  { source: "skill:executing-plans", target: "skill:finishing-branch", type: "invoke" },
+  { source: "skill:subagent-dev", target: "skill:git-worktrees", type: "invoke" },
+  { source: "skill:subagent-dev", target: "skill:finishing-branch", type: "invoke" },
+  { source: "skill:subagent-dev", target: "skill:request-review", type: "invoke" },
+  { source: "skill:code-cleanup", target: "skill:parallel-agents", type: "invoke" },
+  { source: "skill:debugging", target: "skill:tdd", type: "invoke" },
+  { source: "skill:code-cleanup", target: "skill:verification", type: "invoke" },
+  // -> Agents
+  { source: "skill:subagent-dev", target: "agent:code-reviewer", type: "dispatch" },
+  { source: "skill:subagent-dev", target: "agent:documenter", type: "dispatch" },
+  { source: "skill:request-review", target: "agent:code-reviewer", type: "dispatch" },
+  { source: "cmd:sync", target: "agent:structure", type: "dispatch" },
+  { source: "cmd:sync", target: "agent:documenter", type: "dispatch" },
+  // Hooks -> Docs/Skills
+  { source: "hook:prompt-submit", target: "doc:index", type: "data" },
+  { source: "hook:prompt-submit", target: "doc:dead-ends", type: "data" },
+  { source: "hook:session-start", target: "skill:using-forge", type: "invoke" },
+  // Session awareness -> Docs
+  { source: "skill:session-awareness", target: "doc:index", type: "data" },
+  { source: "skill:session-awareness", target: "doc:dead-ends", type: "data" },
+  { source: "skill:session-awareness", target: "doc:decisions", type: "data" },
+  { source: "skill:session-awareness", target: "doc:status", type: "data" },
+  { source: "skill:session-awareness", target: "doc:journal", type: "data" },
+  // Agent -> Docs
+  { source: "agent:documenter", target: "doc:library", type: "data" },
+  { source: "agent:documenter", target: "doc:map", type: "data" },
+  { source: "agent:structure", target: "doc:structure", type: "data" },
+  // Init -> Docs
+  { source: "cmd:init", target: "doc:claude-md", type: "data" },
+  { source: "cmd:init", target: "doc:index", type: "data" },
+  { source: "cmd:init", target: "doc:map", type: "data" },
+  { source: "cmd:init", target: "doc:conventions", type: "data" },
+  { source: "cmd:init", target: "doc:structure", type: "data" },
+  { source: "cmd:init", target: "doc:plans", type: "data" },
+  { source: "cmd:init", target: "doc:library", type: "data" },
+  // Validate -> Docs
+  { source: "cmd:validate", target: "doc:plans", type: "data" },
+  { source: "cmd:validate", target: "doc:library", type: "data" },
+  { source: "cmd:validate", target: "doc:map", type: "data" },
+  // Brainstorming -> Docs
+  { source: "skill:brainstorming", target: "doc:plans", type: "data" },
+  { source: "skill:brainstorming", target: "doc:dead-ends", type: "data" },
+  { source: "skill:brainstorming", target: "doc:library", type: "data" },
+  // Context -> Docs
+  { source: "skill:forge-context", target: "doc:index", type: "data" },
+  { source: "skill:forge-context", target: "doc:map", type: "data" },
+  { source: "skill:forge-context", target: "doc:conventions", type: "data" },
+  // Sync -> Docs
+  { source: "cmd:sync", target: "doc:index", type: "data" },
+  { source: "cmd:sync", target: "doc:status", type: "data" },
+  { source: "cmd:sync", target: "doc:journal", type: "data" },
+  { source: "cmd:sync", target: "doc:dead-ends", type: "data" },
+  { source: "cmd:sync", target: "doc:decisions", type: "data" },
+];
+
+// Build adjacency
+const nodeMap = new Map(NODES.map(n => [n.id, n]));
+const outgoing = new Map();
+const incoming = new Map();
+NODES.forEach(n => { outgoing.set(n.id, []); incoming.set(n.id, []); });
+EDGES.forEach(e => {
+  outgoing.get(e.source).push({ target: e.target, type: e.type });
+  incoming.get(e.target).push({ source: e.source, type: e.type });
+});
+
+const TYPE_CONFIG = {
+  command: { color: "#4a9eff", glow: "#4a9eff40", radius: 26, label: "CMD" },
+  skill:   { color: "#22d98c", glow: "#22d98c40", radius: 22, label: "SKILL" },
+  agent:   { color: "#ff8844", glow: "#ff884440", radius: 24, label: "AGENT" },
+  hook:    { color: "#b366ff", glow: "#b366ff40", radius: 20, label: "HOOK" },
+  doc:     { color: "#5a5a6a", glow: "#5a5a6a30", radius: 16, label: "DOC" },
+};
+
+const width = window.innerWidth;
+const height = window.innerHeight;
+
+function initialX(d) {
+  const positions = { command: 0.15, skill: 0.5, agent: 0.82, hook: 0.5, doc: 0.5 };
+  return width * (positions[d.type] || 0.5);
+}
+function initialY(d) {
+  const positions = { hook: 0.08, doc: 0.88, command: 0.5, skill: 0.5, agent: 0.5 };
+  return height * (positions[d.type] || 0.5);
+}
+NODES.forEach(d => { d.x = initialX(d) + (Math.random() - 0.5) * 120; d.y = initialY(d) + (Math.random() - 0.5) * 120; });
+
+const svg = d3.select("#graph");
+const defs = svg.append("defs");
+
+// Arrow markers
+[["invoke","#4a9eff"],["dispatch","#ff8844"],["data","#5a5a6a"]].forEach(([t, c]) => {
+  defs.append("marker").attr("id", "arrow-"+t).attr("viewBox","0 -4 8 8")
+    .attr("refX",8).attr("refY",0).attr("markerWidth",6).attr("markerHeight",6).attr("orient","auto")
+    .append("path").attr("d","M0,-3.5L8,0L0,3.5Z").attr("fill",c);
+});
+
+// Glow filters
+Object.entries(TYPE_CONFIG).forEach(([type, cfg]) => {
+  const f = defs.append("filter").attr("id","glow-"+type).attr("x","-50%").attr("y","-50%").attr("width","200%").attr("height","200%");
+  f.append("feGaussianBlur").attr("stdDeviation","4").attr("result","blur");
+  f.append("feFlood").attr("flood-color",cfg.color).attr("flood-opacity","0.3").attr("result","color");
+  f.append("feComposite").attr("in","color").attr("in2","blur").attr("operator","in").attr("result","glow");
+  const m = f.append("feMerge"); m.append("feMergeNode").attr("in","glow"); m.append("feMergeNode").attr("in","SourceGraphic");
+});
+
+const g = svg.append("g");
+const zoom = d3.zoom().scaleExtent([0.2, 4]).on("zoom", e => g.attr("transform", e.transform));
+svg.call(zoom);
+
+// Edges
+const edgeElements = g.append("g").selectAll(".edge").data(EDGES).enter().append("path")
+  .attr("class", d => "edge edge-" + d.type).attr("marker-end", d => "url(#arrow-" + d.type + ")");
+
+// Nodes
+const nodeElements = g.append("g").selectAll(".node-group").data(NODES).enter().append("g")
+  .attr("class", "node-group")
+  .call(d3.drag().on("start", (e,d) => { if(!e.active) simulation.alphaTarget(0.1).restart(); d.fx=d.x; d.fy=d.y; })
+    .on("drag", (e,d) => { d.fx=e.x; d.fy=e.y; })
+    .on("end", (e,d) => { if(!e.active) simulation.alphaTarget(0); d.fx=null; d.fy=null; }));
+
+nodeElements.append("circle").attr("class","node-ring").attr("r", d => TYPE_CONFIG[d.type].radius+4).attr("stroke", d => TYPE_CONFIG[d.type].color);
+nodeElements.append("circle").attr("class","node-core").attr("r", d => TYPE_CONFIG[d.type].radius)
+  .attr("fill", d => TYPE_CONFIG[d.type].glow).attr("stroke", d => TYPE_CONFIG[d.type].color).attr("filter", d => "url(#glow-"+d.type+")");
+nodeElements.filter(d => d.type !== "doc").append("circle").attr("r", d => TYPE_CONFIG[d.type].radius*0.35).attr("fill", d => TYPE_CONFIG[d.type].color).attr("opacity",0.15);
+nodeElements.append("text").attr("class","node-label").attr("dy", d => TYPE_CONFIG[d.type].radius+16).text(d => d.label);
+nodeElements.append("text").attr("class","node-type-badge").attr("dy",3).attr("fill", d => TYPE_CONFIG[d.type].color).text(d => TYPE_CONFIG[d.type].label);
+
+// Simulation
+const simulation = d3.forceSimulation(NODES)
+  .force("link", d3.forceLink(EDGES).id(d => d.id).distance(d => d.type==="data"?180:d.type==="dispatch"?150:120).strength(d => d.type==="data"?0.15:0.4))
+  .force("charge", d3.forceManyBody().strength(d => d.type==="doc"?-200:-400))
+  .force("center", d3.forceCenter(width/2, height/2).strength(0.05))
+  .force("x", d3.forceX(d => initialX(d)).strength(0.08))
+  .force("y", d3.forceY(d => initialY(d)).strength(0.08))
+  .force("collision", d3.forceCollide().radius(d => TYPE_CONFIG[d.type].radius+20))
+  .on("tick", () => {
+    edgeElements.attr("d", d => {
+      const sr = TYPE_CONFIG[nodeMap.get(d.source.id||d.source).type].radius;
+      const tr = TYPE_CONFIG[nodeMap.get(d.target.id||d.target).type].radius;
+      const dx = d.target.x-d.source.x, dy = d.target.y-d.source.y;
+      const dist = Math.sqrt(dx*dx+dy*dy)||1;
+      const sx=d.source.x+(dx/dist)*(sr+5), sy=d.source.y+(dy/dist)*(sr+5);
+      const tx=d.target.x-(dx/dist)*(tr+8), ty=d.target.y-(dy/dist)*(tr+8);
+      const mx=(sx+tx)/2+(dy/dist)*15, my=(sy+ty)/2-(dx/dist)*15;
+      return "M"+sx+","+sy+" Q"+mx+","+my+" "+tx+","+ty;
+    });
+    nodeElements.attr("transform", d => "translate("+d.x+","+d.y+")");
+  });
+
+// Hover
+const tooltip = document.getElementById("tooltip");
+const ttName = document.getElementById("tt-name");
+const ttType = document.getElementById("tt-type");
+const ttDesc = document.getElementById("tt-desc");
+
+nodeElements.on("mouseenter", function(event, d) {
+  const connected = new Set([d.id]);
+  EDGES.forEach(e => {
+    const sid = typeof e.source==="object"?e.source.id:e.source;
+    const tid = typeof e.target==="object"?e.target.id:e.target;
+    if(sid===d.id) connected.add(tid);
+    if(tid===d.id) connected.add(sid);
+  });
+  nodeElements.classed("dimmed", n => !connected.has(n.id)).classed("highlighted", n => connected.has(n.id));
+  edgeElements.classed("dimmed", e => {
+    const sid = typeof e.source==="object"?e.source.id:e.source;
+    const tid = typeof e.target==="object"?e.target.id:e.target;
+    return sid!==d.id && tid!==d.id;
+  }).classed("highlighted", e => {
+    const sid = typeof e.source==="object"?e.source.id:e.source;
+    const tid = typeof e.target==="object"?e.target.id:e.target;
+    return sid===d.id || tid===d.id;
+  });
+  const cfg = TYPE_CONFIG[d.type];
+  ttName.textContent = d.label;
+  ttName.style.color = cfg.color;
+  ttType.textContent = cfg.label;
+  ttType.style.color = cfg.color;
+  ttDesc.textContent = d.purposeRu || d.purpose;
+  tooltip.classList.add("visible");
+}).on("mousemove", function(event) {
+  tooltip.style.left = (event.clientX+16)+"px";
+  tooltip.style.top = (event.clientY-10)+"px";
+}).on("mouseleave", function() {
+  nodeElements.classed("dimmed",false).classed("highlighted",false);
+  edgeElements.classed("dimmed",false).classed("highlighted",false);
+  tooltip.classList.remove("visible");
+});
+
+// Click -> detail panel
+document.getElementById("detail-close-btn").addEventListener("click", closeDetail);
+
+nodeElements.on("click", function(event, d) {
+  event.stopPropagation();
+  showDetail(d);
+});
+
+svg.on("click", () => closeDetail());
+
+function showDetail(d) {
+  const panel = document.getElementById("detail-panel");
+  const cfg = TYPE_CONFIG[d.type];
+  document.getElementById("detail-type-tag").textContent = cfg.label;
+  document.getElementById("detail-type-tag").style.color = cfg.color;
+  document.getElementById("detail-title").textContent = d.label;
+  document.getElementById("detail-purpose").textContent = d.purposeRu || d.purpose;
+
+  const body = document.getElementById("detail-body");
+  // Clear existing content safely
+  while (body.firstChild) body.removeChild(body.firstChild);
+
+  const out = outgoing.get(d.id);
+  if (out.length > 0) {
+    const invokes = out.filter(e => e.type === "invoke");
+    const dispatches = out.filter(e => e.type === "dispatch");
+    const data = out.filter(e => e.type === "data");
+
+    if (invokes.length > 0) buildDetailSection(body, "Вызывает", invokes, "target");
+    if (dispatches.length > 0) buildDetailSection(body, "Диспатчит агентов", dispatches, "target");
+    if (data.length > 0) buildDetailSection(body, "Читает / пишет", data, "target");
+  }
+
+  const inc = incoming.get(d.id);
+  if (inc.length > 0) buildDetailSection(body, "Вызывается из", inc, "source");
+
+  panel.classList.add("visible");
+}
+
+function buildDetailSection(parent, title, edges, key) {
+  const section = document.createElement("div");
+  section.className = "detail-section";
+
+  const h4 = document.createElement("h4");
+  h4.textContent = title;
+  section.appendChild(h4);
+
+  const ul = document.createElement("ul");
+  edges.forEach(e => {
+    const nodeId = e[key];
+    const node = nodeMap.get(nodeId);
+    if (!node) return;
+
+    const li = document.createElement("li");
+    li.dataset.node = nodeId;
+
+    const dot = document.createElement("span");
+    dot.className = "link-dot";
+    dot.style.background = TYPE_CONFIG[node.type].color;
+    li.appendChild(dot);
+
+    const text = document.createTextNode(node.label);
+    li.appendChild(text);
+
+    li.addEventListener("click", () => {
+      const nd = NODES.find(n => n.id === nodeId);
+      if (nd) {
+        showDetail(nd);
+        const transform = d3.zoomTransform(svg.node());
+        const tx = width/2 - nd.x * transform.k;
+        const ty = height/2 - nd.y * transform.k;
+        svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(transform.k));
+      }
+    });
+
+    ul.appendChild(li);
+  });
+  section.appendChild(ul);
+  parent.appendChild(section);
+}
+
+function closeDetail() {
+  document.getElementById("detail-panel").classList.remove("visible");
+}
+
+// Search
+const searchInput = document.getElementById("search-input");
+searchInput.addEventListener("input", () => {
+  const q = searchInput.value.toLowerCase().trim();
+  if (!q) {
+    nodeElements.classed("dimmed",false).classed("highlighted",false);
+    edgeElements.classed("dimmed",false).classed("highlighted",false);
+    return;
+  }
+  const matches = new Set();
+  NODES.forEach(n => {
+    if (n.label.toLowerCase().includes(q) || n.purpose.toLowerCase().includes(q) || (n.purposeRu && n.purposeRu.toLowerCase().includes(q)))
+      matches.add(n.id);
+  });
+  nodeElements.classed("dimmed", n => !matches.has(n.id)).classed("highlighted", n => matches.has(n.id));
+  edgeElements.classed("dimmed", e => {
+    const sid = typeof e.source==="object"?e.source.id:e.source;
+    const tid = typeof e.target==="object"?e.target.id:e.target;
+    return !matches.has(sid) && !matches.has(tid);
+  }).classed("highlighted", false);
+});
+
+// Legend toggles
+const hiddenTypes = new Set();
+document.querySelectorAll(".legend-item[data-type]").forEach(item => {
+  item.addEventListener("click", () => {
+    const type = item.dataset.type;
+    if (hiddenTypes.has(type)) { hiddenTypes.delete(type); item.classList.remove("legend-disabled"); }
+    else { hiddenTypes.add(type); item.classList.add("legend-disabled"); }
+    nodeElements.style("display", d => hiddenTypes.has(d.type)?"none":null);
+    edgeElements.style("display", e => {
+      const sn = nodeMap.get(typeof e.source==="object"?e.source.id:e.source);
+      const tn = nodeMap.get(typeof e.target==="object"?e.target.id:e.target);
+      return (hiddenTypes.has(sn.type)||hiddenTypes.has(tn.type))?"none":null;
+    });
+    simulation.alpha(0.3).restart();
+  });
+});
+
+// Keyboard
+document.addEventListener("keydown", e => {
+  if (e.key==="Escape") { closeDetail(); searchInput.blur(); searchInput.value=""; searchInput.dispatchEvent(new Event("input")); }
+  if (e.key==="/" && document.activeElement!==searchInput) { e.preventDefault(); searchInput.focus(); }
+});
+
+// Fit to screen
+setTimeout(() => {
+  simulation.alpha(0.5).restart();
+  setTimeout(() => {
+    const bounds = g.node().getBBox();
+    const pad=80, bw=bounds.width+pad*2, bh=bounds.height+pad*2;
+    const scale = Math.min(width/bw, height/bh, 1.2);
+    const tx = width/2-(bounds.x+bounds.width/2)*scale;
+    const ty = height/2-(bounds.y+bounds.height/2)*scale;
+    svg.transition().duration(800).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
+  }, 2000);
+}, 100);
+</script>
+</body>
+</html>

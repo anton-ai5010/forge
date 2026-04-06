@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FORGE Plugin — n8n-style Graph</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #1b1b2f;
+    --grid-line: #232340;
+    --grid-dot: #2a2a4a;
+    --panel-bg: #232342;
+    --panel-border: #333360;
+    --text: #d0d0e8;
+    --text-dim: #7a7a9a;
+    --text-bright: #f0f0ff;
+
+    --cmd-bg: #1a2744;
+    --cmd-border: #2a5caa;
+    --cmd-accent: #4a9eff;
+    --cmd-icon-bg: #2a5caa;
+
+    --skill-bg: #1a3332;
+    --skill-border: #1a7a5a;
+    --skill-accent: #22d98c;
+    --skill-icon-bg: #1a7a5a;
+
+    --agent-bg: #2d2418;
+    --agent-border: #aa6622;
+    --agent-accent: #ff8844;
+    --agent-icon-bg: #aa6622;
+
+    --hook-bg: #261a3a;
+    --hook-border: #7733bb;
+    --hook-accent: #b366ff;
+    --hook-icon-bg: #7733bb;
+
+    --doc-bg: #1e1e2a;
+    --doc-border: #3a3a52;
+    --doc-accent: #6a6a8a;
+    --doc-icon-bg: #3a3a52;
+
+    --conn-default: #4a4a6a;
+    --conn-active: #6a8aff;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    user-select: none;
+  }
+
+  #canvas {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #world {
+    position: absolute;
+    transform-origin: 0 0;
+    will-change: transform;
+  }
+
+  /* Dot grid background */
+  #canvas::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle, var(--grid-dot) 1px, transparent 1px);
+    background-size: 24px 24px;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* SVG connections layer */
+  #connections-svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 8000px;
+    height: 6000px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .connection {
+    fill: none;
+    stroke: var(--conn-default);
+    stroke-width: 2;
+    opacity: 0.5;
+    transition: opacity 0.2s, stroke 0.2s, stroke-width 0.2s;
+  }
+
+  .connection.highlighted {
+    stroke: var(--conn-active);
+    stroke-width: 2.5;
+    opacity: 0.9;
+  }
+
+  .connection.dimmed {
+    opacity: 0.06;
+  }
+
+  .connection.type-dispatch {
+    stroke-dasharray: 8 4;
+  }
+
+  .connection.type-data {
+    stroke-dasharray: 4 6;
+    stroke-width: 1.5;
+    opacity: 0.3;
+  }
+
+  .connection.type-data.highlighted {
+    stroke-width: 2;
+    opacity: 0.7;
+  }
+
+  /* Node card */
+  .node-card {
+    position: absolute;
+    border-radius: 12px;
+    border: 1.5px solid;
+    cursor: grab;
+    z-index: 2;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    display: flex;
+    align-items: stretch;
+    min-width: 200px;
+    max-width: 280px;
+  }
+
+  .node-card:active { cursor: grabbing; }
+
+  .node-card.dimmed {
+    opacity: 0.08;
+    transition: opacity 0.3s;
+  }
+
+  .node-card.highlighted {
+    opacity: 1;
+    transition: opacity 0.15s;
+  }
+
+  .node-card:not(.dimmed):not(.highlighted) {
+    transition: opacity 0.3s, box-shadow 0.2s;
+  }
+
+  .node-card:hover, .node-card.selected {
+    z-index: 10;
+  }
+
+  /* Type-specific styles */
+  .node-card.type-command {
+    background: var(--cmd-bg);
+    border-color: var(--cmd-border);
+  }
+  .node-card.type-command:hover, .node-card.type-command.selected {
+    box-shadow: 0 0 24px #4a9eff20, 0 4px 20px rgba(0,0,0,0.4);
+    border-color: var(--cmd-accent);
+  }
+
+  .node-card.type-skill {
+    background: var(--skill-bg);
+    border-color: var(--skill-border);
+  }
+  .node-card.type-skill:hover, .node-card.type-skill.selected {
+    box-shadow: 0 0 24px #22d98c20, 0 4px 20px rgba(0,0,0,0.4);
+    border-color: var(--skill-accent);
+  }
+
+  .node-card.type-agent {
+    background: var(--agent-bg);
+    border-color: var(--agent-border);
+  }
+  .node-card.type-agent:hover, .node-card.type-agent.selected {
+    box-shadow: 0 0 24px #ff884420, 0 4px 20px rgba(0,0,0,0.4);
+    border-color: var(--agent-accent);
+  }
+
+  .node-card.type-hook {
+    background: var(--hook-bg);
+    border-color: var(--hook-border);
+  }
+  .node-card.type-hook:hover, .node-card.type-hook.selected {
+    box-shadow: 0 0 24px #b366ff20, 0 4px 20px rgba(0,0,0,0.4);
+    border-color: var(--hook-accent);
+  }
+
+  .node-card.type-doc {
+    background: var(--doc-bg);
+    border-color: var(--doc-border);
+    min-width: 180px;
+    max-width: 240px;
+  }
+  .node-card.type-doc:hover, .node-card.type-doc.selected {
+    box-shadow: 0 0 16px #6a6a8a15, 0 4px 16px rgba(0,0,0,0.3);
+    border-color: var(--doc-accent);
+  }
+
+  /* Icon stripe on the left */
+  .node-icon {
+    width: 42px;
+    min-height: 100%;
+    border-radius: 10px 0 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+  }
+
+  .type-command .node-icon { background: var(--cmd-icon-bg); }
+  .type-skill .node-icon { background: var(--skill-icon-bg); }
+  .type-agent .node-icon { background: var(--agent-icon-bg); }
+  .type-hook .node-icon { background: var(--hook-icon-bg); }
+  .type-doc .node-icon { background: var(--doc-icon-bg); width: 34px; font-size: 14px; }
+
+  .node-body {
+    padding: 10px 14px 10px 12px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .node-type-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 3px;
+  }
+
+  .type-command .node-type-label { color: var(--cmd-accent); }
+  .type-skill .node-type-label { color: var(--skill-accent); }
+  .type-agent .node-type-label { color: var(--agent-accent); }
+  .type-hook .node-type-label { color: var(--hook-accent); }
+  .type-doc .node-type-label { color: var(--doc-accent); }
+
+  .node-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-bright);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .type-doc .node-name { font-size: 11px; }
+
+  .node-desc {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 3px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Connection ports */
+  .port {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid;
+    background: var(--bg);
+    z-index: 3;
+    transition: transform 0.15s;
+  }
+
+  .port:hover {
+    transform: scale(1.4);
+  }
+
+  .port-in {
+    left: -6px;
+    top: 50%;
+    margin-top: -5px;
+  }
+
+  .port-out {
+    right: -6px;
+    top: 50%;
+    margin-top: -5px;
+  }
+
+  .type-command .port { border-color: var(--cmd-accent); }
+  .type-skill .port { border-color: var(--skill-accent); }
+  .type-agent .port { border-color: var(--agent-accent); }
+  .type-hook .port { border-color: var(--hook-accent); }
+  .type-doc .port { border-color: var(--doc-accent); }
+
+  /* Top bar */
+  #top-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    background: #16162c;
+    border-bottom: 1px solid var(--panel-border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 100;
+    gap: 20px;
+  }
+
+  #top-bar .logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-bright);
+    letter-spacing: 2px;
+  }
+
+  #top-bar .logo span {
+    color: var(--cmd-accent);
+  }
+
+  #search-input {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 6px 12px 6px 32px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--text);
+    width: 220px;
+    outline: none;
+    transition: border-color 0.2s, width 0.2s;
+  }
+
+  #search-input:focus {
+    border-color: var(--conn-active);
+    width: 280px;
+  }
+
+  #search-input::placeholder { color: var(--text-dim); }
+
+  .search-wrap {
+    position: relative;
+  }
+
+  .search-wrap::before {
+    content: '\2315';
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  .zoom-controls {
+    margin-left: auto;
+    display: flex;
+    gap: 4px;
+  }
+
+  .zoom-btn {
+    width: 32px;
+    height: 32px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    color: var(--text-dim);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .zoom-btn:hover {
+    background: var(--panel-border);
+    color: var(--text);
+  }
+
+  .zoom-level {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    min-width: 44px;
+    text-align: center;
+    line-height: 32px;
+  }
+
+  /* Legend */
+  #legend {
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    background: #16162cee;
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    z-index: 100;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    font-size: 11px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+
+  .legend-item:hover { background: var(--panel-bg); color: var(--text); }
+  .legend-item.disabled { opacity: 0.25; }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 3px;
+  }
+
+  .legend-sep {
+    width: 1px;
+    height: 16px;
+    background: var(--panel-border);
+  }
+
+  /* Detail sidebar */
+  #detail {
+    position: fixed;
+    top: 48px;
+    right: 0;
+    width: 320px;
+    height: calc(100vh - 48px);
+    background: #16162c;
+    border-left: 1px solid var(--panel-border);
+    z-index: 100;
+    transform: translateX(320px);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  #detail.open { transform: translateX(0); }
+
+  #detail::-webkit-scrollbar { width: 4px; }
+  #detail::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
+
+  .detail-head {
+    padding: 20px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+
+  .detail-head .d-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 4px;
+  }
+
+  .detail-head .d-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-bright);
+  }
+
+  .detail-head .d-desc {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  .detail-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+
+  .detail-close:hover { color: var(--text); border-color: var(--text-dim); }
+
+  .detail-section {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+
+  .detail-section:last-child { border-bottom: none; }
+
+  .detail-section h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .detail-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    margin: 0 -8px;
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+
+  .detail-link:hover { background: var(--panel-bg); }
+
+  .detail-link .dl-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* Minimap */
+  #minimap {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    width: 180px;
+    height: 120px;
+    background: #16162cdd;
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    z-index: 100;
+    overflow: hidden;
+  }
+
+  #minimap canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  .minimap-viewport {
+    position: absolute;
+    border: 1.5px solid var(--conn-active);
+    border-radius: 2px;
+    background: rgba(106, 138, 255, 0.06);
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="top-bar">
+  <div class="logo"><span>FORGE</span> Plugin System</div>
+  <div class="search-wrap">
+    <input type="text" id="search-input" placeholder="Поиск нод... ( / )">
+  </div>
+  <div class="zoom-controls">
+    <button class="zoom-btn" id="zoom-out">-</button>
+    <span class="zoom-level" id="zoom-level">100%</span>
+    <button class="zoom-btn" id="zoom-in">+</button>
+    <button class="zoom-btn" id="zoom-fit" title="Fit all">&#x2B1C;</button>
+  </div>
+</div>
+
+<div id="canvas">
+  <div id="world">
+    <svg id="connections-svg"></svg>
+  </div>
+</div>
+
+<div id="legend">
+  <div class="legend-item" data-type="command"><div class="legend-dot" style="background:var(--cmd-accent)"></div>Commands</div>
+  <div class="legend-item" data-type="skill"><div class="legend-dot" style="background:var(--skill-accent)"></div>Skills</div>
+  <div class="legend-item" data-type="agent"><div class="legend-dot" style="background:var(--agent-accent)"></div>Agents</div>
+  <div class="legend-item" data-type="hook"><div class="legend-dot" style="background:var(--hook-accent)"></div>Hooks</div>
+  <div class="legend-item" data-type="doc"><div class="legend-dot" style="background:var(--doc-accent)"></div>Docs</div>
+  <div class="legend-sep"></div>
+  <div class="legend-item" style="cursor:default;color:var(--text-dim)">
+    <span style="font-size:10px">Drag nodes &middot; Scroll to zoom &middot; / to search</span>
+  </div>
+</div>
+
+<div id="detail">
+  <div class="detail-head">
+    <button class="detail-close" id="detail-close">&times;</button>
+    <div class="d-type" id="d-type"></div>
+    <div class="d-name" id="d-name"></div>
+    <div class="d-desc" id="d-desc"></div>
+  </div>
+  <div id="detail-body"></div>
+</div>
+
+<div id="minimap">
+  <canvas id="minimap-canvas"></canvas>
+  <div class="minimap-viewport" id="minimap-vp"></div>
+</div>
+
+<script>
+// ===== DATA =====
+const ICONS = {
+  command: '\u25B6', skill: '\u2699', agent: '\u2604', hook: '\u26A1', doc: '\u2B1C'
+};
+
+const COLORS = {
+  command: '#4a9eff', skill: '#22d98c', agent: '#ff8844', hook: '#b366ff', doc: '#6a6a8a'
+};
+
+const NODES = [
+  // Commands
+  { id:"cmd:start", label:"start", type:"command", desc:"Загружает весь контекст проекта из docs/ при старте сессии — цель, статус, решения, тупики, журнал, git" },
+  { id:"cmd:brainstorm", label:"brainstorm", type:"command", desc:"Обязательный первый шаг перед любой работой — задаёт вопросы, собирает требования, проектирует решение" },
+  { id:"cmd:writing-plans", label:"writing-plans", type:"command", desc:"Создаёт пошаговый план: задачи по 2-5 минут с точными файлами и кодом" },
+  { id:"cmd:execute-plan", label:"execute-plan", type:"command", desc:"Запускает готовый план: батчами по 3 задачи с остановкой на проверку" },
+  { id:"cmd:discover", label:"discover", type:"command", desc:"Ищет готовые скилы в маркетплейсе под технологии из твоего плана" },
+  { id:"cmd:init", label:"init", type:"command", desc:"Одноразовая настройка: создаёт docs/, CLAUDE.md, structure.md и всю документацию проекта" },
+  { id:"cmd:sync", label:"sync", type:"command", desc:"После работы — обновляет документацию: проверяет структуру, пересоздаёт спеки, пишет журнал" },
+  { id:"cmd:validate", label:"validate", type:"command", desc:"Только читает: сверяет код с планом и документацией, ничего не меняет" },
+  { id:"cmd:cleanup", label:"cleanup", type:"command", desc:"Находит мёртвый код, плохие имена, дубликаты, сложные функции — запускает параллельных агентов" },
+  { id:"cmd:unblocker", label:"unblocker", type:"command", desc:"Когда не знаешь что делать — сканирует проект и вытаскивает конкретные задачи" },
+
+  // Skills
+  { id:"skill:brainstorming", label:"brainstorming", type:"skill", desc:"Процесс дизайна: задаёт вопросы → фиксирует требования → предлагает подходы → ждёт одобрения → пишет план" },
+  { id:"skill:writing-plans", label:"writing-plans", type:"skill", desc:"Разбивает дизайн на мелкие задачи: каждая 2-5 мин, с TDD, точными файлами и полным кодом" },
+  { id:"skill:executing-plans", label:"executing-plans", type:"skill", desc:"Выполняет план батчами: 3 задачи → показывает результат → ждёт ОК → следующие 3" },
+  { id:"skill:subagent-dev", label:"subagent-dev", type:"skill", desc:"Свежий субагент на каждую задачу → двойной review (спека + качество) → обновление документации" },
+  { id:"skill:git-worktrees", label:"git-worktrees", type:"skill", desc:"Создаёт изолированную копию репо для работы — не мешает основной ветке" },
+  { id:"skill:finishing-branch", label:"finishing-branch", type:"skill", desc:"Завершение работы: предлагает merge / PR / оставить / удалить, чистит worktree" },
+  { id:"skill:forge-context", label:"forge-context", type:"skill", desc:"Читает index.md и по запросу подгружает детали — ~400 токенов вместо сканирования 40k+ кода" },
+  { id:"skill:session-awareness", label:"session-awareness", type:"skill", desc:"Фоновая запись: обновляет index.md, записывает тупики сразу, фиксирует решения и статус" },
+  { id:"skill:tdd", label:"test-driven-dev", type:"skill", desc:"Железное правило: сначала падающий тест → потом минимальный код → потом рефакторинг" },
+  { id:"skill:debugging", label:"systematic-debug", type:"skill", desc:"4 фазы: найти причину → проанализировать паттерн → проверить гипотезу → починить через TDD" },
+  { id:"skill:verification", label:"verification", type:"skill", desc:"Запрещает говорить «готово» без доказательств: запусти команду → прочитай вывод → подтверди" },
+  { id:"skill:code-cleanup", label:"code-cleanup", type:"skill", desc:"Запускает параллельных агентов для анализа: dead code, naming, complexity, duplication" },
+  { id:"skill:parallel-agents", label:"parallel-agents", type:"skill", desc:"Паттерн: разбивает работу на независимые куски и запускает агента на каждый параллельно" },
+  { id:"skill:request-review", label:"request-review", type:"skill", desc:"Готовит контекст (SHA, diff, план) и запускает агента code-reviewer" },
+  { id:"skill:receive-review", label:"receive-review", type:"skill", desc:"Обрабатывает feedback от review: технически проверяет каждый пункт, не соглашается вслепую" },
+  { id:"skill:project-unblocker", label:"project-unblocker", type:"skill", desc:"Глубокий скан: код, TODO, инфраструктура, документация → вытаскивает задачи через реакции → ROADMAP" },
+  { id:"skill:writing-skills", label:"writing-skills", type:"skill", desc:"Создание новых скилов через TDD: тест без скила → написать SKILL.md → закрыть дыры" },
+  { id:"skill:using-forge", label:"using-forge", type:"skill", desc:"Мета-скил: объясняет какой скил использовать в какой ситуации, flowchart выбора" },
+
+  // Agents
+  { id:"agent:code-reviewer", label:"code-reviewer", type:"agent", desc:"Проверяет код против плана и стандартов, выдаёт замечания: Critical / Important / Suggestion" },
+  { id:"agent:documenter", label:"forge-documenter", type:"agent", desc:"Sonnet-агент: читает изменённый код и обновляет spec.json (англ.) + README.md (рус.)" },
+  { id:"agent:structure", label:"structure-enforcer", type:"agent", desc:"Сверяет файлы с structure.md, перемещает в нужные папки, обновляет все импорты" },
+
+  // Hooks
+  { id:"hook:session-start", label:"SessionStart", type:"hook", desc:"При старте сессии автоматически загружает using-forge — правила работы с плагином" },
+  { id:"hook:prompt-submit", label:"UserPromptSubmit", type:"hook", desc:"В каждый промпт автоматически вставляет: index.md + список тупиков + последний git log" },
+
+  // Docs
+  { id:"doc:index", label:"index.md", type:"doc", desc:"Главный файл: цель, стадия, текущая задача, живая сессия" },
+  { id:"doc:map", label:"map.json", type:"doc", desc:"Карта проекта: директории, кол-во файлов, red zones" },
+  { id:"doc:conventions", label:"conventions.json", type:"doc", desc:"Правила именования: файлы, классы, функции, паттерны" },
+  { id:"doc:status", label:"status.md", type:"doc", desc:"Что работает / что сломано / что заблокировано" },
+  { id:"doc:decisions", label:"decisions.md", type:"doc", desc:"Технические решения с контекстом: почему, какие варианты были, что выбрали" },
+  { id:"doc:dead-ends", label:"dead-ends/", type:"doc", desc:"Провальные подходы по темам — чтобы не повторять ошибки" },
+  { id:"doc:journal", label:"journal.md", type:"doc", desc:"Журнал сессий: что делали, результат, что дальше" },
+  { id:"doc:plans", label:"plans/", type:"doc", desc:"Дизайн-документы и пошаговые планы реализации" },
+  { id:"doc:library", label:"library/spec.json", type:"doc", desc:"Спецификация каждого файла: зачем, входы, выходы, зависимости" },
+  { id:"doc:structure", label:"structure.md", type:"doc", desc:"Эталон: какие папки должны быть в проекте по конвенциям стека" },
+  { id:"doc:claude-md", label:"CLAUDE.md", type:"doc", desc:"Инструкции для Claude Code: стек, воркфлоу, правила, команды" },
+];
+
+const EDGES = [
+  { s:"cmd:brainstorm", t:"skill:brainstorming", type:"invoke" },
+  { s:"cmd:writing-plans", t:"skill:writing-plans", type:"invoke" },
+  { s:"cmd:execute-plan", t:"skill:executing-plans", type:"invoke" },
+  { s:"cmd:cleanup", t:"skill:code-cleanup", type:"invoke" },
+  { s:"cmd:unblocker", t:"skill:project-unblocker", type:"invoke" },
+  { s:"cmd:start", t:"skill:forge-context", type:"invoke" },
+  { s:"skill:brainstorming", t:"skill:writing-plans", type:"invoke" },
+  { s:"skill:writing-plans", t:"skill:executing-plans", type:"invoke" },
+  { s:"skill:writing-plans", t:"skill:subagent-dev", type:"invoke" },
+  { s:"skill:executing-plans", t:"skill:git-worktrees", type:"invoke" },
+  { s:"skill:executing-plans", t:"skill:finishing-branch", type:"invoke" },
+  { s:"skill:subagent-dev", t:"skill:git-worktrees", type:"invoke" },
+  { s:"skill:subagent-dev", t:"skill:finishing-branch", type:"invoke" },
+  { s:"skill:subagent-dev", t:"skill:request-review", type:"invoke" },
+  { s:"skill:code-cleanup", t:"skill:parallel-agents", type:"invoke" },
+  { s:"skill:debugging", t:"skill:tdd", type:"invoke" },
+  { s:"skill:code-cleanup", t:"skill:verification", type:"invoke" },
+  { s:"skill:subagent-dev", t:"agent:code-reviewer", type:"dispatch" },
+  { s:"skill:subagent-dev", t:"agent:documenter", type:"dispatch" },
+  { s:"skill:request-review", t:"agent:code-reviewer", type:"dispatch" },
+  { s:"cmd:sync", t:"agent:structure", type:"dispatch" },
+  { s:"cmd:sync", t:"agent:documenter", type:"dispatch" },
+  { s:"hook:prompt-submit", t:"doc:index", type:"data" },
+  { s:"hook:prompt-submit", t:"doc:dead-ends", type:"data" },
+  { s:"hook:session-start", t:"skill:using-forge", type:"invoke" },
+  { s:"skill:session-awareness", t:"doc:index", type:"data" },
+  { s:"skill:session-awareness", t:"doc:dead-ends", type:"data" },
+  { s:"skill:session-awareness", t:"doc:decisions", type:"data" },
+  { s:"skill:session-awareness", t:"doc:status", type:"data" },
+  { s:"skill:session-awareness", t:"doc:journal", type:"data" },
+  { s:"agent:documenter", t:"doc:library", type:"data" },
+  { s:"agent:documenter", t:"doc:map", type:"data" },
+  { s:"agent:structure", t:"doc:structure", type:"data" },
+  { s:"cmd:init", t:"doc:claude-md", type:"data" },
+  { s:"cmd:init", t:"doc:index", type:"data" },
+  { s:"cmd:init", t:"doc:map", type:"data" },
+  { s:"cmd:init", t:"doc:conventions", type:"data" },
+  { s:"cmd:init", t:"doc:structure", type:"data" },
+  { s:"cmd:init", t:"doc:plans", type:"data" },
+  { s:"cmd:init", t:"doc:library", type:"data" },
+  { s:"cmd:validate", t:"doc:plans", type:"data" },
+  { s:"cmd:validate", t:"doc:library", type:"data" },
+  { s:"cmd:validate", t:"doc:map", type:"data" },
+  { s:"skill:brainstorming", t:"doc:plans", type:"data" },
+  { s:"skill:brainstorming", t:"doc:dead-ends", type:"data" },
+  { s:"skill:brainstorming", t:"doc:library", type:"data" },
+  { s:"skill:forge-context", t:"doc:index", type:"data" },
+  { s:"skill:forge-context", t:"doc:map", type:"data" },
+  { s:"skill:forge-context", t:"doc:conventions", type:"data" },
+  { s:"cmd:sync", t:"doc:index", type:"data" },
+  { s:"cmd:sync", t:"doc:status", type:"data" },
+  { s:"cmd:sync", t:"doc:journal", type:"data" },
+  { s:"cmd:sync", t:"doc:dead-ends", type:"data" },
+  { s:"cmd:sync", t:"doc:decisions", type:"data" },
+];
+
+// ===== LAYOUT =====
+// Manual layout: left-to-right flow following logical workflow
+//
+// Flow lanes (left → right):
+//   Hooks/Triggers → Commands → Primary Skills → Execution Skills → Agents
+//   Docs at the bottom, grouped by who writes them
+//
+// Vertical sections:
+//   Top:    Feature development flow (brainstorm → plan → execute)
+//   Middle: Setup & context (init, start, forge-context)
+//   Lower:  Maintenance (sync, cleanup, validate, unblocker)
+//   Bottom: Discipline skills + Docs
+
+const POS = {
+  // ── HOOKS (top-left, triggers) ──
+  'hook:session-start':   { x: 60,   y: 30 },
+  'hook:prompt-submit':   { x: 60,   y: 150 },
+
+  // ── FEATURE DEVELOPMENT FLOW (top, left→right) ──
+  'cmd:brainstorm':       { x: 60,   y: 320 },
+  'skill:brainstorming':  { x: 380,  y: 320 },
+  'skill:writing-plans':  { x: 700,  y: 320 },
+  'cmd:writing-plans':    { x: 700,  y: 190 },
+
+  'skill:executing-plans':{ x: 1020, y: 240 },
+  'skill:subagent-dev':   { x: 1020, y: 400 },
+  'cmd:execute-plan':     { x: 1020, y: 110 },
+
+  'skill:git-worktrees':  { x: 1340, y: 200 },
+  'skill:finishing-branch':{ x: 1340, y: 340 },
+  'skill:request-review': { x: 1340, y: 480 },
+
+  'agent:code-reviewer':  { x: 1660, y: 320 },
+  'agent:documenter':     { x: 1660, y: 500 },
+
+  // ── SETUP & CONTEXT (middle band) ──
+  'cmd:init':             { x: 60,   y: 580 },
+  'cmd:start':            { x: 60,   y: 720 },
+  'skill:using-forge':    { x: 380,  y: 80 },
+  'skill:forge-context':  { x: 380,  y: 720 },
+  'skill:session-awareness':{ x: 700, y: 640 },
+  'cmd:discover':         { x: 700,  y: 120 },
+
+  // ── MAINTENANCE FLOW (lower band) ──
+  'cmd:sync':             { x: 60,   y: 900 },
+  'agent:structure':      { x: 380,  y: 880 },
+
+  'cmd:validate':         { x: 60,   y: 1060 },
+  'cmd:cleanup':          { x: 60,   y: 1200 },
+  'skill:code-cleanup':   { x: 380,  y: 1200 },
+  'skill:parallel-agents':{ x: 700,  y: 1160 },
+  'skill:verification':   { x: 700,  y: 1300 },
+
+  'cmd:unblocker':        { x: 60,   y: 1360 },
+  'skill:project-unblocker':{ x: 380, y: 1360 },
+
+  // ── DISCIPLINE SKILLS (right side, standalone) ──
+  'skill:tdd':            { x: 1020, y: 1160 },
+  'skill:debugging':      { x: 1020, y: 1300 },
+  'skill:receive-review': { x: 1340, y: 620 },
+  'skill:writing-skills': { x: 1020, y: 1440 },
+
+  // ── DOCS (bottom) ──
+  // Init creates:
+  'doc:claude-md':        { x: 60,   y: 1600 },
+  'doc:structure':        { x: 320,  y: 1600 },
+  'doc:conventions':      { x: 580,  y: 1600 },
+  'doc:plans':            { x: 840,  y: 1600 },
+  // Session/sync writes:
+  'doc:index':            { x: 60,   y: 1720 },
+  'doc:status':           { x: 320,  y: 1720 },
+  'doc:decisions':        { x: 580,  y: 1720 },
+  'doc:dead-ends':        { x: 840,  y: 1720 },
+  'doc:journal':          { x: 1100, y: 1720 },
+  // Agents write:
+  'doc:library':          { x: 1100, y: 1600 },
+  'doc:map':              { x: 1360, y: 1600 },
+};
+
+NODES.forEach(n => {
+  const pos = POS[n.id];
+  if (pos) { n.x = pos.x; n.y = pos.y; }
+  else { n.x = 400; n.y = 600; } // fallback
+});
+
+// ===== BUILD ADJACENCY =====
+const nodeMap = new Map(NODES.map(n => [n.id, n]));
+const outEdges = new Map();
+const inEdges = new Map();
+NODES.forEach(n => { outEdges.set(n.id, []); inEdges.set(n.id, []); });
+EDGES.forEach(e => {
+  outEdges.get(e.s).push(e);
+  inEdges.get(e.t).push(e);
+});
+
+// ===== RENDER =====
+const world = document.getElementById('world');
+const connSvg = document.getElementById('connections-svg');
+const canvas = document.getElementById('canvas');
+
+// Section labels on canvas
+const SECTIONS = [
+  { x: 40, y: 8, text: 'TRIGGERS — автоматические хуки', color: 'var(--hook-accent)' },
+  { x: 40, y: 296, text: 'FEATURE DEVELOPMENT — разработка новых фич', color: 'var(--cmd-accent)' },
+  { x: 40, y: 556, text: 'SETUP & CONTEXT — настройка и контекст', color: 'var(--skill-accent)' },
+  { x: 40, y: 876, text: 'MAINTENANCE — обслуживание проекта', color: 'var(--cmd-accent)' },
+  { x: 1000, y: 1136, text: 'DISCIPLINE — правила и дисциплина', color: 'var(--skill-accent)' },
+  { x: 40, y: 1570, text: 'DOCUMENTATION — файлы docs/', color: 'var(--doc-accent)' },
+];
+
+SECTIONS.forEach(s => {
+  const lbl = document.createElement('div');
+  lbl.style.cssText = 'position:absolute;font-family:JetBrains Mono,monospace;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:' + s.color + ';opacity:0.35;pointer-events:none;white-space:nowrap;';
+  lbl.style.left = s.x + 'px';
+  lbl.style.top = s.y + 'px';
+  lbl.textContent = s.text;
+  world.appendChild(lbl);
+});
+
+// Create node cards
+const cardElements = {};
+
+NODES.forEach(n => {
+  const card = document.createElement('div');
+  card.className = 'node-card type-' + n.type;
+  card.dataset.id = n.id;
+  card.style.left = n.x + 'px';
+  card.style.top = n.y + 'px';
+
+  const icon = document.createElement('div');
+  icon.className = 'node-icon';
+  icon.textContent = ICONS[n.type];
+
+  const body = document.createElement('div');
+  body.className = 'node-body';
+
+  const typeLabel = document.createElement('div');
+  typeLabel.className = 'node-type-label';
+  typeLabel.textContent = n.type.toUpperCase();
+
+  const name = document.createElement('div');
+  name.className = 'node-name';
+  name.textContent = n.label;
+
+  const desc = document.createElement('div');
+  desc.className = 'node-desc';
+  desc.textContent = n.desc;
+
+  body.appendChild(typeLabel);
+  body.appendChild(name);
+  body.appendChild(desc);
+
+  // Ports
+  const hasIn = inEdges.get(n.id).length > 0;
+  const hasOut = outEdges.get(n.id).length > 0;
+
+  if (hasIn) {
+    const portIn = document.createElement('div');
+    portIn.className = 'port port-in';
+    card.appendChild(portIn);
+  }
+  if (hasOut) {
+    const portOut = document.createElement('div');
+    portOut.className = 'port port-out';
+    card.appendChild(portOut);
+  }
+
+  card.appendChild(icon);
+  card.appendChild(body);
+  world.appendChild(card);
+  cardElements[n.id] = card;
+});
+
+// ===== CONNECTIONS =====
+function getPortPos(nodeId, side) {
+  const card = cardElements[nodeId];
+  const n = nodeMap.get(nodeId);
+  const rect = card.getBoundingClientRect();
+  const w = card.offsetWidth;
+  const h = card.offsetHeight;
+
+  if (side === 'out') return { x: n.x + w + 1, y: n.y + h / 2 };
+  return { x: n.x - 1, y: n.y + h / 2 };
+}
+
+function drawConnections() {
+  while (connSvg.firstChild) connSvg.removeChild(connSvg.firstChild);
+
+  EDGES.forEach((e, i) => {
+    const from = getPortPos(e.s, 'out');
+    const to = getPortPos(e.t, 'in');
+
+    const dx = Math.abs(to.x - from.x);
+    const cpOffset = Math.max(50, dx * 0.4);
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const d = 'M ' + from.x + ' ' + from.y +
+              ' C ' + (from.x + cpOffset) + ' ' + from.y +
+              ' ' + (to.x - cpOffset) + ' ' + to.y +
+              ' ' + to.x + ' ' + to.y;
+    path.setAttribute('d', d);
+    path.setAttribute('class', 'connection type-' + e.type);
+    path.dataset.index = i;
+    path.dataset.source = e.s;
+    path.dataset.target = e.t;
+    connSvg.appendChild(path);
+  });
+}
+
+// Initial draw after cards render
+requestAnimationFrame(() => requestAnimationFrame(drawConnections));
+
+// ===== DRAG =====
+let dragNode = null;
+let dragOffX = 0, dragOffY = 0;
+
+Object.entries(cardElements).forEach(([id, card]) => {
+  card.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const n = nodeMap.get(id);
+    dragNode = n;
+    dragOffX = (e.clientX - panX) / zoomScale - n.x;
+    dragOffY = (e.clientY - panY - 48) / zoomScale - n.y;
+    card.style.zIndex = 100;
+  });
+});
+
+document.addEventListener('mousemove', e => {
+  if (!dragNode) return;
+  dragNode.x = (e.clientX - panX) / zoomScale - dragOffX;
+  dragNode.y = (e.clientY - panY - 48) / zoomScale - dragOffY;
+  cardElements[dragNode.id].style.left = dragNode.x + 'px';
+  cardElements[dragNode.id].style.top = dragNode.y + 'px';
+  drawConnections();
+  drawMinimap();
+});
+
+document.addEventListener('mouseup', () => {
+  if (dragNode) {
+    cardElements[dragNode.id].style.zIndex = 2;
+    dragNode = null;
+  }
+});
+
+// ===== PAN & ZOOM =====
+let zoomScale = 0.65;
+let panX = 100;
+let panY = 100;
+
+function applyTransform() {
+  world.style.transform = 'translate(' + panX + 'px, ' + panY + 'px) scale(' + zoomScale + ')';
+  document.getElementById('zoom-level').textContent = Math.round(zoomScale * 100) + '%';
+  drawMinimap();
+}
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  const oldScale = zoomScale;
+  const delta = e.deltaY > 0 ? 0.9 : 1.1;
+  zoomScale = Math.min(3, Math.max(0.15, zoomScale * delta));
+
+  panX = mx - (mx - panX) * (zoomScale / oldScale);
+  panY = my - (my - panY) * (zoomScale / oldScale);
+
+  applyTransform();
+}, { passive: false });
+
+// Pan with middle mouse or when dragging on empty space
+let isPanning = false;
+let panStartX, panStartY;
+
+canvas.addEventListener('mousedown', e => {
+  if (e.target === canvas || e.target === world || e.target.tagName === 'svg') {
+    if (e.button === 0 || e.button === 1) {
+      isPanning = true;
+      panStartX = e.clientX - panX;
+      panStartY = e.clientY - panY;
+      canvas.style.cursor = 'grabbing';
+    }
+  }
+});
+
+document.addEventListener('mousemove', e => {
+  if (!isPanning) return;
+  panX = e.clientX - panStartX;
+  panY = e.clientY - panStartY;
+  applyTransform();
+});
+
+document.addEventListener('mouseup', () => {
+  isPanning = false;
+  canvas.style.cursor = '';
+});
+
+document.getElementById('zoom-in').addEventListener('click', () => {
+  zoomScale = Math.min(3, zoomScale * 1.2);
+  applyTransform();
+});
+document.getElementById('zoom-out').addEventListener('click', () => {
+  zoomScale = Math.max(0.15, zoomScale * 0.8);
+  applyTransform();
+});
+document.getElementById('zoom-fit').addEventListener('click', fitAll);
+
+function fitAll() {
+  let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
+  NODES.forEach(n => {
+    const card = cardElements[n.id];
+    minX = Math.min(minX, n.x);
+    minY = Math.min(minY, n.y);
+    maxX = Math.max(maxX, n.x + card.offsetWidth);
+    maxY = Math.max(maxY, n.y + card.offsetHeight);
+  });
+  const pad = 60;
+  const w = maxX - minX + pad * 2;
+  const h = maxY - minY + pad * 2;
+  const vw = canvas.clientWidth;
+  const vh = canvas.clientHeight - 48;
+  zoomScale = Math.min(vw / w, vh / h, 1.2);
+  panX = (vw - w * zoomScale) / 2 - minX * zoomScale + pad * zoomScale;
+  panY = (vh - h * zoomScale) / 2 - minY * zoomScale + pad * zoomScale + 24;
+  applyTransform();
+}
+
+applyTransform();
+setTimeout(fitAll, 100);
+
+// ===== HOVER HIGHLIGHT =====
+Object.entries(cardElements).forEach(([id, card]) => {
+  card.addEventListener('mouseenter', () => {
+    if (dragNode) return;
+    const connected = new Set([id]);
+    EDGES.forEach(e => {
+      if (e.s === id) connected.add(e.t);
+      if (e.t === id) connected.add(e.s);
+    });
+    Object.entries(cardElements).forEach(([nid, el]) => {
+      el.classList.toggle('dimmed', !connected.has(nid));
+      el.classList.toggle('highlighted', connected.has(nid));
+    });
+    connSvg.querySelectorAll('.connection').forEach(p => {
+      const isConn = p.dataset.source === id || p.dataset.target === id;
+      p.classList.toggle('dimmed', !isConn);
+      p.classList.toggle('highlighted', isConn);
+    });
+  });
+
+  card.addEventListener('mouseleave', () => {
+    if (dragNode) return;
+    Object.values(cardElements).forEach(el => { el.classList.remove('dimmed', 'highlighted'); });
+    connSvg.querySelectorAll('.connection').forEach(p => { p.classList.remove('dimmed', 'highlighted'); });
+  });
+});
+
+// ===== CLICK -> DETAIL =====
+let selectedId = null;
+
+Object.entries(cardElements).forEach(([id, card]) => {
+  card.addEventListener('click', e => {
+    e.stopPropagation();
+    if (selectedId) cardElements[selectedId].classList.remove('selected');
+    selectedId = id;
+    card.classList.add('selected');
+    openDetail(nodeMap.get(id));
+  });
+});
+
+canvas.addEventListener('click', e => {
+  if (e.target === canvas || e.target === world || e.target.tagName === 'svg') {
+    closeDetailPanel();
+  }
+});
+
+function openDetail(n) {
+  const panel = document.getElementById('detail');
+  document.getElementById('d-type').textContent = n.type.toUpperCase();
+  document.getElementById('d-type').style.color = COLORS[n.type];
+  document.getElementById('d-name').textContent = n.label;
+  document.getElementById('d-desc').textContent = n.descFull || n.desc;
+
+  const body = document.getElementById('detail-body');
+  while (body.firstChild) body.removeChild(body.firstChild);
+
+  const out = outEdges.get(n.id);
+  const inc = inEdges.get(n.id);
+
+  const invokes = out.filter(e => e.type === 'invoke');
+  const dispatches = out.filter(e => e.type === 'dispatch');
+  const data = out.filter(e => e.type === 'data');
+
+  if (invokes.length) addDetailSection(body, 'Вызывает', invokes, 't');
+  if (dispatches.length) addDetailSection(body, 'Диспатчит агентов', dispatches, 't');
+  if (data.length) addDetailSection(body, 'Читает / пишет', data, 't');
+  if (inc.length) addDetailSection(body, 'Вызывается из', inc, 's');
+
+  panel.classList.add('open');
+}
+
+function addDetailSection(parent, title, edges, key) {
+  const sec = document.createElement('div');
+  sec.className = 'detail-section';
+  const h4 = document.createElement('h4');
+  h4.textContent = title;
+  sec.appendChild(h4);
+
+  edges.forEach(e => {
+    const targetNode = nodeMap.get(e[key]);
+    if (!targetNode) return;
+
+    const link = document.createElement('div');
+    link.className = 'detail-link';
+
+    const dot = document.createElement('span');
+    dot.className = 'dl-dot';
+    dot.style.background = COLORS[targetNode.type];
+    link.appendChild(dot);
+
+    const text = document.createTextNode(targetNode.label);
+    link.appendChild(text);
+
+    link.addEventListener('click', () => {
+      if (selectedId) cardElements[selectedId].classList.remove('selected');
+      selectedId = targetNode.id;
+      cardElements[targetNode.id].classList.add('selected');
+      openDetail(targetNode);
+
+      // Pan to node
+      const nx = targetNode.x * zoomScale + panX;
+      const ny = targetNode.y * zoomScale + panY;
+      const vw = canvas.clientWidth / 2;
+      const vh = canvas.clientHeight / 2;
+      panX += vw - nx - 50;
+      panY += vh - ny;
+      applyTransform();
+    });
+
+    sec.appendChild(link);
+  });
+
+  parent.appendChild(sec);
+}
+
+function closeDetailPanel() {
+  document.getElementById('detail').classList.remove('open');
+  if (selectedId) {
+    cardElements[selectedId].classList.remove('selected');
+    selectedId = null;
+  }
+}
+
+document.getElementById('detail-close').addEventListener('click', closeDetailPanel);
+
+// ===== SEARCH =====
+const searchInput = document.getElementById('search-input');
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.toLowerCase().trim();
+  if (!q) {
+    Object.values(cardElements).forEach(el => { el.classList.remove('dimmed', 'highlighted'); });
+    connSvg.querySelectorAll('.connection').forEach(p => { p.classList.remove('dimmed', 'highlighted'); });
+    return;
+  }
+  const matches = new Set();
+  NODES.forEach(n => {
+    if (n.label.toLowerCase().includes(q) || n.desc.toLowerCase().includes(q) || (n.descFull && n.descFull.toLowerCase().includes(q)))
+      matches.add(n.id);
+  });
+  Object.entries(cardElements).forEach(([id, el]) => {
+    el.classList.toggle('dimmed', !matches.has(id));
+    el.classList.toggle('highlighted', matches.has(id));
+  });
+  connSvg.querySelectorAll('.connection').forEach(p => {
+    p.classList.toggle('dimmed', !matches.has(p.dataset.source) && !matches.has(p.dataset.target));
+    p.classList.remove('highlighted');
+  });
+});
+
+// ===== LEGEND TOGGLES =====
+const hiddenTypes = new Set();
+document.querySelectorAll('.legend-item[data-type]').forEach(item => {
+  item.addEventListener('click', () => {
+    const type = item.dataset.type;
+    if (hiddenTypes.has(type)) { hiddenTypes.delete(type); item.classList.remove('disabled'); }
+    else { hiddenTypes.add(type); item.classList.add('disabled'); }
+
+    Object.entries(cardElements).forEach(([id, el]) => {
+      el.style.display = hiddenTypes.has(nodeMap.get(id).type) ? 'none' : '';
+    });
+    connSvg.querySelectorAll('.connection').forEach(p => {
+      const sType = nodeMap.get(p.dataset.source).type;
+      const tType = nodeMap.get(p.dataset.target).type;
+      p.style.display = (hiddenTypes.has(sType) || hiddenTypes.has(tType)) ? 'none' : '';
+    });
+  });
+});
+
+// ===== KEYBOARD =====
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeDetailPanel(); searchInput.blur(); searchInput.value = ''; searchInput.dispatchEvent(new Event('input')); }
+  if (e.key === '/' && document.activeElement !== searchInput) { e.preventDefault(); searchInput.focus(); }
+});
+
+// ===== MINIMAP =====
+const mmCanvas = document.getElementById('minimap-canvas');
+const mmCtx = mmCanvas.getContext('2d');
+const mmVp = document.getElementById('minimap-vp');
+
+function drawMinimap() {
+  const dpr = window.devicePixelRatio || 1;
+  const mmW = 180, mmH = 120;
+  mmCanvas.width = mmW * dpr;
+  mmCanvas.height = mmH * dpr;
+  mmCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  mmCtx.clearRect(0, 0, mmW, mmH);
+
+  // Compute bounds
+  let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
+  NODES.forEach(n => {
+    const c = cardElements[n.id];
+    minX = Math.min(minX, n.x); minY = Math.min(minY, n.y);
+    maxX = Math.max(maxX, n.x + (c ? c.offsetWidth : 180));
+    maxY = Math.max(maxY, n.y + (c ? c.offsetHeight : 60));
+  });
+
+  const pad = 40;
+  const bw = maxX - minX + pad * 2;
+  const bh = maxY - minY + pad * 2;
+  const scale = Math.min(mmW / bw, mmH / bh);
+  const offX = (mmW - bw * scale) / 2 - minX * scale + pad * scale;
+  const offY = (mmH - bh * scale) / 2 - minY * scale + pad * scale;
+
+  // Draw connections
+  mmCtx.strokeStyle = '#4a4a6a';
+  mmCtx.lineWidth = 0.5;
+  mmCtx.globalAlpha = 0.3;
+  EDGES.forEach(e => {
+    const sn = nodeMap.get(e.s), tn = nodeMap.get(e.t);
+    mmCtx.beginPath();
+    mmCtx.moveTo(sn.x * scale + offX + 4, sn.y * scale + offY + 2);
+    mmCtx.lineTo(tn.x * scale + offX + 4, tn.y * scale + offY + 2);
+    mmCtx.stroke();
+  });
+  mmCtx.globalAlpha = 1;
+
+  // Draw nodes
+  NODES.forEach(n => {
+    if (hiddenTypes.has(n.type)) return;
+    mmCtx.fillStyle = COLORS[n.type];
+    mmCtx.globalAlpha = 0.8;
+    const w = n.type === 'doc' ? 6 : 8;
+    const h = n.type === 'doc' ? 3 : 4;
+    mmCtx.fillRect(n.x * scale + offX, n.y * scale + offY, w, h);
+  });
+  mmCtx.globalAlpha = 1;
+
+  // Viewport rect
+  const vw = canvas.clientWidth;
+  const vh = canvas.clientHeight - 48;
+  const vpLeft = (-panX / zoomScale) * scale + offX;
+  const vpTop = ((-panY + 48) / zoomScale) * scale + offY;
+  const vpW = (vw / zoomScale) * scale;
+  const vpH = (vh / zoomScale) * scale;
+
+  mmVp.style.left = Math.max(0, vpLeft) + 'px';
+  mmVp.style.top = Math.max(0, vpTop) + 'px';
+  mmVp.style.width = Math.min(mmW, vpW) + 'px';
+  mmVp.style.height = Math.min(mmH, vpH) + 'px';
+}
+
+setTimeout(drawMinimap, 200);
+window.addEventListener('resize', () => { fitAll(); drawConnections(); drawMinimap(); });
+</script>
+</body>
+</html>

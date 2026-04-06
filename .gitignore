@@ -1,3 +1,7 @@
 node_modules/
 .DS_Store
 *.log
+.forge/
+.claude/settings.local.json
+.claude/agent-memory-local/
+CLAUDE.local.md
