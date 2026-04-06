@@ -593,10 +593,79 @@ If any check fails — fix before showing to user. Do not ask about validation �
 
 ### 14f: Show and confirm before writing
 
-## Step 15: Confirm Completion
+## Step 15: Configure .claude/ project settings
+
+Set up Claude Code hooks so L0 context auto-injects every prompt.
+
+### 15a: Find forge plugin path
+
+```bash
+FORGE_HOOKS=$(find ~/.claude/plugins -path '*/forge*/hooks/context-inject.sh' 2>/dev/null | head -1)
+echo "Found: $FORGE_HOOKS"
+```
+
+If not found — try:
+```bash
+FORGE_HOOKS=$(find ~/.claude/plugins/cache -name 'context-inject.sh' 2>/dev/null | head -1)
+```
+
+### 15b: Create or update .claude/settings.json
+
+```bash
+mkdir -p .claude
+```
+
+Read existing `.claude/settings.json` if it exists. Merge FORGE hooks into it
+without overwriting existing user settings (permissions, other hooks).
+
+Add these hooks:
+
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash {FORGE_HOOKS_PATH}"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Where `{FORGE_HOOKS_PATH}` is the absolute path found in Step 15a.
+
+**Rules:**
+- If `.claude/settings.json` exists — READ it first, MERGE hooks, preserve existing permissions/settings
+- If `hooks.UserPromptSubmit` already has FORGE hook — don't duplicate
+- If other hooks exist (PreToolUse, etc.) — keep them
+- Write the merged result back
+
+### 15c: Add .claude/ to .gitignore if needed
+
+```bash
+# settings.json may contain user-specific paths — don't commit
+grep -q '.claude/settings.json' .gitignore 2>/dev/null || echo '.claude/settings.json' >> .gitignore
+```
+
+### 15d: Verify hook works
+
+```bash
+# Quick test — should output JSON with additionalContext
+echo '{"input":"test"}' | bash {FORGE_HOOKS_PATH}
+```
+
+If output contains `"FORGE L0 CONTEXT"` — hook is configured correctly.
+
+## Step 16: Confirm Completion
 
 ```
-FORGE initialized (v3 — L0/L1/L2 context system)
+FORGE initialized (v5 — L0/L1/L2 context system)
 
 Created:
 - CLAUDE.md (project instructions)
@@ -607,8 +676,14 @@ Created:
 - .forge/decisions.yml (L1 — technical decisions)
 - .forge/dead-ends.yml (L1 — failed approaches index)
 - .forge/journal.yml (L1 — session history)
+- .forge/infrastructure.yml (L1 — Docker, servers, DBs, APIs)
 - .forge/structure.md (expected layout)
 - .forge/library/ ({N} directories documented as L2)
 
+Configured:
+- .claude/settings.json — UserPromptSubmit hook (L0 auto-inject)
+
 Context budget: ~200 tok/prompt (L0) + ~500 tok on-demand (L1)
+
+Хук настроен — L0 контекст будет инжектиться в каждый промпт автоматически.
 ```
