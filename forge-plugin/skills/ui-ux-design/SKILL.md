@@ -79,7 +79,7 @@ Output goes to `design-system/<project>/MASTER.md` and `design-system/<project>/
 
 ### Step 5: Save to Project Docs
 
-Save the final design system spec to `docs/plans/design-system.md` (if FORGE project) so other skills and sessions can reference it.
+Save the final design system spec to `.forge/plans/design-system.md` (if FORGE project) so other skills and sessions can reference it.
 
 ## Search Domains Quick Reference
 

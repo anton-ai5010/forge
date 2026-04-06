@@ -42,7 +42,7 @@ Stop. Don't proceed to Step 2.
 Before presenting merge options, ensure documentation is current:
 ```bash
 # Check if FORGE docs exist
-ls docs/map.json 2>/dev/null
+ls .forge/map.json 2>/dev/null
 ```
 
 If FORGE docs exist, suggest running `/forge:sync` to update documentation before merge. Documentation should reflect all changes made in this branch.

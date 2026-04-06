@@ -103,7 +103,7 @@ digraph process {
 ```
 You: I'm using Subagent-Driven Development to execute this plan.
 
-[Read plan file once: docs/plans/feature-plan.md]
+[Read plan file once: .forge/plans/feature-plan.md]
 [Extract all 5 tasks with full text and context]
 [Create TodoWrite with all tasks]
 
@@ -249,8 +249,8 @@ Done!
 - **forge:test-driven-development** - Subagents follow TDD for each task
 
 **FORGE documentation:**
-- **forge:forge-context** - Subagents read docs/library/[folder]/spec.json before work
-- **forge:sync** - Manual update for docs/ at end of session
+- **forge:forge-context** - Subagents read .forge/library/[folder]/spec.json before work
+- **forge:sync** - Manual update for .forge/ at end of session
 - **forge-documenter** agent - Automatic doc update after each task's review
 
 **Alternative workflow:**

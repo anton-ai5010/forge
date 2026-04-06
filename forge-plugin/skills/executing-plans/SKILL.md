@@ -41,7 +41,7 @@ For each task:
 When batch complete:
 - Show what was implemented
 - Show verification output
-- Update documentation: update docs/library/[folders]/spec.json and README.md for files changed in this batch. Update docs/map.json if new files were created or deleted.
+- Update documentation: update .forge/library/[folders]/spec.json and README.md for files changed in this batch. Update .forge/map.json if new files were created or deleted.
 - Say: "Ready for feedback."
 
 ### Step 4: Continue

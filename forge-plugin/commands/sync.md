@@ -1,5 +1,5 @@
 ---
-description: Update FORGE documentation after code changes - syncs docs/ YAML files with current codebase state
+description: Update FORGE documentation after code changes - syncs .forge/ YAML files with current codebase state
 ---
 
 # FORGE Sync
@@ -9,7 +9,7 @@ description: Update FORGE documentation after code changes - syncs docs/ YAML fi
 ## Pre-Check: FORGE Documentation Exists?
 
 ```bash
-ls docs/index.yml docs/index.md 2>/dev/null
+ls .forge/index.yml .forge/index.md 2>/dev/null
 ```
 
 **If neither exists:**
@@ -18,7 +18,7 @@ FORGE documentation not found. Run `/forge:init` first.
 ```
 Stop.
 
-**Detect format:** If `docs/index.yml` exists → v3 (YAML). Else → v2 (legacy MD/JSON).
+**Detect format:** If `.forge/index.yml` exists → v3 (YAML). Else → v2 (legacy MD/JSON).
 Use detected format for all updates below.
 
 ## Step 1: Determine Changes Since Last Sync
@@ -55,7 +55,7 @@ If no infrastructure — skip.
 
 ## Step 1.7: Enforce Project Structure
 
-If `docs/structure.md` exists — dispatch structure enforcer agent:
+If `.forge/structure.md` exists — dispatch structure enforcer agent:
 
 ```
 Agent tool (general-purpose):
@@ -63,11 +63,11 @@ Agent tool (general-purpose):
   description: "Enforce project structure conventions"
   prompt: |
     You are the FORGE Structure Enforcer.
-    Read docs/structure.md and docs/conventions.yml (or .json for legacy).
+    Read .forge/structure.md and .forge/conventions.yml (or .json for legacy).
     Compare expected vs actual structure.
     Focus on recently changed files: {Created list}, {Modified list}
     Move misplaced files, update ALL imports.
-    DO NOT move: root configs, dotfiles, docs/, generated dirs.
+    DO NOT move: root configs, dotfiles, .forge/, generated dirs.
     Report: Moved, Created dirs, Warnings.
 ```
 
@@ -82,11 +82,11 @@ Agent tool (general-purpose):
   prompt: |
     Update FORGE project documentation for code changes.
 
-    Format: YAML (if docs/index.yml exists) or JSON (if legacy docs/index.md)
+    Format: YAML (if .forge/index.yml exists) or JSON (if legacy .forge/index.md)
 
     Docs to update:
-    - docs/map.yml (or map.json) — structure, red zones, directory counts
-    - docs/library/[folders]/spec.yml (or spec.json) — file specs
+    - .forge/map.yml (or map.json) — structure, red zones, directory counts
+    - .forge/library/[folders]/spec.yml (or spec.json) — file specs
     - [folders]/README.md — human-readable descriptions
 
     Changes:
@@ -134,7 +134,7 @@ If tests were run, use results.
 
 **If yes:**
 
-Add entry to `docs/dead-ends.yml`:
+Add entry to `.forge/dead-ends.yml`:
 ```yaml
   - id: {slug}
     date: {date}
@@ -143,7 +143,7 @@ Add entry to `docs/dead-ends.yml`:
     detail: null  # или путь к L2 если нужен полный анализ
 ```
 
-Create L2 file `docs/dead-ends/{id}.md` only if summary insufficient.
+Create L2 file `.forge/dead-ends/{id}.md` only if summary insufficient.
 
 ## Step 6: Check for Decisions
 
@@ -152,7 +152,7 @@ Create L2 file `docs/dead-ends/{id}.md` only if summary insufficient.
 (или 'нет')
 ```
 
-If yes — add entry to `docs/decisions.yml`:
+If yes — add entry to `.forge/decisions.yml`:
 ```yaml
   - id: {slug}
     date: {date}
@@ -187,14 +187,14 @@ git config forge.last-sync-sha $(git rev-parse HEAD)
 FORGE documentation synced
 
 Updated:
-- docs/library/ ({N} directories)
+- .forge/library/ ({N} directories)
   Created: {M} | Modified: {K} | Deleted: {L}
-- docs/map.yml (counts updated)
-- docs/index.yml (stage, last session)
-- docs/status.yml ({updated|no changes})
-- docs/dead-ends.yml ({new entries|no changes})
-- docs/decisions.yml ({new entries|no changes})
-- docs/journal.yml (new entry)
+- .forge/map.yml (counts updated)
+- .forge/index.yml (stage, last session)
+- .forge/status.yml ({updated|no changes})
+- .forge/dead-ends.yml ({new entries|no changes})
+- .forge/decisions.yml ({new entries|no changes})
+- .forge/journal.yml (new entry)
 
 Structure: {N files moved|no violations|skipped}
 Infrastructure: {checked|skipped}

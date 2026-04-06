@@ -11,7 +11,7 @@ description: Validate code against implementation plan and documentation - finds
 ## Pre-Check: FORGE Documentation Exists?
 
 ```bash
-ls docs/map.json 2>/dev/null
+ls .forge/map.json 2>/dev/null
 ```
 
 **If not exists:**
@@ -28,14 +28,14 @@ Stop.
 Read project documentation:
 
 ```bash
-cat docs/map.json
-cat docs/index.md
+cat .forge/map.json
+cat .forge/index.md
 ```
 
-For each directory in `docs/library/`:
+For each directory in `.forge/library/`:
 
 ```bash
-cat docs/library/*/spec.json
+cat .forge/library/*/spec.json
 ```
 
 Store in memory:
@@ -48,7 +48,7 @@ Store in memory:
 Check for implementation plans:
 
 ```bash
-ls -t docs/plans/*.md 2>/dev/null | head -1
+ls -t .forge/plans/*.md 2>/dev/null | head -1
 ```
 
 **If no plan exists:**
@@ -126,7 +126,7 @@ Generate report in this format:
 Plan Validation
 ═══════════════
 
-Plan: docs/plans/2026-02-15-polymarket-smart-money.md
+Plan: .forge/plans/2026-02-15-polymarket-smart-money.md
 Tasks: 13 total
 
 ✅ Task 1: SmartMoneyStore implementation
@@ -148,7 +148,7 @@ Tasks: 13 total
    Action: Update weight to match plan
 
 ❌ Task 13: Documentation sync
-   Expected: docs/library/ updated with new files
+   Expected: .forge/library/ updated with new files
    Found: spec.json missing entries for:
      - src/database/smart_money_store.py
      - src/parsers/polymarket_parser.py
@@ -172,7 +172,7 @@ If all tasks ✅:
 
 Compare documentation against actual codebase.
 
-### For Each docs/library/[folder]/spec.json
+### For Each .forge/library/[folder]/spec.json
 
 Read spec.json to get expected files and their purposes.
 
@@ -180,7 +180,7 @@ Scan actual directory on disk:
 
 ```bash
 # Get files documented in spec
-jq -r '.files | keys[]' docs/library/{folder}/spec.json
+jq -r '.files | keys[]' .forge/library/{folder}/spec.json
 
 # Get actual files in directory
 find {folder} -type f -name "*.py" -o -name "*.js" -o -name "*.ts"
@@ -225,7 +225,7 @@ Compare against `depends_on` in spec.json:
 Documentation Validation
 ════════════════════════
 
-Scanning 8 directories in docs/library/
+Scanning 8 directories in .forge/library/
 
 ✅ analyzers/ (9 files)
    Spec: 9 files documented
@@ -272,7 +272,7 @@ For each directory in map.json:
 
 ```bash
 # Expected count from map.json
-jq -r '.directories["{folder}"].files' docs/map.json
+jq -r '.directories["{folder}"].files' .forge/map.json
 
 # Actual count on disk
 find {folder} -type f | wc -l
@@ -291,7 +291,7 @@ For red zones:
 
 ```bash
 # Expected red zones from map.json
-jq -r '.red_zones[]' docs/map.json
+jq -r '.red_zones[]' .forge/map.json
 
 # Check each exists
 for file in {red_zones}; do
@@ -318,7 +318,7 @@ Project: {project_name}
 
 Plan Compliance
 ───────────────
-Plan: docs/plans/{latest_plan}
+Plan: .forge/plans/{latest_plan}
 ✅ Implemented: {N}/{total} tasks
 ⚠️ Partial: {M} tasks
 ❌ Missing: {K} tasks
@@ -441,7 +441,7 @@ If you're about to:
 ```
 You: /forge:validate
 
-[Reads docs/, scans codebase]
+[Reads .forge/, scans codebase]
 
 FORGE Validation Summary
 ════════════════════════
@@ -462,14 +462,14 @@ Overall Status: ✅ ALL CLEAR
 ```
 You: /forge:validate
 
-[Reads docs/, scans codebase, finds problems]
+[Reads .forge/, scans codebase, finds problems]
 
 FORGE Validation Summary
 ════════════════════════
 
 Plan Compliance
 ───────────────
-Plan: docs/plans/2026-02-15-caching.md
+Plan: .forge/plans/2026-02-15-caching.md
 ✅ Implemented: 10/12 tasks
 ⚠️ Partial: 1 task
 ❌ Missing: 1 task
@@ -482,7 +482,7 @@ Discrepancies:
    Missing: miss_rate, eviction_count
 
 ❌ Task 12: Documentation not synced
-   Expected: docs/library/ updated
+   Expected: .forge/library/ updated
    Found: Missing spec.json entries
 
 Documentation Coverage
@@ -519,7 +519,7 @@ Next Steps:
 **Performance:**
 - Validation should complete in <30 seconds for typical project
 - Use parallel checks where possible (checking multiple spec.json files)
-- Bail early if critical errors found (missing docs/map.json)
+- Bail early if critical errors found (missing .forge/map.json)
 
 **Accuracy vs Speed:**
 - Prefer accuracy over speed

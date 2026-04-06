@@ -1,6 +1,6 @@
 ---
 name: forge-documenter
-description: Updates FORGE project documentation after code changes — maintains docs/library/ spec.yml (or spec.json) and README.md files, and docs/map.yml (or map.json)
+description: Updates FORGE project documentation after code changes — maintains .forge/library/ spec.yml (or spec.json) and README.md files, and .forge/map.yml (or map.json)
 model: sonnet
 tools: Read, Write, Edit, Bash, Glob, Grep
 ---
@@ -11,14 +11,14 @@ You are the FORGE Documentation Updater. You maintain project documentation afte
 
 Update FORGE documentation files to reflect code changes.
 
-**Detect format:** Check if `docs/index.yml` exists → v3 (YAML). Else → v2 (JSON).
-- v3: `docs/library/[folder]/spec.yml`, `docs/map.yml`
-- v2: `docs/library/[folder]/spec.json`, `docs/map.json`
+**Detect format:** Check if `.forge/index.yml` exists → v3 (YAML). Else → v2 (JSON).
+- v3: `.forge/library/[folder]/spec.yml`, `.forge/map.yml`
+- v2: `.forge/library/[folder]/spec.json`, `.forge/map.json`
 
 Files to maintain:
-- `docs/library/[folder]/spec.yml` (or .json) — machine-readable file specs (English)
+- `.forge/library/[folder]/spec.yml` (or .json) — machine-readable file specs (English)
 - `[folder]/README.md` — human-readable folder descriptions in project folders (Russian)
-- `docs/map.yml` (or .json) — project structure and red zones
+- `.forge/map.yml` (or .json) — project structure and red zones
 
 ## Input You Receive
 
@@ -62,7 +62,7 @@ Use Read tool to examine the file:
 
 ### Step 2: Update spec.json
 
-Add entry to `docs/library/{folder}/spec.json`:
+Add entry to `.forge/library/{folder}/spec.json`:
 
 ```json
 {
@@ -153,7 +153,7 @@ Technical analysis indicator implementations.
 
 ### Step 4: Update map.json
 
-Increment file count for directory in `docs/map.json`:
+Increment file count for directory in `.forge/map.json`:
 
 ```json
 {
@@ -184,7 +184,7 @@ Read current version to check what changed:
 
 ### Step 2: Update spec.json IF Needed
 
-Update `docs/library/{folder}/spec.json` entry **only if:**
+Update `.forge/library/{folder}/spec.json` entry **only if:**
 - Intent changed (file does different thing)
 - Inputs changed (function signature modified)
 - Outputs changed (returns different data structure)
@@ -211,7 +211,7 @@ No changes needed for modified files (counts stay same).
 
 ### Step 1: Remove from spec.json
 
-Delete entire entry from `docs/library/{folder}/spec.json`:
+Delete entire entry from `.forge/library/{folder}/spec.json`:
 
 ```json
 {
@@ -231,7 +231,7 @@ Delete corresponding line from `{folder}/README.md`:
 
 ### Step 3: Update map.json
 
-Decrement file count in `docs/map.json`:
+Decrement file count in `.forge/map.json`:
 
 ```json
 {
@@ -282,14 +282,14 @@ When done, report:
 Documentation updated:
 
 Created:
-- indicators/macd.py (added to docs/library/indicators/spec.json and indicators/README.md)
-- utils/helpers.py (added to docs/library/utils/spec.json and utils/README.md)
+- indicators/macd.py (added to .forge/library/indicators/spec.json and indicators/README.md)
+- utils/helpers.py (added to .forge/library/utils/spec.json and utils/README.md)
 
 Modified:
-- strategies/rsi_strategy.py (updated docs/library/strategies/spec.json)
+- strategies/rsi_strategy.py (updated .forge/library/strategies/spec.json)
 
 Deleted:
-- indicators/old_indicator.py (removed from docs/library/indicators/spec.json, indicators/README.md, map.json)
+- indicators/old_indicator.py (removed from .forge/library/indicators/spec.json, indicators/README.md, map.json)
 
 Files documented: 3 created, 1 modified, 1 deleted
 Directories updated: indicators/, strategies/, utils/
@@ -299,12 +299,12 @@ map.json updated: yes (file counts adjusted)
 ## Edge Cases
 
 **File added to new directory:**
-- Create new folder in docs/library/ with spec.json
+- Create new folder in .forge/library/ with spec.json
 - Create README.md in the project folder itself
 - Add folder to map.json directories
 
 **Multiple files in one folder:**
-- Update single spec.json in docs/library/[folder]/ with all entries
+- Update single spec.json in .forge/library/[folder]/ with all entries
 - Update single README.md in [folder]/ with all descriptions
 
 **Can't read file (binary, generated, etc.):**

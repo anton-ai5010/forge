@@ -55,8 +55,8 @@ git diff {BASE_SHA}..{HEAD_SHA}
 - Breaking changes documented?
 
 **FORGE Compliance:**
-- Does code follow naming and structure conventions from `docs/conventions.json`?
-- Do changes align with file intent described in `docs/library/[folder]/spec.json`?
+- Does code follow naming and structure conventions from `.forge/conventions.json`?
+- Do changes align with file intent described in `.forge/library/[folder]/spec.json`?
 - Are dependent modules (check `depends_on` in spec.json) unbroken by these changes?
 - Do new files follow existing project patterns for their directory?
 

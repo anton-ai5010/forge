@@ -6,7 +6,7 @@ description: Use when the user asks to clean up, refactor, lint, or improve code
 # Code Cleanup
 
 ## Автозагруженный контекст — ключевые решения (не противоречить):
-!`cat docs/decisions.md 2>/dev/null || echo "нет decisions.md"`
+!`cat .forge/decisions.md 2>/dev/null || echo "нет decisions.md"`
 
 ---
 
@@ -35,9 +35,9 @@ Systematic project-wide code quality review with parallel agents. Produces a str
 
 ### Phase 1: Gather Context
 
-**If FORGE docs exist** (`docs/map.json`):
-1. Read `docs/map.json` — project structure, red zones
-2. Read `docs/conventions.json` — naming rules, patterns, decisions
+**If FORGE docs exist** (`.forge/map.json`):
+1. Read `.forge/map.json` — project structure, red zones
+2. Read `.forge/conventions.json` — naming rules, patterns, decisions
 3. Use this as the source of truth for what "correct" looks like
 
 **If no FORGE docs:**
@@ -128,7 +128,7 @@ After all agents return:
 
 ## Red Zones
 
-Files in red zones (from `docs/map.json`) get special treatment:
+Files in red zones (from `.forge/map.json`) get special treatment:
 - Still analyzed and reported
 - But NEVER auto-fixed — always require explicit per-file approval
 - Flagged visually in the report

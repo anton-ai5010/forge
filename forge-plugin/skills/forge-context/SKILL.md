@@ -1,13 +1,13 @@
 ---
 name: forge-context
-description: Use at session start when project has docs/index.yml — loads project context using L0/L1/L2 tiered system for minimal token usage
+description: Use at session start when project has .forge/index.yml — loads project context using L0/L1/L2 tiered system for minimal token usage
 ---
 
 # FORGE Project Context (L0/L1/L2)
 
 ## Overview
 
-Load project context from docs/index.yml — NOT from source code.
+Load project context from .forge/index.yml — NOT from source code.
 
 **Core principle:** 200 tokens of index.yml > 40k tokens of source reading.
 
@@ -17,13 +17,13 @@ Load project context from docs/index.yml — NOT from source code.
 
 ## When to Use
 
-At session start if docs/index.yml (or legacy docs/index.md) exists.
+At session start if .forge/index.yml (or legacy .forge/index.md) exists.
 
 ## The Process
 
 ### Step 1: L0 is Already Loaded
 
-The hook auto-injects docs/index.yml into every prompt. You already see:
+The hook auto-injects .forge/index.yml into every prompt. You already see:
 - Project goal, stage, stack
 - Current task and branch
 - **catalog** — map of all L1 resources with tags
@@ -37,13 +37,13 @@ Match the user's request against `catalog[].tags`:
 
 | User wants | Tags match | Load L1 file |
 |---|---|---|
-| Create/find files | structure, files, dirs | `docs/map.yml` |
-| Write new code | naming, format, rules | `docs/conventions.yml` |
-| Check project health | working, broken, blocked | `docs/status.yml` |
-| Understand past choices | why, architecture | `docs/decisions.yml` |
-| Avoid failed approaches | failed, tried, avoid | `docs/dead-ends.yml` |
-| Resume previous work | history, last-session | `docs/journal.yml` |
-| Find right skill | skill, workflow | `docs/skills-catalog.yml` |
+| Create/find files | structure, files, dirs | `.forge/map.yml` |
+| Write new code | naming, format, rules | `.forge/conventions.yml` |
+| Check project health | working, broken, blocked | `.forge/status.yml` |
+| Understand past choices | why, architecture | `.forge/decisions.yml` |
+| Avoid failed approaches | failed, tried, avoid | `.forge/dead-ends.yml` |
+| Resume previous work | history, last-session | `.forge/journal.yml` |
+| Find right skill | skill, workflow | `.forge/skills-catalog.yml` |
 
 **Load ONLY files whose tags match.** Typical: 1-2 L1 files per task.
 
@@ -54,7 +54,7 @@ L1 files contain one-liner summaries. If a summary answers the question — stop
 Load L2 (full document) only when:
 - L1 summary is too brief for the specific case
 - Need full dead-end analysis or decision rationale
-- Need file-level specs from `docs/library/*/spec.yml`
+- Need file-level specs from `.forge/library/*/spec.yml`
 
 ### Step 4: Context Loaded — Ready to Work
 
@@ -78,8 +78,8 @@ Ready.
 
 ## Legacy Support
 
-If project has `docs/index.md` (not .yml) — this is FORGE v2.
-Read index.md as before (~400 tok). L1/L2 routing not available.
+If project has `.forge/index.md` (not .yml) — this is FORGE v2.
+Read .forge/index.md as before (~400 tok). L1/L2 routing not available.
 Suggest: "Run `/forge:init` to upgrade to L0/L1/L2 format."
 
 ## Environment Check
@@ -100,5 +100,5 @@ After loading context, check available tools:
 ## Integration
 
 **Called by:** using-forge skill (at session start)
-**Works with:** session-awareness skill (maintains index.yml live)
+**Works with:** session-awareness skill (maintains .forge/index.yml live)
 **Before using:** Project must be initialized with `/forge:init`

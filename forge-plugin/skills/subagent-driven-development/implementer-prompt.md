@@ -19,8 +19,8 @@ Task tool (general-purpose):
     ## Project Context
 
     If the project has FORGE documentation, read before starting:
-    - `docs/library/[your-working-folder]/spec.json` — file intents, dependencies, red zones
-    - `docs/conventions.json` — naming rules, structure patterns, project decisions
+    - `.forge/library/[your-working-folder]/spec.json` — file intents, dependencies, red zones
+    - `.forge/conventions.json` — naming rules, structure patterns, project decisions
 
     Follow conventions. Respect file intents. If a file is marked red_zone in spec.json, do not modify it unless the task explicitly requires it.
 

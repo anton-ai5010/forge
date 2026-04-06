@@ -6,7 +6,7 @@ description: Use when encountering any bug, test failure, or unexpected behavior
 # Systematic Debugging
 
 ## Автозагруженный контекст — провальные подходы (НЕ повторять):
-!`for f in docs/dead-ends/*.md; do [ -f "$f" ] && echo "=== $(basename $f) ===" && cat "$f"; done 2>/dev/null || echo "нет dead-ends"`
+!`for f in .forge/dead-ends/*.md; do [ -f "$f" ] && echo "=== $(basename $f) ===" && cat "$f"; done 2>/dev/null || echo "нет dead-ends"`
 
 ---
 

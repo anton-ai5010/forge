@@ -6,10 +6,10 @@
 set -euo pipefail
 
 # Check for FORGE docs (new format first, then legacy)
-if [ -f "docs/index.yml" ]; then
-    index_content=$(cat docs/index.yml 2>/dev/null || echo "")
-elif [ -f "docs/index.md" ]; then
-    index_content=$(cat docs/index.md 2>/dev/null || echo "")
+if [ -f ".forge/index.yml" ]; then
+    index_content=$(cat .forge/index.yml 2>/dev/null || echo "")
+elif [ -f ".forge/index.md" ]; then
+    index_content=$(cat .forge/index.md 2>/dev/null || echo "")
 else
     exit 0
 fi

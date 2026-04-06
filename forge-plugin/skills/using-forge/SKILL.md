@@ -86,13 +86,13 @@ When multiple skills could apply, use this order:
 
 At session start, check if project has FORGE docs.
 
-**If docs/index.yml exists (v3):**
+**If .forge/index.yml exists (v3):**
 L0 is auto-injected via hook (~200 tokens). You already see the project catalog.
 Do NOT load all L1 files — match `catalog[].tags` to the current task.
 Proceed with skill checks.
 
-**If docs/index.md exists (v2 legacy):**
-Read docs/index.md (~400 tokens). L1/L2 routing not available.
+**If .forge/index.md exists (v2 legacy):**
+Read .forge/index.md (~400 tokens). L1/L2 routing not available.
 After completing task, suggest upgrading: "Run `/forge:init` to upgrade to v3."
 
 **If neither exists:**

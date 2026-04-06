@@ -62,7 +62,7 @@ Task tool (general-purpose):
        - What it returns (outputs)
        - What it imports (depends_on)
 
-    2. Add entry to `docs/library/{folder}/spec.json`:
+    2. Add entry to `.forge/library/{folder}/spec.json`:
        ```json
        {
          "filename.ext": {
@@ -75,12 +75,12 @@ Task tool (general-purpose):
        }
        ```
 
-    3. Add line to `docs/library/{folder}/README.md`:
+    3. Add line to `.forge/library/{folder}/README.md`:
        ```markdown
        - **filename.ext** — простое объяснение что делает этот файл
        ```
 
-    4. Update `docs/map.json`:
+    4. Update `.forge/map.json`:
        - Increment file count for directory
        - If new directory, add new entry
 
@@ -91,14 +91,14 @@ Task tool (general-purpose):
        - Did signature change? (update inputs/outputs)
        - Did imports change? (update depends_on)
 
-    2. Update `docs/library/{folder}/spec.json` ONLY if:
+    2. Update `.forge/library/{folder}/spec.json` ONLY if:
        - Intent changed (does different thing)
        - Inputs/outputs changed (different interface)
        - Dependencies changed (imports added/removed)
 
        If only implementation changed (same interface): do NOT update spec.json
 
-    3. Update `docs/library/{folder}/README.md` ONLY if:
+    3. Update `.forge/library/{folder}/README.md` ONLY if:
        - File's purpose changed
        - User-facing behavior changed
 
@@ -106,11 +106,11 @@ Task tool (general-purpose):
 
     ### For DELETED Files
 
-    1. Remove entry from `docs/library/{folder}/spec.json`
+    1. Remove entry from `.forge/library/{folder}/spec.json`
 
-    2. Remove line from `docs/library/{folder}/README.md`
+    2. Remove line from `.forge/library/{folder}/README.md`
 
-    3. Update `docs/map.json`:
+    3. Update `.forge/map.json`:
        - Decrement file count
        - If file was in red_zones, remove it
        - If directory now empty, remove directory entry

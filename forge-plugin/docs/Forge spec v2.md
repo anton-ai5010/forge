@@ -43,7 +43,7 @@ forge/
 
 ### Документация в проекте пользователя (создаётся через /forge:init)
 ```
-docs/
+.forge/
 ├── map.json              # карта проекта + красные зоны
 ├── conventions.json      # правила проекта
 ├── state.json            # текущее состояние (перезаписывается при sync)
@@ -86,15 +86,15 @@ ml/
 ```markdown
 ## FORGE Project Context
 
-Before any work, check if project has `docs/map.json`. If yes:
+Before any work, check if project has `.forge/map.json`. If yes:
 
-1. Read `docs/map.json` — project structure and red zones
-2. Read `docs/conventions.json` — project rules
-3. Read `docs/state.json` — current state and pending tasks
+1. Read `.forge/map.json` — project structure and red zones
+2. Read `.forge/conventions.json` — project rules
+3. Read `.forge/state.json` — current state and pending tasks
 
 After completing any task, suggest: "Run /forge:sync to update documentation."
 
-If project has no `docs/map.json`, suggest: "Run /forge:init to set up project documentation."
+If project has no `.forge/map.json`, suggest: "Run /forge:init to set up project documentation."
 ```
 
 **Глобальная замена:** `forge` → `forge` во всём файле.
@@ -115,9 +115,9 @@ Explore project context — check files, documentation, recent commits
 СТАЛО:
 ```
 Explore project context:
-  - Read docs/map.json — project structure and red zones
-  - Read docs/conventions.json — project rules
-  - Read docs/state.json — current state
+  - Read .forge/map.json — project structure and red zones
+  - Read .forge/conventions.json — project rules
+  - Read .forge/state.json — current state
   - Only then, if deeper context needed — read specific files from map
 ```
 
@@ -132,10 +132,10 @@ and WHAT the expected outcome is. Get explicit confirmation before proceeding.
 
 ```
 Before presenting design:
-- Check docs/map.json for red zones. If design touches red zone files —
+- Check .forge/map.json for red zones. If design touches red zone files —
   warn user explicitly: "This design modifies [file] which is marked as red zone.
   Confirm before proceeding."
-- Check docs/library/[folder]/spec.json for dependencies of affected modules.
+- Check .forge/library/[folder]/spec.json for dependencies of affected modules.
   If change cascades to other modules — show this in design:
   "Changing [X] will affect [Y] and [Z] because [dependency]."
 ```
@@ -205,16 +205,16 @@ subagents with auto-review. Works as autonomously as possible. You check results
 ```
 Dispatch forge-documenter subagent (Sonnet):
   - Receives: implementer's report (files changed, what was done) + git diff
-  - Updates: docs/library/[folders]/spec.json for affected folders
-  - Updates: docs/library/[folders]/README.md for affected folders
-  - Updates: docs/map.json if new files created or files deleted
+  - Updates: .forge/library/[folders]/spec.json for affected folders
+  - Updates: .forge/library/[folders]/README.md for affected folders
+  - Updates: .forge/map.json if new files created or files deleted
 ```
 
 **Изменение 2 — в секцию "Integration", добавить:**
 
 ```
 **FORGE documentation:**
-- **forge:forge-context** — Subagents read docs/library/[folder]/spec.json before work
+- **forge:forge-context** — Subagents read .forge/library/[folder]/spec.json before work
 - **forge:sync** — Manual update for state.json at end of session
 - **forge-documenter** agent — Automatic doc update after each task's review
 ```
@@ -236,8 +236,8 @@ Dispatch forge-documenter subagent (Sonnet):
 **Изменение — в "Step 3: Report", добавить после "Show verification output":**
 
 ```
-- Update docs/library/[folders]/spec.json and README.md for files changed in this batch
-- Update docs/map.json if new files were created
+- Update .forge/library/[folders]/spec.json and README.md for files changed in this batch
+- Update .forge/map.json if new files were created
 ```
 
 **Глобальная замена:** `forge:` → `forge:`
@@ -252,9 +252,9 @@ Dispatch forge-documenter subagent (Sonnet):
 
 ```markdown
 **FORGE Compliance:**
-- Does code follow conventions from docs/conventions.json?
-- Do changes align with file intent described in docs/library/[folder]/spec.json?
-- Are dependent modules (from docs/map.json) not broken by changes?
+- Does code follow conventions from .forge/conventions.json?
+- Do changes align with file intent described in .forge/library/[folder]/spec.json?
+- Are dependent modules (from .forge/map.json) not broken by changes?
 - Do file naming and structure follow project patterns?
 ```
 
@@ -270,7 +270,7 @@ Dispatch forge-documenter subagent (Sonnet):
 ### Step 1.5: Update Documentation
 
 Run /forge:sync to ensure documentation is up to date before merge.
-Verify docs/map.json, docs/library/ reflect all changes made in this branch.
+Verify .forge/map.json, .forge/library/ reflect all changes made in this branch.
 ```
 
 **Глобальная замена:** `forge:` → `forge:`
@@ -284,8 +284,8 @@ Verify docs/map.json, docs/library/ reflect all changes made in this branch.
 **Изменение — в "4. Review and Integrate", добавить после "Integrate all changes":**
 
 ```
-- Update docs/library/ for all folders affected by parallel agents
-- Update docs/map.json if any agent created new files
+- Update .forge/library/ for all folders affected by parallel agents
+- Update .forge/map.json if any agent created new files
 ```
 
 **Глобальная замена:** `forge:` → `forge:`
@@ -302,8 +302,8 @@ Verify docs/map.json, docs/library/ reflect all changes made in this branch.
 ## Project Context
 
 Before starting work, read:
-- docs/library/[your-working-folder]/spec.json — file intents and dependencies
-- docs/conventions.json — project rules to follow
+- .forge/library/[your-working-folder]/spec.json — file intents and dependencies
+- .forge/conventions.json — project rules to follow
 ```
 
 ---
@@ -336,8 +336,8 @@ Before starting work, read:
 
 **Что делает:**
 - Сканирует структуру проекта
-- Создаёт `docs/` с map.json, conventions.json, state.json
-- Создаёт `docs/library/` с spec.json для каждой папки
+- Создаёт `.forge/` с map.json, conventions.json, state.json
+- Создаёт `.forge/library/` с spec.json для каждой папки
 - Создаёт README.md прямо в папках проекта (для человека)
 - Спрашивает пользователя: какие файлы отметить как red zone?
 - Спрашивает: какие конвенции уже есть? (именование, структура, паттерны)
@@ -348,11 +348,11 @@ Before starting work, read:
 
 **Что делает:**
 - Читает `git diff HEAD~1` (или от последнего sync)
-- Обновляет docs/library/[папки]/spec.json для изменённых файлов
+- Обновляет .forge/library/[папки]/spec.json для изменённых файлов
 - Обновляет [папки]/README.md в папках проекта для изменённых файлов
-- Обновляет docs/map.json если новые файлы или удалённые
-- Перезаписывает docs/state.json с текущим состоянием
-- Добавляет строку в docs/history.log
+- Обновляет .forge/map.json если новые файлы или удалённые
+- Перезаписывает .forge/state.json с текущим состоянием
+- Добавляет строку в .forge/history.log
 
 ### 3. forge-context (скилл)
 
@@ -360,7 +360,7 @@ Before starting work, read:
 
 **Что делает:**
 - Загружается при старте сессии (ссылка из using-forge)
-- Читает docs/map.json, docs/conventions.json, docs/state.json
+- Читает .forge/map.json, .forge/conventions.json, .forge/state.json
 - Даёт Claude полный контекст проекта за ~2k токенов
 
 ### 4. forge-documenter (агент)
@@ -378,7 +378,7 @@ tools: Read, Write, Edit, Bash, Glob, Grep
 
 **Что делает:**
 - Получает отчёт имплементатора + git diff
-- Обновляет spec.json в docs/library/ и README.md в папках проекта
+- Обновляет spec.json в .forge/library/ и README.md в папках проекта
 - Обновляет map.json
 - Работает на Sonnet (дешёво и быстро)
 
@@ -401,16 +401,16 @@ Task tool (forge:forge-documenter):
 
     ## Your Job
     1. For each CREATED file:
-       - Add entry to docs/library/[folder]/spec.json
+       - Add entry to .forge/library/[folder]/spec.json
        - Update [folder]/README.md (in project folder)
-       - Add to docs/map.json
+       - Add to .forge/map.json
     2. For each MODIFIED file:
-       - Update description in docs/library/[folder]/spec.json
+       - Update description in .forge/library/[folder]/spec.json
        - Update [folder]/README.md if behavior changed
     3. For each DELETED file:
-       - Remove from docs/library/[folder]/spec.json
+       - Remove from .forge/library/[folder]/spec.json
        - Remove from [folder]/README.md
-       - Remove from docs/map.json
+       - Remove from .forge/map.json
 
     ## Format for spec.json entries
     {
@@ -436,7 +436,7 @@ Task tool (forge:forge-documenter):
 
 ## Часть 3: Форматы файлов
 
-### docs/map.json
+### .forge/map.json
 ```json
 {
   "project": "project_name",
@@ -454,7 +454,7 @@ Task tool (forge:forge-documenter):
 }
 ```
 
-### docs/conventions.json
+### .forge/conventions.json
 ```json
 {
   "language": "python",
@@ -480,7 +480,7 @@ Task tool (forge:forge-documenter):
 }
 ```
 
-### docs/state.json
+### .forge/state.json
 ```json
 {
   "current_task": "Add MACD indicator",
@@ -498,7 +498,7 @@ Task tool (forge:forge-documenter):
 }
 ```
 
-### docs/library/[folder]/spec.json
+### .forge/library/[folder]/spec.json
 ```json
 {
   "purpose": "Technical analysis indicators — pure functions calculating indicators from price data",
@@ -534,7 +534,7 @@ Task tool (forge:forge-documenter):
 - **bollinger.py** — считает полосы Боллинджера
 ```
 
-README.md находится прямо в папке проекта (indicators/README.md), а не в docs/library/.
+README.md находится прямо в папке проекта (indicators/README.md), а не в .forge/library/.
 
 ---
 

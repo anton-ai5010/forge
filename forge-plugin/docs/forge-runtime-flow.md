@@ -19,11 +19,11 @@ flowchart TB
     subgraph EVERY_PROMPT["🔄 Каждый промт пользователя"]
         G[Пользователь пишет сообщение] --> H{UserPromptSubmit hook}
         H --> I[context-inject.sh]
-        I --> J{docs/index.md существует?}
+        I --> J{.forge/index.md существует?}
         J -- Нет --> K[Hook завершается молча]
         J -- Да --> L["Собирает контекст:"]
-        L --> L1["docs/index.md (~400 токенов)"]
-        L --> L2["Список файлов в docs/dead-ends/"]
+        L --> L1[".forge/index.md (~400 токенов)"]
+        L --> L2["Список файлов в .forge/dead-ends/"]
         L --> L3["git log --oneline -3"]
         L --> L4["git branch --show-current"]
         L1 & L2 & L3 & L4 --> M["Инжектит JSON в промт Claude"]
@@ -49,7 +49,7 @@ flowchart LR
     subgraph INJECTED["Авто-инжект (невидим пользователю)"]
         direction TB
         IC1["using-forge skill<br/>(из SessionStart)"]
-        IC2["docs/index.md<br/>• Goal проекта<br/>• Current task<br/>• Session state<br/>~400 токенов"]
+        IC2[".forge/index.md<br/>• Goal проекта<br/>• Current task<br/>• Session state<br/>~400 токенов"]
         IC3["Dead-ends список<br/>(только имена файлов)"]
         IC4["Git: branch + 3 коммита"]
     end
@@ -84,7 +84,7 @@ flowchart TB
         C2 --> C3["HARD GATE: дизайн одобрен?"]
         C3 -- Нет --> C2
         C3 -- Да --> C4["Автоматически → /forge:write-plan"]
-        C4 --> C5["План в docs/plans/<br/>задачи по 2-5 мин"]
+        C4 --> C5["План в .forge/plans/<br/>задачи по 2-5 мин"]
         C5 --> C6["/forge:execute-plan<br/>или subagent-driven"]
     end
 
@@ -95,7 +95,7 @@ flowchart TB
         EX3 --> EX4["Рефакторинг"]
         EX4 --> EX5{"Ещё задачи?"}
         EX5 -- Да --> EX1
-        EX5 -- Нет --> EX6["/forge:sync — обновляет docs/"]
+        EX5 -- Нет --> EX6["/forge:sync — обновляет .forge/"]
     end
 ```
 
@@ -112,7 +112,7 @@ sequenceDiagram
     participant R as Review Agent
 
     U->>M: /forge:execute-plan
-    M->>M: Читает docs/plans/plan.md
+    M->>M: Читает .forge/plans/plan.md
     
     Note over M: Задача 1
     M->>S1: Промт с задачей + контекст
@@ -132,7 +132,7 @@ sequenceDiagram
     M->>R: Review #1 + #2
     R-->>M: OK
 
-    M->>M: /forge:sync — обновляет docs/
+    M->>M: /forge:sync — обновляет .forge/
     M-->>U: Отчёт о выполнении
 ```
 
@@ -144,24 +144,24 @@ sequenceDiagram
 flowchart TB
     subgraph HOOKS["Hooks (автоматические)"]
         H1["session-start.sh<br/>ЧИТАЕТ: using-forge/SKILL.md"]
-        H2["context-inject.sh<br/>ЧИТАЕТ: docs/index.md<br/>docs/dead-ends/*<br/>git log, git branch"]
+        H2["context-inject.sh<br/>ЧИТАЕТ: .forge/index.md<br/>.forge/dead-ends/*<br/>git log, git branch"]
     end
 
     subgraph SKILLS_READ["Скиллы ЧИТАЮТ"]
-        SR1["brainstorming<br/>← docs/dead-ends/*<br/>← docs/decisions.md<br/>← docs/library/"]
-        SR2["forge-context<br/>← docs/index.md<br/>← docs/map.json<br/>← docs/conventions.json"]
-        SR3["executing-plans<br/>← docs/plans/*.md"]
-        SR4["systematic-debugging<br/>← docs/dead-ends/*"]
+        SR1["brainstorming<br/>← .forge/dead-ends/*<br/>← .forge/decisions.md<br/>← .forge/library/"]
+        SR2["forge-context<br/>← .forge/index.md<br/>← .forge/map.json<br/>← .forge/conventions.json"]
+        SR3["executing-plans<br/>← .forge/plans/*.md"]
+        SR4["systematic-debugging<br/>← .forge/dead-ends/*"]
     end
 
     subgraph SKILLS_WRITE["Скиллы ПИШУТ"]
-        SW1["brainstorming → writing-plans<br/>→ docs/plans/YYYY-MM-DD-name.md"]
-        SW2["session-awareness<br/>→ docs/index.md (session section)<br/>→ docs/dead-ends/topic.md<br/>→ docs/journal.md"]
-        SW3["/forge:sync<br/>→ docs/index.md<br/>→ docs/status.md<br/>→ docs/map.json"]
-        SW4["/forge:init<br/>→ ВСЮ структуру docs/"]
+        SW1["brainstorming → writing-plans<br/>→ .forge/plans/YYYY-MM-DD-name.md"]
+        SW2["session-awareness<br/>→ .forge/index.md (session section)<br/>→ .forge/dead-ends/topic.md<br/>→ .forge/journal.md"]
+        SW3["/forge:sync<br/>→ .forge/index.md<br/>→ .forge/status.md<br/>→ .forge/map.json"]
+        SW4["/forge:init<br/>→ ВСЮ структуру .forge/"]
     end
 
-    subgraph DOCS["docs/ (персистентная память)"]
+    subgraph DOCS[".forge/ (персистентная память)"]
         D1["index.md — точка входа ~400 токенов"]
         D2["dead-ends/ — провальные подходы"]
         D3["plans/ — планы реализации"]
@@ -198,7 +198,7 @@ flowchart TB
 │    using-forge SKILL.md        ~800 токенов (один раз)   │
 │                                                          │
 │  Каждый промт (context-inject):                          │
-│    docs/index.md               ~400 токенов              │
+│    .forge/index.md              ~400 токенов              │
 │    dead-ends список             ~50 токенов              │
 │    git log + branch             ~30 токенов              │
 │    ─────────────────────────────────────                  │
@@ -225,14 +225,14 @@ t=0     Claude Code запускается               пусто
         ↓ SessionStart hook                   + using-forge (~800 tok)
 
 t=1     User: "хочу добавить JWT авторизацию"
-        ↓ UserPromptSubmit hook               + index.md + dead-ends + git
+        ↓ UserPromptSubmit hook               + .forge/index.md + dead-ends + git
         ↓ Claude: подходит brainstorming      + brainstorming skill
         ↓ Skill читает dead-ends, decisions   + контекст проекта
         ↓ Claude задаёт вопросы               ...уточняет требования...
 
 t=5     User одобряет дизайн
         ↓ Claude → writing-plans skill        + writing-plans skill
-        ↓ Пишет план → docs/plans/            docs/ обновлён
+        ↓ Пишет план → .forge/plans/           .forge/ обновлён
 
 t=6     User: "выполняй"
         ↓ UserPromptSubmit hook               + обновлённый index.md
@@ -244,7 +244,7 @@ t=6     User: "выполняй"
         ...
 
 t=15    Все задачи выполнены
-        ↓ Claude → /forge:sync                обновляет docs/index.md
+        ↓ Claude → /forge:sync                обновляет .forge/index.md
         ↓ session-awareness                   пишет в journal.md
         ↓ Claude: "готово, запусти /forge:validate"
 

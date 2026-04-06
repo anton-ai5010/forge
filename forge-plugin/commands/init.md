@@ -1,5 +1,5 @@
 ---
-description: Initialize FORGE project documentation - creates docs/ structure with L0/L1/L2 context system in YAML format
+description: Initialize FORGE project documentation - creates .forge/ structure with L0/L1/L2 context system in YAML format
 ---
 
 # FORGE Initialization
@@ -9,13 +9,13 @@ description: Initialize FORGE project documentation - creates docs/ structure wi
 ## Pre-Check: Documentation Already Exists?
 
 ```bash
-ls docs/index.yml docs/index.md 2>/dev/null
+ls .forge/index.yml .forge/index.md 2>/dev/null
 ```
 
 **If index.yml exists:**
 ```
-FORGE v3 documentation already exists at docs/
-Regenerating will overwrite all docs/ files.
+FORGE v3 documentation already exists at .forge/
+Regenerating will overwrite all .forge/ files.
 Type 'regenerate' to confirm, or any other key to cancel.
 ```
 
@@ -33,7 +33,7 @@ Wait for user confirmation. If not confirmed, stop.
 ## Pre-Check: Legacy v1 Structure
 
 ```bash
-ls docs/state.json 2>/dev/null
+ls .forge/state.json 2>/dev/null
 ```
 
 **If state.json exists:** Migrate data from v1 → v3 YAML format.
@@ -86,15 +86,15 @@ Naming conventions? (default = language defaults)
 ## Step 4: Create Directory Structure
 
 ```bash
-mkdir -p docs/plans docs/library docs/dead-ends docs/journal-archive
+mkdir -p .forge/plans .forge/library .forge/dead-ends .forge/journal-archive
 ```
 
 For each source directory:
 ```bash
-mkdir -p docs/library/{directory_name}
+mkdir -p .forge/library/{directory_name}
 ```
 
-## Step 5: Generate docs/map.yml (L1)
+## Step 5: Generate .forge/map.yml (L1)
 
 ```yaml
 directories:
@@ -108,7 +108,7 @@ red_zones:
     why: "{reason}"
 ```
 
-## Step 6: Generate docs/conventions.yml (L1)
+## Step 6: Generate .forge/conventions.yml (L1)
 
 ```yaml
 language: {language}
@@ -122,7 +122,7 @@ structure:
 patterns: {}
 ```
 
-## Step 6.5: Generate docs/structure.md
+## Step 6.5: Generate .forge/structure.md
 
 Based on detected language/framework, generate expected project structure.
 Show to user and confirm before writing.
@@ -178,7 +178,7 @@ config/            — configuration
 
 For other stacks — research conventions and generate accordingly.
 
-Write confirmed structure to `docs/structure.md`.
+Write confirmed structure to `.forge/structure.md`.
 
 ## Step 7: Ask Project Goal
 
@@ -187,7 +187,7 @@ Write confirmed structure to `docs/structure.md`.
 Пример: "Магазин цифровых товаров на Yandex Market с автовыдачей ключей"
 ```
 
-## Step 8: Generate docs/index.yml (L0)
+## Step 8: Generate .forge/index.yml (L0)
 
 This is the CRITICAL file — auto-injected every prompt (~200 tokens).
 
@@ -205,27 +205,27 @@ now:
 
 catalog:
   map:
-    path: docs/map.yml
+    path: .forge/map.yml
     tags: [structure, files, dirs, where, create, navigate, red-zone]
 
   conventions:
-    path: docs/conventions.yml
+    path: .forge/conventions.yml
     tags: [naming, format, style, commit, pattern, rules]
 
   status:
-    path: docs/status.yml
+    path: .forge/status.yml
     tags: [working, broken, blocked, health, state]
 
   decisions:
-    path: docs/decisions.yml
+    path: .forge/decisions.yml
     tags: [why, architecture, choice, tradeoff, rationale]
 
   dead-ends:
-    path: docs/dead-ends.yml
+    path: .forge/dead-ends.yml
     tags: [failed, tried, broken, doesnt-work, avoid, mistake]
 
   journal:
-    path: docs/journal.yml
+    path: .forge/journal.yml
     tags: [history, last-session, previous, yesterday, when, resume]
 
 session:
@@ -240,7 +240,7 @@ session:
 last_session: "{date} — Инициализация FORGE документации"
 ```
 
-## Step 9: Generate docs/status.yml (L1)
+## Step 9: Generate .forge/status.yml (L1)
 
 ```yaml
 working:
@@ -249,7 +249,7 @@ broken: []
 blocked: []
 ```
 
-## Step 10: Generate docs/decisions.yml (L1)
+## Step 10: Generate .forge/decisions.yml (L1)
 
 ```yaml
 # Технические решения проекта
@@ -257,7 +257,7 @@ blocked: []
 entries: []
 ```
 
-## Step 11: Generate docs/dead-ends.yml (L1)
+## Step 11: Generate .forge/dead-ends.yml (L1)
 
 ```yaml
 # Провальные подходы — чтобы не повторять ошибки
@@ -266,22 +266,22 @@ entries: []
 entries: []
 ```
 
-## Step 12: Generate docs/journal.yml (L1)
+## Step 12: Generate .forge/journal.yml (L1)
 
 ```yaml
 entries:
   - date: {date}
     summary: "Инициализация FORGE"
-    result: "docs/ структура создана"
+    result: ".forge/ структура создана"
     next: "Начать разработку"
-    files: [docs/]
+    files: [.forge/]
 ```
 
 ## Step 13: Generate library/ Documentation
 
 For each source directory:
 
-**docs/library/{directory}/spec.yml (L2):**
+**.forge/library/{directory}/spec.yml (L2):**
 ```yaml
 purpose: "{what this directory is for}"
 files:
@@ -364,24 +364,24 @@ If CLAUDE.md exists — preserve user content, merge FORGE sections.
 
 Context is auto-injected via hook (~200 tokens per prompt).
 
-L0 (always loaded): `docs/index.yml` — goal, stage, task, catalog of all resources
+L0 (always loaded): `.forge/index.yml` — goal, stage, task, catalog of all resources
 L1 (load by tags):
-- `docs/map.yml` — structure, red zones [tags: structure, files, navigate]
-- `docs/conventions.yml` — naming, patterns [tags: naming, format, rules]
-- `docs/status.yml` — working/broken/blocked [tags: working, broken, health]
-- `docs/decisions.yml` — why we chose X [tags: why, architecture, choice]
-- `docs/dead-ends.yml` — failed approaches [tags: failed, tried, avoid]
-- `docs/journal.yml` — session history [tags: history, last-session, resume]
-L2 (load rarely): `docs/library/*/spec.yml`, `docs/dead-ends/*.md`
+- `.forge/map.yml` — structure, red zones [tags: structure, files, navigate]
+- `.forge/conventions.yml` — naming, patterns [tags: naming, format, rules]
+- `.forge/status.yml` — working/broken/blocked [tags: working, broken, health]
+- `.forge/decisions.yml` — why we chose X [tags: why, architecture, choice]
+- `.forge/dead-ends.yml` — failed approaches [tags: failed, tried, avoid]
+- `.forge/journal.yml` — session history [tags: history, last-session, resume]
+L2 (load rarely): `.forge/library/*/spec.yml`, `.forge/dead-ends/*.md`
 
 DO NOT load all L1 files. Match catalog tags to current task.
-DO NOT read source code before checking docs/library/spec.yml.
+DO NOT read source code before checking .forge/library/spec.yml.
 
 ## Development Workflow
 
 ### Before any new work
 1. `/forge:brainstorm` — clarify requirements, get approval
-2. Plan saved to `docs/plans/`
+2. Plan saved to `.forge/plans/`
 
 ### During implementation
 3. TDD mandatory — failing test FIRST
@@ -439,15 +439,15 @@ FORGE initialized (v3 — L0/L1/L2 context system)
 
 Created:
 - CLAUDE.md (project instructions)
-- docs/index.yml (L0 — auto-injected, ~200 tokens)
-- docs/map.yml (L1 — structure, red zones)
-- docs/conventions.yml (L1 — naming, patterns)
-- docs/status.yml (L1 — working/broken/blocked)
-- docs/decisions.yml (L1 — technical decisions)
-- docs/dead-ends.yml (L1 — failed approaches index)
-- docs/journal.yml (L1 — session history)
-- docs/structure.md (expected layout)
-- docs/library/ ({N} directories documented as L2)
+- .forge/index.yml (L0 — auto-injected, ~200 tokens)
+- .forge/map.yml (L1 — structure, red zones)
+- .forge/conventions.yml (L1 — naming, patterns)
+- .forge/status.yml (L1 — working/broken/blocked)
+- .forge/decisions.yml (L1 — technical decisions)
+- .forge/dead-ends.yml (L1 — failed approaches index)
+- .forge/journal.yml (L1 — session history)
+- .forge/structure.md (expected layout)
+- .forge/library/ ({N} directories documented as L2)
 
 Context budget: ~200 tok/prompt (L0) + ~500 tok on-demand (L1)
 ```

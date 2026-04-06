@@ -3,7 +3,7 @@ name: session-awareness
 description: >
   Maintains project context files during work. Use when completing a task step,
   encountering errors, abandoning an approach, or making architectural decisions.
-  Updates docs/index.yml session state, writes dead-ends, logs decisions.
+  Updates .forge/index.yml session state, writes dead-ends, logs decisions.
   Reading context is handled by the hook — this skill is only for WRITING.
 ---
 
@@ -16,11 +16,11 @@ description: >
 
 ## Формат файлов
 
-Все docs/ файлы — YAML. Если проект использует legacy .md/.json — пиши в том же формате.
+Все .forge/ файлы — YAML. Если проект использует legacy .md/.json — пиши в том же формате.
 
 ## Когда обновлять
 
-### docs/index.yml → секция `session:`
+### .forge/index.yml → секция `session:`
 
 | Момент | Что обновить |
 |---|---|
@@ -30,26 +30,26 @@ description: >
 | Тронул файл | обнови `now.task` если задача сменилась |
 | Сменил ветку | обнови `now.branch` |
 
-### docs/dead-ends.yml → при провале подхода
+### .forge/dead-ends.yml → при провале подхода
 
 Когда подход не сработал (2+ попытки):
 
-Добавь запись в `entries:` секцию docs/dead-ends.yml:
+Добавь запись в `entries:` секцию .forge/dead-ends.yml:
 
 ```yaml
   - id: short-slug
     date: 2026-04-06
     summary: "Краткое описание что не сработало и почему"
     tags: [relevant, keywords, for, matching]
-    detail: docs/dead-ends/short-slug.md  # если нужен L2
+    detail: .forge/dead-ends/short-slug.md  # если нужен L2
 ```
 
-Если нужен детальный L2 — создай файл `docs/dead-ends/{id}.md` с полным описанием.
+Если нужен детальный L2 — создай файл `.forge/dead-ends/{id}.md` с полным описанием.
 Если summary достаточно — `detail: null`.
 
 **КРИТИЧНО:** Записывай СРАЗУ при провале. Не жди конца сессии.
 
-### docs/decisions.yml → при значимом выборе
+### .forge/decisions.yml → при значимом выборе
 
 Добавь в `entries:`:
 
@@ -62,7 +62,7 @@ description: >
     detail: null  # или путь к L2 если решение сложное
 ```
 
-### docs/status.yml → при изменении состояния
+### .forge/status.yml → при изменении состояния
 
 ```yaml
 working:
@@ -75,7 +75,7 @@ blocked:
 
 Также обнови `blocked:` в index.yml если появился/исчез блокер.
 
-### docs/journal.yml → в конце сессии
+### .forge/journal.yml → в конце сессии
 
 Добавь запись В НАЧАЛО `entries:`:
 
@@ -93,7 +93,7 @@ entries:
 
 ## Антипаттерны
 
-- НЕ читай index.yml для контекста — он уже в промпте через hook
+- НЕ читай .forge/index.yml для контекста — он уже в промпте через hook
 - НЕ откладывай запись dead-ends — "потом" = никогда
 - НЕ пиши dead-end после первой неудачи — подожди 2 попытки
 - НЕ забывай обновлять session.now — главная защита от потери контекста
