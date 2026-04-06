@@ -93,10 +93,15 @@ digraph process {
 
 ## Prompt Templates
 
-- `./implementer-prompt.md` - Dispatch implementer subagent
+- `./implementer-prompt.md` - Dispatch implementer subagent (auto-injects stack-specific patterns)
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
 - `./forge-documenter-prompt.md` - Dispatch documentation updater subagent
+- `./stack-hints/*.md` - Language/framework-specific patterns (Python, TypeScript, Go, React, SQL)
+
+### Stack Hints
+
+Before dispatching an implementer, read `.forge/conventions.yml` → detect language/framework → inject matching `stack-hints/*.md` into the prompt. This gives the subagent idiomatic patterns for the project's stack without maintaining separate agents per language. See `implementer-prompt.md` for matching rules.
 
 ## Example Workflow
 
