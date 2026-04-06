@@ -53,6 +53,13 @@ Systematic project-wide code quality review with parallel agents. Produces a str
 
 Split the project into independent areas (by directory, module, or layer). Dispatch one agent per area using the `forge:dispatching-parallel-agents` pattern.
 
+**Scan in parallel** — dispatch subagents for independent checks:
+- Agent 1: Dead code + unused imports
+- Agent 2: Naming inconsistencies + convention violations
+- Agent 3: Duplication + complexity (functions >50 lines, nesting >3 levels)
+
+Aggregate findings into a single report before presenting to user.
+
 Each agent gets this prompt template:
 
 ```markdown

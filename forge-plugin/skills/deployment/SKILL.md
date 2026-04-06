@@ -37,15 +37,14 @@ NO PRODUCTION DEPLOYMENT WITHOUT ROLLBACK STRATEGY AND HEALTH CHECK
 
 ## Process
 
-### Step 1: Detect existing infrastructure
+### Step 1: Detect existing infrastructure (PARALLEL)
 
-```bash
-# What's already here?
-ls Dockerfile docker-compose.yml .github/workflows/*.yml \
-   .gitlab-ci.yml fly.toml vercel.json k8s/ 2>/dev/null
-```
+Dispatch checks simultaneously:
+- **Local:** `ls Dockerfile docker-compose.yml .github/workflows/*.yml .gitlab-ci.yml fly.toml vercel.json k8s/ 2>/dev/null`
+- **Remote:** `docker --version 2>/dev/null`, `ssh server "docker ps" 2>/dev/null`
+- **Environment:** Check `.env`, `.env.example`, existing CI configs
 
-Check environment: `docker --version`, `ssh server "docker ps"` (if Docker server available).
+Aggregate results, then choose strategy.
 
 ### Step 2: Choose deployment strategy
 

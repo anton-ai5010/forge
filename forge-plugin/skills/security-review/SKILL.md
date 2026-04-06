@@ -53,19 +53,14 @@ Classify each changed file:
 
 Hot files get full checklist. Warm files get dependency + error checks. Cold files skip.
 
-### Step 2: Run Quick Scans
+### Step 2: Run Quick Scans (PARALLEL)
 
-```bash
-# Hardcoded secrets
-grep -rn "password\|secret\|api_key\|token\|private_key" --include='*.{ts,js,py,go,java,rb}' . \
-  | grep -v node_modules | grep -v '.env' | grep -v test
+Dispatch 3 checks simultaneously:
+- **Secrets scan:** `grep -rn "password\|secret\|api_key\|token\|private_key" --include='*.{ts,js,py,go,java,rb}' . | grep -v node_modules | grep -v test`
+- **Gitignore check:** `grep -q '.env' .gitignore && echo "OK" || echo "FAIL: .env NOT in gitignore"`
+- **Dependency audit:** `npm audit 2>/dev/null || pip-audit 2>/dev/null || echo "Run audit for your package manager"`
 
-# .env in gitignore?
-grep -q '.env' .gitignore && echo "OK: .env in gitignore" || echo "FAIL: .env NOT in gitignore"
-
-# Dependency vulnerabilities
-npm audit 2>/dev/null || pip-audit 2>/dev/null || echo "Run audit for your package manager"
-```
+Don't wait for one to finish before starting the next.
 
 ### Step 3: Checklist (Hot Files Only)
 

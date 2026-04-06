@@ -48,14 +48,14 @@ Every project goes through this process. A todo list, a single-function utility,
 
 You MUST create a task for each of these items and complete them in order:
 
-1. **Load FORGE context (MANDATORY FIRST STEP)** — L0 (index.yml) is auto-injected via hook. Load L1 files relevant to brainstorming:
-   - `.forge/map.yml` (or .json) — project structure and red zones
-   - `.forge/conventions.yml` (or .json) — project rules
-   - `.forge/dead-ends.yml` — check for failed approaches related to this topic
-   - `.forge/learnings.yml` — project lessons from previous sessions (if exists)
-   - ALL `.forge/library/*/spec.yml` (or spec.json) files — complete project knowledge
+1. **Load FORGE context (MANDATORY FIRST STEP)** — L0 is auto-injected. Load L1 files in PARALLEL:
 
-   DO NOT read source code. DO NOT scan the filesystem. Everything you need is in .forge/library/. If neither .forge/index.yml nor .forge/index.md exists, tell the user to run /forge:init first and STOP.
+   Dispatch 2 subagents simultaneously:
+   - Agent 1: Read `.forge/map.yml` (structure + red zones) + `.forge/conventions.yml` (rules)
+   - Agent 2: Read `.forge/dead-ends.yml` (failed approaches) + ALL `.forge/library/*/spec.yml` (project knowledge)
+
+   Wait for both. Do NOT read source code — everything is in .forge/library/.
+   If neither .forge/index.yml nor .forge/index.md exists, tell user to run /forge:init and STOP.
 
 2. **Confirm understanding of goal** — Restate what you believe the user wants to build and ask for confirmation before proceeding
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria

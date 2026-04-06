@@ -121,6 +121,8 @@ You MUST complete each phase before proceeding to the next.
 
    **This reveals:** Which layer fails (secrets → workflow ✓, workflow → build ✗)
 
+   **Parallelize evidence gathering:** If system has 3+ components, dispatch one subagent per component boundary to gather evidence simultaneously. Don't check layers one by one — check all at once, then analyze where the break is.
+
 5. **Trace Data Flow**
 
    **WHEN error is deep in call stack:**
