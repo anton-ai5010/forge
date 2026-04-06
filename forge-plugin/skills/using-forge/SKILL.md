@@ -112,6 +112,10 @@ Suggest: "Run `/forge:sync` to update project documentation."
 | forge:writing-plans | Bite-sized implementation plans from spec |
 | forge:executing-plans | Run plans with review checkpoints |
 | forge:verification-before-completion | Evidence before claims |
+| forge:security-review | OWASP-based security checklist before PR/merge |
+| forge:api-design | REST API contract design: resources, endpoints, pagination |
+| forge:database-migrations | Zero-downtime schema changes with rollback strategy |
+| forge:deployment | Docker, CI/CD, health checks, rollback plans |
 | forge:code-cleanup | Refactor and simplify code |
 | forge:session-awareness | Track session state and context |
 | forge:project-unblocker | Unblock stuck sessions |
