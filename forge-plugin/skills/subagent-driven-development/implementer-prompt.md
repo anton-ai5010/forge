@@ -17,6 +17,7 @@ in the `## Stack-Specific Patterns` section of the prompt below.
 | framework includes `react`, `next`, `nextjs` | `stack-hints/react.md` |
 | task involves database/SQL work | `stack-hints/sql.md` |
 | task involves ML, data analysis, feature engineering, statistics | `stack-hints/data-science.md` |
+| task involves server setup, nginx, systemd, monitoring, SSH | `stack-hints/devops.md` |
 
 Multiple hints can apply (e.g., TypeScript + React + SQL for a Next.js fullstack task).
 Only include hints relevant to the specific task — not all project languages.
