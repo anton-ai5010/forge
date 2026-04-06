@@ -228,6 +228,10 @@ catalog:
     path: .forge/journal.yml
     tags: [history, last-session, previous, yesterday, when, resume]
 
+  learnings:
+    path: .forge/learnings.yml
+    tags: [lesson, learning, pattern, insight, remember, learned]
+
 session:
   started: {time}
   goal: "Инициализация FORGE"
@@ -372,6 +376,7 @@ L1 (load by tags):
 - `.forge/decisions.yml` — why we chose X [tags: why, architecture, choice]
 - `.forge/dead-ends.yml` — failed approaches [tags: failed, tried, avoid]
 - `.forge/journal.yml` — session history [tags: history, last-session, resume]
+- `.forge/learnings.yml` — project lessons [tags: lesson, learning, insight]
 L2 (load rarely): `.forge/library/*/spec.yml`, `.forge/dead-ends/*.md`
 
 DO NOT load all L1 files. Match catalog tags to current task.
@@ -430,7 +435,21 @@ DO NOT read source code before checking .forge/library/spec.yml.
 - One clarifying question at a time
 ```
 
-### 14e: Show and confirm before writing
+### 14e: Self-Check CLAUDE.md (built-in validation)
+
+Before showing to user, verify the generated CLAUDE.md:
+
+1. **Required sections present:** Technical Stack, Project Structure, Running, FORGE Context, Development Workflow, Red Zones, Conventions, Commands Reference
+2. **No placeholders left:** No `{curly_braces}`, `TODO`, `TBD`, `описание...`, `???`, or `...` remaining in text
+3. **Consistency:** Stack in CLAUDE.md matches `stack:` in index.yml. Red zones match Step 2 list.
+4. **Size:** Total < 300 lines (~4000 tokens). If larger — trim verbose sections, keep only essentials.
+5. **Correct paths:** All doc references use `.forge/` (not `docs/`)
+6. **Commands table complete:** At minimum: start, brainstorm, sync, validate, cleanup
+7. **No empty sections:** Every section has content. If nothing to put — remove the section entirely.
+
+If any check fails — fix before showing to user. Do not ask about validation — just fix silently.
+
+### 14f: Show and confirm before writing
 
 ## Step 15: Confirm Completion
 

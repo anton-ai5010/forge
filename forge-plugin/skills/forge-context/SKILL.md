@@ -43,6 +43,7 @@ Match the user's request against `catalog[].tags`:
 | Understand past choices | why, architecture | `.forge/decisions.yml` |
 | Avoid failed approaches | failed, tried, avoid | `.forge/dead-ends.yml` |
 | Resume previous work | history, last-session | `.forge/journal.yml` |
+| Apply past lessons | lesson, learning, insight | `.forge/learnings.yml` |
 | Find right skill | skill, workflow | `.forge/skills-catalog.yml` |
 
 **Load ONLY files whose tags match.** Typical: 1-2 L1 files per task.

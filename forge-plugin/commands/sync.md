@@ -175,6 +175,42 @@ Add entry at TOP of `entries:`:
 
 If entries >7 — remove oldest.
 
+## Step 7.5: Extract Learnings (Compound)
+
+Reflect on this session's work and extract actionable lessons.
+
+Ask:
+```
+Какие уроки из этой сессии стоит запомнить?
+
+Примеры:
+- "pytest fixtures лучше чем setUp/tearDown для нашего стека"
+- "API v2 не поддерживает batch — нужны отдельные запросы"
+- "Docker build с --no-cache решает проблему кеша слоёв"
+
+Опишите 1-3 урока (или 'нет'):
+```
+
+**If 'нет'** — skip.
+
+**If user provides lessons OR you can extract non-obvious ones from dead-ends/errors:**
+
+If `.forge/learnings.yml` doesn't exist — create it:
+```yaml
+# Уроки проекта — накапливаются через /forge:sync
+# Загружаются при brainstorming для informed decisions
+entries: []
+```
+
+Add entries to `.forge/learnings.yml`:
+```yaml
+  - id: {slug}
+    date: {date}
+    summary: "{урок — одна строка}"
+    tags: [{relevant, keywords}]
+    source: "{из какой задачи или ошибки}"
+```
+
 ## Step 8: Mark Sync Point
 
 ```bash
@@ -195,6 +231,7 @@ Updated:
 - .forge/dead-ends.yml ({new entries|no changes})
 - .forge/decisions.yml ({new entries|no changes})
 - .forge/journal.yml (new entry)
+- .forge/learnings.yml ({new entries|no changes|created})
 
 Structure: {N files moved|no violations|skipped}
 Infrastructure: {checked|skipped}

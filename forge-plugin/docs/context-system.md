@@ -71,6 +71,10 @@ catalog:
     path: .forge/journal.yml
     tags: [history, last-session, previous, yesterday, when, resume]
 
+  learnings:
+    path: .forge/learnings.yml
+    tags: [lesson, learning, pattern, insight, remember, learned]
+
   skills:
     path: .forge/skills-catalog.yml
     tags: [skill, workflow, how-to, process, tool]

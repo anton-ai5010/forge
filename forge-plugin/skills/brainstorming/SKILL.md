@@ -50,6 +50,7 @@ You MUST create a task for each of these items and complete them in order:
    - `.forge/map.yml` (or .json) — project structure and red zones
    - `.forge/conventions.yml` (or .json) — project rules
    - `.forge/dead-ends.yml` — check for failed approaches related to this topic
+   - `.forge/learnings.yml` — project lessons from previous sessions (if exists)
    - ALL `.forge/library/*/spec.yml` (or spec.json) files — complete project knowledge
 
    DO NOT read source code. DO NOT scan the filesystem. Everything you need is in .forge/library/. If neither .forge/index.yml nor .forge/index.md exists, tell the user to run /forge:init first and STOP.

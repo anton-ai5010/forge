@@ -4,42 +4,61 @@ description: "Полная загрузка контекста проекта в
 
 # FORGE Session Start
 
-## Контекст проекта
+## Step 1: Load Project Context
 
-!`cat .forge/index.md 2>/dev/null || echo ".forge/index.md не найден. Запустите /forge:init для инициализации."`
+!`cat .forge/index.yml 2>/dev/null || cat .forge/index.md 2>/dev/null || echo ".forge/ не найден. Запустите /forge:init для инициализации."`
 
-## Что работает / сломано
+## Step 2: Load Detail Files
 
-!`cat .forge/status.md 2>/dev/null || echo ".forge/status.md не найден"`
+### Что работает / сломано
 
-## Ключевые решения
+!`cat .forge/status.yml 2>/dev/null || cat .forge/status.md 2>/dev/null || echo "нет status"`
 
-!`cat .forge/decisions.md 2>/dev/null || echo ".forge/decisions.md не найден"`
+### Ключевые решения
 
-## Провальные подходы (темы)
+!`cat .forge/decisions.yml 2>/dev/null || cat .forge/decisions.md 2>/dev/null || echo "нет decisions"`
 
-!`ls .forge/dead-ends/ 2>/dev/null || echo "нет dead-ends"`
+### Провальные подходы
 
-## Последние сессии
+!`cat .forge/dead-ends.yml 2>/dev/null || ls .forge/dead-ends/ 2>/dev/null || echo "нет dead-ends"`
 
-!`head -30 .forge/journal.md 2>/dev/null || echo ".forge/journal.md не найден"`
+### Уроки проекта
 
-## Последние коммиты
+!`cat .forge/learnings.yml 2>/dev/null || echo "нет learnings"`
+
+### Последние сессии
+
+!`cat .forge/journal.yml 2>/dev/null || head -30 .forge/journal.md 2>/dev/null || echo "нет journal"`
+
+### Git контекст
 
 !`git log --oneline -10 2>/dev/null || echo "не git репозиторий"`
-
-## Текущая ветка и изменения
-
 !`git branch --show-current 2>/dev/null`
 !`git diff --stat 2>/dev/null | tail -5`
 
 ---
 
-На основе загруженного контекста:
+## Step 3: Common-Ground Check
 
-1. Покажи краткий дашборд: цель, стадия, текущая задача, что работает/сломано
-2. Если есть dead-ends — запомни их, не повторяй эти подходы
-3. Если есть незаконченная задача — предложи продолжить
-4. Жди запрос пользователя
+На основе загруженного контекста — покажи краткий дашборд (3-5 строк):
 
-НЕ спрашивай "что делаем?" — ты уже знаешь из index.md.
+```
+Проект: {name} ({stack}) — {stage}, прогресс {X}%
+Цель: {goal}
+Сейчас: {current task}
+Блокеры: {blockers or "нет"}
+Ключевое: {1 важный факт из dead-ends, decisions или learnings}
+```
+
+Спроси: **"Верно? Что исправить?"**
+
+- Если пользователь корректирует — обнови понимание, при необходимости обнови .forge/index.yml
+- Если подтверждает — переходи к Step 4
+
+## Step 4: Ready to Work
+
+- Если есть незаконченная задача (session.now) — предложи продолжить
+- Если есть dead-ends — запомни их, не повторяй эти подходы
+- Жди запрос пользователя
+
+НЕ спрашивай "что делаем?" — ты уже знаешь из контекста.
