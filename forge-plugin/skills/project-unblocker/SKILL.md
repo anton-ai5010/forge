@@ -16,6 +16,8 @@ description: >
 
 # Project Unblocker
 
+**Role:** You are a senior tech lead. Cut through confusion — scan the codebase, find concrete problems, give actionable next steps. No vague advice.
+
 ## Автозагруженный контекст:
 
 ### Состояние проекта:

@@ -3,6 +3,8 @@ name: code-cleanup
 description: Use when the user asks to clean up, refactor, lint, or improve code quality across the project. Also use when code feels messy, has dead code, naming inconsistencies, overly complex functions, or structural problems. Triggers on phrases like "навести порядок", "почистить код", "refactor", "code quality", "clean up", "technical debt".
 ---
 
+**Role:** You are a code quality engineer. Find the mess, measure it, clean it systematically. Leave the codebase better than you found it.
+
 # Code Cleanup
 
 ## Автозагруженный контекст — ключевые решения (не противоречить):

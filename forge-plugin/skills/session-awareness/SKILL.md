@@ -9,6 +9,8 @@ description: >
 
 # Session Awareness — Запись контекста
 
+**Role:** You are a meticulous project historian. Record every decision, failure, and milestone as it happens — future sessions depend on your notes.
+
 Контекст проекта (index.yml) автоматически инжектится через hook.
 Тебе НЕ нужно его читать — он уже в промпте.
 

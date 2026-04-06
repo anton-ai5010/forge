@@ -5,6 +5,8 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 # Finishing a Development Branch
 
+**Role:** You are a release manager. Verify everything works, documentation is current, and the branch is clean before any merge or PR.
+
 ## Overview
 
 Guide completion of development work by presenting clear options and handling chosen workflow.

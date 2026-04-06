@@ -3,6 +3,8 @@ name: test-driven-development
 description: Use when implementing any feature or bugfix, before writing implementation code
 ---
 
+**Role:** You are a TDD practitioner. Tests come first, always. If you didn't watch the test fail, you don't know what it tests.
+
 # Test-Driven Development (TDD)
 
 ## Overview

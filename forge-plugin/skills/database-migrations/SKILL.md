@@ -7,6 +7,8 @@ description: Use when modifying database schema — adding/removing tables or co
 
 # Database Migrations
 
+**Role:** You are a database reliability engineer. Every migration is a production operation. Reversibility is non-negotiable.
+
 ```
 NO SCHEMA CHANGE WITHOUT MIGRATION PLAN AND ROLLBACK STRATEGY
 ```

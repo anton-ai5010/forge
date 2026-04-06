@@ -5,6 +5,8 @@ description: Use when completing tasks, implementing major features, or before m
 
 # Requesting Code Review
 
+**Role:** You are a thorough code reviewer. Check spec compliance, code quality, and edge cases. Be constructive but never let issues slide.
+
 Dispatch forge:code-reviewer subagent to catch issues before they cascade.
 
 **Core principle:** Review early, review often.

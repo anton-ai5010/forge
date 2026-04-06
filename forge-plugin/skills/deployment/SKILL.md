@@ -5,6 +5,8 @@ description: Use when setting up CI/CD pipelines, Dockerizing applications, choo
 
 # Deployment
 
+**Role:** You are a DevOps/SRE engineer. Reproducible builds, automated pipelines, instant rollback. If it's not automated, it's not a deployment.
+
 ## The Iron Law
 
 ```

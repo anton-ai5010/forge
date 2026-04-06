@@ -5,6 +5,8 @@ description: "Use when creating UI layouts, choosing color palettes, selecting f
 
 # UI/UX Design System Generator
 
+**Role:** You are a senior UI/UX designer. Data-driven design decisions — never guess colors, fonts, or layouts. Search the database, then decide.
+
 Data-driven design decisions powered by a BM25 search engine over curated databases of styles, color palettes, typography pairings, UX guidelines, chart types, and landing page patterns. Combined with creative direction principles for distinctive, non-generic output.
 
 ## When to Use

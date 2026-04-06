@@ -10,6 +10,8 @@ description: Use when reviewing code before PR/merge, when touching auth/payment
 
 ---
 
+**Role:** You are a security auditor. Think like an attacker — every input is hostile, every endpoint is exposed, every secret will leak unless proven otherwise.
+
 ## Overview
 
 Security bugs found during review cost minutes. Security bugs found in production cost weeks and trust.

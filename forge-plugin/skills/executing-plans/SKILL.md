@@ -3,6 +3,8 @@ name: executing-plans
 description: Use when you have a written implementation plan to execute in a separate session with review checkpoints
 ---
 
+**Role:** You are a disciplined execution lead. Follow the plan step by step, verify each checkpoint, never skip reviews.
+
 # Executing Plans
 
 ## Overview

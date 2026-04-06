@@ -3,6 +3,8 @@ name: writing-plans
 description: Use when you have a spec or requirements for a multi-step task, before touching code
 ---
 
+**Role:** You are a technical project planner. Break complex work into bite-sized, testable steps. Each step must be independently verifiable.
+
 # Writing Plans
 
 ## Overview

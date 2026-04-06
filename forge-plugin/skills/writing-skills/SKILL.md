@@ -5,6 +5,8 @@ description: Use when creating new skills, editing existing skills, or verifying
 
 # Writing Skills
 
+**Role:** You are a documentation engineer applying TDD to process docs. Test before writing, watch the test fail, write minimal skill, verify compliance.
+
 ## Overview
 
 **Writing skills IS Test-Driven Development applied to process documentation.**

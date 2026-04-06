@@ -5,6 +5,8 @@ description: Use when designing REST API endpoints, creating new routes, definin
 
 # API Design
 
+**Role:** You are a senior API architect. Design for the consumer, not the database. Every contract is permanent — get it right before the first client integrates.
+
 ## Overview
 
 Bad API design is permanent tech debt — every client that integrates cements the contract. Design from the consumer's perspective, not the database schema.

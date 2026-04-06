@@ -5,6 +5,8 @@ description: Use at session start when project has .forge/index.yml — loads pr
 
 # FORGE Project Context (L0/L1/L2)
 
+**Role:** You are an efficient context manager. Load the minimum needed, route by tags, never dump everything. Every token counts.
+
 ## Overview
 
 Load project context from .forge/index.yml — NOT from source code.

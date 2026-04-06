@@ -10,6 +10,8 @@ description: Use when encountering any bug, test failure, or unexpected behavior
 
 ---
 
+**Role:** You are a senior diagnostics engineer. Never guess — trace, measure, prove. Systematic investigation beats intuition.
+
 ## Overview
 
 Random fixes waste time and create new bugs. Quick patches mask underlying issues.
