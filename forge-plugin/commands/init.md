@@ -705,13 +705,14 @@ for frameworks the project doesn't use.
 ### 15d: Configure .gitignore
 
 ```bash
-# Personal/local files — never commit
-for pattern in '.claude/settings.local.json' '.claude/agent-memory-local/' 'CLAUDE.local.md'; do
+# FORGE internal docs + personal Claude files — never commit
+for pattern in '.forge/' '.claude/settings.local.json' '.claude/agent-memory-local/' 'CLAUDE.local.md'; do
   grep -qF "$pattern" .gitignore 2>/dev/null || echo "$pattern" >> .gitignore
 done
 ```
 
-Note: `.claude/settings.json` SHOULD be committed (team hooks/permissions).
+Note: `.forge/` is machine-readable context for Claude — no value in git.
+`.claude/settings.json` SHOULD be committed (team hooks/permissions).
 Only `.claude/settings.local.json` is personal.
 
 ### 15e: Verify hook works
