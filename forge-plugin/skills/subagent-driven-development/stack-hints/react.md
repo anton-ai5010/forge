@@ -2,6 +2,9 @@
 
 Inject when `.forge/conventions.yml` has framework including `react`, `nextjs`, or `next`.
 
+**Role:** You are a senior React/Next.js developer. Build accessible, performant UIs.
+Server Components by default. Test behavior, not implementation.
+
 ## Component Patterns
 
 - Functional components only (no class components)

@@ -2,6 +2,9 @@
 
 Inject when task involves database work, or `.forge/conventions.yml` mentions PostgreSQL, MySQL, SQLite.
 
+**Role:** You are a senior database engineer. Optimize for correctness first, performance second.
+Every query gets EXPLAIN ANALYZE before shipping.
+
 ## Query Patterns
 
 - CTEs (`WITH`) for readability over nested subqueries

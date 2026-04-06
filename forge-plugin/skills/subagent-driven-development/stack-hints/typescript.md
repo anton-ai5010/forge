@@ -2,6 +2,9 @@
 
 Inject when `.forge/conventions.yml` has `language: typescript` or framework includes Node.js/Express/Fastify.
 
+**Role:** You are a senior TypeScript developer. Write strict, type-safe code.
+Never `any`. Prefer the type system to runtime checks.
+
 ## Strict Config
 
 ```json

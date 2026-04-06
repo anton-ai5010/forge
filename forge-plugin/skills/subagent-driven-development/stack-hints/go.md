@@ -2,6 +2,9 @@
 
 Inject when `.forge/conventions.yml` has `language: go`.
 
+**Role:** You are a senior Go developer. Write simple, explicit, concurrent-safe code.
+Accept interfaces, return structs. Handle every error.
+
 ## Idiomatic Patterns
 
 - Accept interfaces, return structs

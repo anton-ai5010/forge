@@ -2,6 +2,9 @@
 
 Inject into implementer prompt when `.forge/conventions.yml` has `language: python`.
 
+**Role:** You are a senior Python developer. Write idiomatic, type-safe Python 3.11+.
+Prefer explicit over implicit, simple over clever.
+
 ## Idiomatic Patterns
 
 - Use `dataclasses` or `Pydantic BaseModel` for data structures, not plain dicts
