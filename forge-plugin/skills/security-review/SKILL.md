@@ -1,15 +1,20 @@
 ---
 name: security-review
-description: Use when reviewing code before PR/merge, when touching auth/payment/user-data code, or when implementing new endpoints — runs OWASP-based security checklist
+description: Use when reviewing code before PR/merge, when touching auth/payment/user-data/file-upload code, when adding new API endpoints, or when implementing secrets handling
 ---
 
 # Security Review
 
+## Auto-loaded context — failed approaches (DO NOT repeat):
+!`for f in .forge/dead-ends/*secur*.md .forge/dead-ends/*auth*.md .forge/dead-ends/*vuln*.md; do [ -f "$f" ] && echo "=== $(basename $f) ===" && cat "$f"; done 2>/dev/null || echo "no security dead-ends"`
+
+---
+
 ## Overview
 
-Security bugs are harder to find after merge. Catching them during review costs minutes; fixing them in production costs weeks.
+Security bugs found during review cost minutes. Security bugs found in production cost weeks and trust.
 
-**Core principle:** Every code path that handles user input, credentials, or money gets a security pass.
+**Core principle:** Every code path handling user input, credentials, or money gets a security pass before merge.
 
 ## The Iron Law
 
@@ -19,175 +24,126 @@ NO MERGE WITHOUT SECURITY CHECKLIST FOR CHANGED FILES
 
 If changed files touch auth, payments, user data, API endpoints, or file operations — this checklist is mandatory.
 
-## When to Use
+## Environment Recon
 
-**Always before:**
-- PR creation / merge
-- Deploying to production
-- Adding new API endpoints
-- Implementing authentication/authorization
-- Handling payments or sensitive data
-- File uploads / user-generated content
+Before starting, check available tools:
+- **Serena MCP** — `find_referencing_symbols` to trace data flow through auth/input paths
+- **Context7** — check framework-specific security docs (CORS config, auth middleware)
+- **Playwright** — verify security headers, cookie flags, HTTPS redirect in browser
+- **grep/bash** — quick secret scans (commands below)
 
-**Especially when:**
-- "It's just a small auth change"
-- "Only internal users access this"
-- "We'll add security later"
+## Process
 
-## Разведка окружения
+### Step 1: Scope — What Changed?
 
-- **Serena MCP** — find all callers of a function to trace data flow
-- **Context7** — check framework-specific security docs
-- **Playwright** — verify security headers in browser
-
-## The Checklist
-
-Run through ALL sections. Mark each item. Skip = documented exception.
-
-### 1. Secrets & Credentials
-
-```
-[ ] No hardcoded secrets (API keys, passwords, tokens)
-[ ] No secrets in git history (check: git log -p --all -S 'password\|secret\|api_key')
-[ ] .env files in .gitignore
-[ ] Secrets loaded from environment, not config files
-[ ] No secrets in error messages or logs
-[ ] No secrets in URL query parameters
-```
-
-**Quick check:**
 ```bash
-# Find potential hardcoded secrets
+# List changed files (vs main branch)
+git diff --name-only main...HEAD
+
+# Find potential hardcoded secrets in changed files
+git diff main...HEAD | grep -i 'password\|secret\|api_key\|token\|private_key' | grep -v test
+```
+
+Classify each changed file:
+- **Hot** — touches auth, payments, user data, file I/O, API endpoints
+- **Warm** — new dependencies, config changes, error handling
+- **Cold** — docs, styling, tests only
+
+Hot files get full checklist. Warm files get dependency + error checks. Cold files skip.
+
+### Step 2: Run Quick Scans
+
+```bash
+# Hardcoded secrets
 grep -rn "password\|secret\|api_key\|token\|private_key" --include='*.{ts,js,py,go,java,rb}' . \
   | grep -v node_modules | grep -v '.env' | grep -v test
+
+# .env in gitignore?
+grep -q '.env' .gitignore && echo "OK: .env in gitignore" || echo "FAIL: .env NOT in gitignore"
+
+# Dependency vulnerabilities
+npm audit 2>/dev/null || pip-audit 2>/dev/null || echo "Run audit for your package manager"
 ```
 
-### 2. Input Validation
+### Step 3: Checklist (Hot Files Only)
 
 ```
-[ ] ALL user input validated at entry point (not deep inside)
-[ ] SQL: parameterized queries only (no string concatenation)
-[ ] HTML: output escaped (XSS prevention)
-[ ] File paths: no user input in path construction (path traversal)
-[ ] URLs: validated against allowlist for redirects
-[ ] JSON: schema validated before processing
-[ ] Numbers: range checked (no negative amounts, no overflow)
-[ ] Strings: length limited
+[ ] SECRETS: No hardcoded creds, secrets from env only, not in logs/URLs/errors
+[ ] INPUT: All user input validated at entry, parameterized queries, output escaped, paths sanitized
+[ ] AUTH: Every endpoint has auth check, role/permission verified, no client-side user ID for authz
+[ ] API: CORS restricted (not '*'), rate limiting, request size limits, no internals in errors
+[ ] DEPS: No critical CVEs, lock file committed
+[ ] DATA: PII not logged, cookies have Secure+HttpOnly+SameSite, HTTPS enforced
 ```
 
-**Red patterns — immediate fix:**
+**One red pattern example (catches the most common bug):**
 ```
-❌ `query("SELECT * FROM users WHERE id = " + userId)`
-✅ `query("SELECT * FROM users WHERE id = $1", [userId])`
-
-❌ `<div>{userInput}</div>`  (React is safe, raw HTML is not)
-✅ `<div>{sanitize(userInput)}</div>` or use framework escaping
-
-❌ `fs.readFile("/uploads/" + req.params.filename)`
-✅ `fs.readFile(path.join(UPLOAD_DIR, path.basename(req.params.filename)))`
+BAD:  query("SELECT * FROM users WHERE id = " + userId)
+GOOD: query("SELECT * FROM users WHERE id = $1", [userId])
 ```
 
-### 3. Authentication & Authorization
+### Step 4: Write Report
 
-```
-[ ] Auth check on EVERY endpoint (not just frontend)
-[ ] No endpoint accessible without auth (unless intentionally public)
-[ ] Role/permission check where needed (admin vs user)
-[ ] Token expiration set and enforced
-[ ] Password hashing: bcrypt/argon2, NOT md5/sha1/sha256
-[ ] Session invalidation on logout
-[ ] Rate limiting on login/signup/password-reset
-[ ] No user ID from client for authorization decisions (use session)
-```
-
-**Red pattern:**
-```
-❌ DELETE /api/users/:id — checks if logged in, but not if user owns the resource
-✅ DELETE /api/users/:id — checks req.user.id === id OR req.user.role === 'admin'
-```
-
-### 4. API Security
-
-```
-[ ] CORS configured restrictively (not '*' in production)
-[ ] Rate limiting on all public endpoints
-[ ] Request size limits (body, file uploads)
-[ ] No sensitive data in GET parameters (use POST body)
-[ ] Error responses don't leak internals (stack traces, DB schema)
-[ ] API versioning (breaking changes don't break clients)
-[ ] HTTPS enforced (redirect HTTP → HTTPS)
-```
-
-### 5. Dependencies
-
-```bash
-# Check for known vulnerabilities
-npm audit          # Node.js
-pip-audit          # Python
-go vuln check ./...  # Go
-```
-
-```
-[ ] No dependencies with known critical CVEs
-[ ] Lock file committed (package-lock.json / poetry.lock / go.sum)
-[ ] No unnecessary dependencies (smaller surface = fewer vulns)
-```
-
-### 6. Data & Privacy
-
-```
-[ ] PII not logged (emails, IPs, names — mask or omit)
-[ ] Database backups encrypted
-[ ] Soft delete for user data (GDPR right to erasure)
-[ ] No user data in URLs (analytics/referrer leak)
-[ ] Cookies: Secure + HttpOnly + SameSite flags
-```
-
-### 7. Error Handling
-
-```
-[ ] Errors don't expose internals (no stack traces to users)
-[ ] Failed auth returns generic message (not "user not found" vs "wrong password")
-[ ] Catch blocks don't swallow errors silently
-[ ] Error logging includes context but not sensitive data
-```
-
-## Output Format
-
-After completing checklist, produce a security report:
-
-```
+```markdown
 ## Security Review: {files/feature}
 Date: {date}
 
 ### PASS
-- [x] Secrets: no hardcoded credentials
-- [x] Input validation: parameterized queries
-- [x] Auth: role checks on all endpoints
-...
+- [x] Item...
 
-### FAIL (requires fix)
-- [ ] CORS set to '*' in production config → restrict to domain
-- [ ] Rate limiting missing on /api/auth/login → add rate limiter
+### FAIL (requires fix before merge)
+- [ ] Issue → fix action
 
 ### EXCEPTIONS (documented skip)
-- File uploads: not applicable (no upload functionality)
+- Reason...
 
 ### Verdict: PASS / FAIL (N issues)
 ```
 
-Save report to `.forge/plans/security-review-{date}.md` if FORGE project.
+Save to `.forge/plans/security-review-{date}.md`. Record architectural security decisions in `.forge/decisions.yml`.
+
+## Decision Flowchart
+
+```dot
+digraph security_scope {
+  rankdir=TB;
+  node [shape=diamond]; hot; warm;
+  node [shape=box]; full; partial; skip;
+
+  "File changed?" -> hot [label="touches auth/data/payments/endpoints"];
+  "File changed?" -> warm [label="deps/config/errors"];
+  "File changed?" -> skip [label="docs/style/tests"];
+  hot -> full [label="Full checklist (Step 3)"];
+  warm -> partial [label="Deps + error checks only"];
+  skip -> "No review needed";
+}
+```
+
+## Red Flags — STOP
+
+If you catch yourself thinking:
+- "It's internal, security doesn't matter" — Internal tools get compromised too
+- "We'll add auth later" — Unauthed endpoints in git history get found
+- "Framework handles security" — Framework handles SOME, you handle the rest
+- "It's just a read endpoint" — Read endpoints leak data
+- "Only admins use this" — Admin panels are prime targets
+- "It's a small change, skip the checklist" — Small auth changes cause big breaches
+
+**ALL of these mean: Run the checklist.**
+
+## Common Rationalizations
+
+| Excuse | Reality |
+|--------|---------|
+| "No user-facing changes" | Backend changes expose APIs. Check them. |
+| "Tests cover security" | Tests verify behavior, not attack surface. Different concern. |
+| "We'll do a security audit later" | Later never comes. 5 min now vs incident later. |
+| "It's behind a VPN" | VPNs get breached. Defense in depth. |
+| "Just prototyping" | Prototypes become production. Secure from day one. |
+| "Too many files changed" | Scope to hot files. Never skip entirely. |
 
 ## Integration
 
 **Called after:** implementation complete, before `forge:verification-before-completion`
 **Works with:** `forge:finishing-a-development-branch` — security review before merge
-**Records to:** `.forge/decisions.yml` if significant security architecture decisions made
-
-## Red Flags — STOP
-
-- "It's internal, security doesn't matter" → Internal tools get compromised too
-- "We'll add auth later" → Unauthed endpoints in git history get found
-- "Framework handles security" → Framework handles SOME, you handle the rest
-- "It's just a read endpoint" → Read endpoints leak data
-- "Only admins use this" → Admin panels are prime targets
+**Records to:** `.forge/decisions.yml` for security architecture decisions, `.forge/plans/` for review reports

@@ -1,229 +1,124 @@
 ---
 name: database-migrations
-description: Use when modifying database schema, adding tables/columns, changing constraints, or planning data migrations — ensures zero-downtime changes and safe rollback
+description: Use when modifying database schema — adding/removing tables or columns, changing constraints, renaming fields, planning data migrations, or any ALTER TABLE targeting production
 ---
 
+`!database`
+
 # Database Migrations
-
-## Overview
-
-A bad migration takes down production. A good migration is invisible to users. The difference is planning.
-
-**Core principle:** Every migration must be reversible. If you can't roll back, you can't ship.
-
-## The Iron Law
 
 ```
 NO SCHEMA CHANGE WITHOUT MIGRATION PLAN AND ROLLBACK STRATEGY
 ```
 
-## When to Use
+## Overview
 
-- Adding/removing/modifying tables or columns
-- Changing indexes or constraints
-- Migrating data between schemas
-- Renaming fields (requires expand-contract)
-- Any `ALTER TABLE` in production
+Every migration must be reversible. If you can't roll back, you can't ship. A bad migration takes down production; a good one is invisible to users.
 
-## Step 1: Detect Migration Tool
+## Environment Check
 
-Check project for ORM/migration tool:
+Before starting, verify what you have access to:
+- [ ] Database access (MCP tool, connection string, or CLI)
+- [ ] Migration tool detected (see detection step below)
+- [ ] Can run migrations against dev/staging environment
+- [ ] Have backup strategy for production data
+
+## Process
+
+### 1. Detect Migration Tool
 
 ```bash
-# Node.js
-ls prisma/schema.prisma 2>/dev/null   # Prisma
-ls drizzle.config.* 2>/dev/null        # Drizzle
-grep "knex\|kysely" package.json 2>/dev/null
-
-# Python
-ls */models.py 2>/dev/null             # Django
-grep "alembic\|sqlalchemy" requirements*.txt 2>/dev/null
-
-# Go
-grep "golang-migrate\|goose\|atlas" go.mod 2>/dev/null
-
-# Ruby
-ls db/migrate/ 2>/dev/null             # Rails
+# Node: check for prisma/, drizzle.config.*, knex/kysely in package.json
+# Python: check for */models.py (Django), alembic/sqlalchemy in requirements
+# Go: check for golang-migrate/goose/atlas in go.mod
+# Ruby: check for db/migrate/ (Rails)
 ```
 
-If no migration tool — recommend one before proceeding. Raw SQL migrations are a last resort.
+No migration tool found? Recommend one before proceeding. Raw SQL is last resort.
 
-## Step 2: Classify the Change
+### 2. Classify the Change
 
 | Change | Risk | Pattern |
 |--------|------|---------|
 | Add table | Low | Direct create |
 | Add nullable column | Low | Direct add |
-| Add NOT NULL column | Medium | Add nullable → backfill → set NOT NULL |
-| Add index | Medium | CREATE INDEX CONCURRENTLY (Postgres) |
-| Remove column | High | Expand-contract |
-| Rename column | High | Expand-contract |
-| Change column type | High | Expand-contract |
-| Remove table | High | Verify zero references → drop |
+| Add NOT NULL column | Medium | Add nullable, backfill, set NOT NULL |
+| Add index | Medium | CONCURRENTLY (no lock) |
+| Remove column | **High** | Expand-contract |
+| Rename column | **High** | Expand-contract |
+| Change column type | **High** | Expand-contract |
+| Remove table | **High** | Verify zero refs, then drop |
 
-## Step 3: Write Migration
-
-### Safe patterns (deploy directly):
-
-**Add table:**
-```sql
-CREATE TABLE orders (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id),
-    total DECIMAL(10,2) NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT now()
-);
-CREATE INDEX idx_orders_user_id ON orders(user_id);
-```
-
-**Add nullable column:**
-```sql
-ALTER TABLE users ADD COLUMN phone VARCHAR(20);
-```
-
-**Add index without locking (Postgres):**
-```sql
-CREATE INDEX CONCURRENTLY idx_users_email ON users(email);
--- CONCURRENTLY = no table lock, but slower
-```
-
-### Expand-Contract pattern (for breaking changes):
-
-**Rename column** (`name` → `full_name`):
+### 3. Decision: Direct vs Expand-Contract
 
 ```
-Phase 1: EXPAND (deploy)
-  - Add new column: ALTER TABLE users ADD COLUMN full_name VARCHAR(255);
-  - Code writes BOTH columns
-  - Backfill: UPDATE users SET full_name = name WHERE full_name IS NULL;
-
-Phase 2: MIGRATE (deploy)
-  - Code reads from full_name only
-  - Code still writes both (for rollback safety)
-
-Phase 3: CONTRACT (deploy after Phase 2 is stable)
-  - Remove old column: ALTER TABLE users DROP COLUMN name;
-  - Code stops writing to old column
+Is the change backward-compatible?
+├─ YES (add table, add nullable col) → Direct migration
+└─ NO (rename, remove, change type)
+   └─ Expand-Contract: 3 separate deploys
+      Phase 1: EXPAND — add new, code writes both
+      Phase 2: MIGRATE — code reads new only, still writes both
+      Phase 3: CONTRACT — drop old, code uses new only
+      ⚠ NEVER combine phases into one deploy
 ```
 
-**Each phase = separate deployment.** Never combine phases.
+### 4. Handle Large Tables (>1M rows)
 
-### Adding NOT NULL column:
+Batch all UPDATE operations in chunks of 10K with breathing room between batches. Never run a single UPDATE across millions of rows — it locks the table.
 
-```sql
--- Step 1: Add as nullable
-ALTER TABLE users ADD COLUMN role VARCHAR(20);
+### 5. Write Rollback
 
--- Step 2: Backfill with default
-UPDATE users SET role = 'user' WHERE role IS NULL;
--- For large tables, batch:
--- UPDATE users SET role = 'user' WHERE role IS NULL AND id IN (SELECT id FROM users WHERE role IS NULL LIMIT 10000);
+Every migration gets a rollback. No exceptions. For data migrations, take a backup before running.
 
--- Step 3: Set constraint (after backfill complete)
-ALTER TABLE users ALTER COLUMN role SET NOT NULL;
-ALTER TABLE users ALTER COLUMN role SET DEFAULT 'user';
-```
+### 6. Verify
 
-## Step 4: Write Rollback
+- [ ] Migration runs on empty database
+- [ ] Migration runs on database with existing data
+- [ ] Rollback runs cleanly
+- [ ] No table locks (CONCURRENTLY for indexes)
+- [ ] Large table updates are batched
+- [ ] App code handles both old and new schema during deploy
+- [ ] Foreign keys reference existing tables
+- [ ] Indexes added for new foreign keys
 
-**Every migration gets a rollback.** No exceptions.
+## Rationalizations (excuses to skip the process)
 
-```sql
--- migrate up
-ALTER TABLE users ADD COLUMN phone VARCHAR(20);
+| Excuse | Reality |
+|--------|---------|
+| "It's just adding a column" | Adding NOT NULL without backfill breaks existing rows |
+| "We can fix it in the next deploy" | Rollback is needed NOW, not next sprint |
+| "The table is small" | Tables grow. Build the habit on small ones |
+| "Nobody reads that column yet" | Code you don't know about might. Check first |
+| "We'll do expand-contract next time" | Next time never comes. Do it now for breaking changes |
 
--- migrate down (rollback)
-ALTER TABLE users DROP COLUMN phone;
-```
+## Red Flags
 
-For data migrations, rollback may need a backup:
-```bash
-# Before data migration
-pg_dump -t users --data-only > users_backup_$(date +%Y%m%d).sql
+Stop immediately if you catch yourself thinking:
 
-# Rollback
-psql < users_backup_20260406.sql
-```
-
-## Step 5: Verify
-
-```
-[ ] Migration runs cleanly on empty database
-[ ] Migration runs cleanly on database with existing data
-[ ] Rollback runs cleanly
-[ ] No table locks during migration (use CONCURRENTLY for indexes)
-[ ] Large table? Batched updates (not single UPDATE for millions of rows)
-[ ] Application code handles both old and new schema during deploy
-[ ] Foreign keys point to existing tables
-[ ] Indexes added for new foreign keys
-```
+- "Just ALTER TABLE real quick" — on a production table with traffic
+- "We don't need a rollback for this" — you always do
+- "Let me just rename this column directly" — that's a breaking change
+- "One big UPDATE should be fine" — not on a table with >100K rows
+- "I'll combine all three phases into one migration" — that defeats the purpose
 
 ## Anti-Patterns
 
-| Anti-Pattern | Why Bad | Do Instead |
-|---|---|---|
-| `DROP COLUMN` without expand-contract | Running code still reads it → errors | Three-phase expand-contract |
-| `NOT NULL` without default | Existing rows fail constraint | Add nullable → backfill → set NOT NULL |
-| `UPDATE` millions of rows in one tx | Locks table, blocks reads | Batch in chunks of 10K |
-| No rollback script | Can't undo if broken | Always write down migration |
-| `ALTER TYPE` on large table | Full table rewrite, lock | Add new column, backfill, swap |
-| Test only on empty DB | Migration fails on real data | Test with production-like data |
-| Multiple breaking changes in one migration | Can't rollback partially | One change per migration file |
-
-## Large Table Migrations
-
-For tables with >1M rows:
-
-```sql
--- BAD: locks entire table
-UPDATE users SET status = 'active' WHERE status IS NULL;
-
--- GOOD: batch processing
-DO $$
-DECLARE
-  batch_size INT := 10000;
-  rows_updated INT;
-BEGIN
-  LOOP
-    UPDATE users SET status = 'active'
-    WHERE id IN (
-      SELECT id FROM users WHERE status IS NULL LIMIT batch_size
-    );
-    GET DIAGNOSTICS rows_updated = ROW_COUNT;
-    EXIT WHEN rows_updated = 0;
-    PERFORM pg_sleep(0.1);  -- breathing room
-  END LOOP;
-END $$;
-```
+| Anti-Pattern | Do Instead |
+|---|---|
+| `DROP COLUMN` without expand-contract | Three-phase expand-contract |
+| `NOT NULL` without default on existing table | Add nullable, backfill, constrain |
+| Single UPDATE on millions of rows | Batch in 10K chunks |
+| No rollback script | Always write down migration |
+| `ALTER TYPE` on large table | New column, backfill, swap |
+| Test only on empty DB | Test with production-like data |
+| Multiple breaking changes in one file | One change per migration |
 
 ## Output
 
-Save migration plan to `.forge/plans/migration-{name}.md`:
-
-```markdown
-## Migration: {description}
-Date: {date}
-Risk: Low / Medium / High
-Pattern: Direct / Expand-Contract
-
-### Changes
-1. {change description}
-
-### Migration SQL
-{forward migration}
-
-### Rollback SQL
-{reverse migration}
-
-### Verification
-- [ ] Tested on empty DB
-- [ ] Tested on data copy
-- [ ] Rollback tested
-- [ ] No locks on large tables
-```
+Save migration plan to `.forge/plans/migration-{name}.md` with: description, date, risk level, pattern (Direct/Expand-Contract), migration SQL, rollback SQL, and verification checklist.
 
 ## Integration
 
-**Called after:** `forge:brainstorming` (schema design decided)
-**Called before:** `forge:test-driven-development` (test migration behavior)
-**Records to:** `.forge/decisions.yml` (schema decisions)
+- **After:** `forge:brainstorming` (schema design decided)
+- **Before:** `forge:test-driven-development` (test migration behavior)
+- **Records to:** `.forge/decisions.yml` (schema decisions)
