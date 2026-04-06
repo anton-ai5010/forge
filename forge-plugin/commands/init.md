@@ -595,7 +595,7 @@ If any check fails — fix before showing to user. Do not ask about validation �
 
 ## Step 15: Configure .claude/ project settings
 
-Set up Claude Code hooks so L0 context auto-injects every prompt.
+Set up Claude Code environment: hooks, permissions, rules, gitignore.
 
 ### 15a: Find forge plugin path
 
@@ -604,21 +604,13 @@ FORGE_HOOKS=$(find ~/.claude/plugins -path '*/forge*/hooks/context-inject.sh' 2>
 echo "Found: $FORGE_HOOKS"
 ```
 
-If not found — try:
-```bash
-FORGE_HOOKS=$(find ~/.claude/plugins/cache -name 'context-inject.sh' 2>/dev/null | head -1)
-```
-
-### 15b: Create or update .claude/settings.json
+### 15b: Create/update .claude/settings.json
 
 ```bash
 mkdir -p .claude
 ```
 
-Read existing `.claude/settings.json` if it exists. Merge FORGE hooks into it
-without overwriting existing user settings (permissions, other hooks).
-
-Add these hooks:
+Read existing `.claude/settings.json` if exists. MERGE (don't overwrite) these settings:
 
 ```json
 {
@@ -626,37 +618,105 @@ Add these hooks:
     "UserPromptSubmit": [
       {
         "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash {FORGE_HOOKS_PATH}"
-          }
-        ]
+        "hooks": [{
+          "type": "command",
+          "command": "bash {FORGE_HOOKS_PATH}"
+        }]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{
+          "type": "command",
+          "command": "[ \"$(git branch --show-current)\" != \"main\" ] && [ \"$(git branch --show-current)\" != \"master\" ] || { echo 'BLOCKED: Do not edit files on main/master. Create a feature branch first.' >&2; exit 2; }"
+        }]
       }
     ]
-  }
+  },
+  "permissions": {
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)"
+    ]
+  },
+  "language": "ru"
 }
 ```
 
-Where `{FORGE_HOOKS_PATH}` is the absolute path found in Step 15a.
-
-**Rules:**
-- If `.claude/settings.json` exists — READ it first, MERGE hooks, preserve existing permissions/settings
+**Merge rules:**
+- If `.claude/settings.json` exists — read first, preserve existing settings
 - If `hooks.UserPromptSubmit` already has FORGE hook — don't duplicate
-- If other hooks exist (PreToolUse, etc.) — keep them
-- Write the merged result back
+- Append to existing `permissions.deny`, don't replace
+- Don't overwrite user's `permissions.allow`
+- If `language` already set — keep user's choice
 
-### 15c: Add .claude/ to .gitignore if needed
+### 15c: Create .claude/rules/ (path-scoped instructions)
 
-```bash
-# settings.json may contain user-specific paths — don't commit
-grep -q '.claude/settings.json' .gitignore 2>/dev/null || echo '.claude/settings.json' >> .gitignore
+Create rules that activate only when working on specific files:
+
+**`.claude/rules/testing.md`** (if project has tests):
+```yaml
+---
+paths:
+  - "**/*.test.*"
+  - "**/*.spec.*"
+  - "**/tests/**"
+  - "**/__tests__/**"
+---
+
+Follow TDD: write failing test first, then minimal implementation.
+Use descriptive test names: "should [expected] when [condition]".
+No mocks unless external dependency. Clean up in afterEach.
 ```
 
-### 15d: Verify hook works
+**`.claude/rules/api-routes.md`** (if project has API routes):
+```yaml
+---
+paths:
+  - "src/app/api/**"
+  - "src/routes/**"
+  - "api/**"
+---
+
+Every endpoint: validate input, check auth, handle errors.
+Return consistent shape. Use proper HTTP status codes.
+Never expose internal errors to client.
+```
+
+**`.claude/rules/red-zones.md`** (if red zones identified in Step 2):
+```yaml
+---
+paths:
+  - "{red_zone_paths from Step 2}"
+---
+
+RED ZONE FILE. Extra care required:
+- Read the entire file before any change
+- Write tests BEFORE modifying
+- Make minimal changes only
+- Get explicit user approval before editing
+```
+
+Only create rules that are relevant to the detected stack. Don't create rules
+for frameworks the project doesn't use.
+
+### 15d: Configure .gitignore
 
 ```bash
-# Quick test — should output JSON with additionalContext
+# Personal/local files — never commit
+for pattern in '.claude/settings.local.json' '.claude/agent-memory-local/' 'CLAUDE.local.md'; do
+  grep -qF "$pattern" .gitignore 2>/dev/null || echo "$pattern" >> .gitignore
+done
+```
+
+Note: `.claude/settings.json` SHOULD be committed (team hooks/permissions).
+Only `.claude/settings.local.json` is personal.
+
+### 15e: Verify hook works
+
+```bash
 echo '{"input":"test"}' | bash {FORGE_HOOKS_PATH}
 ```
 
