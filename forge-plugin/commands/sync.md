@@ -42,16 +42,33 @@ git diff --name-status HEAD~1..HEAD
 
 Collect: Created (A), Modified (M), Deleted (D) files.
 
-## Step 1.5: Check Connected Infrastructure
+## Step 1.5: Check and Update Infrastructure
 
-If project has server infrastructure — check its state.
+If `.forge/infrastructure.yml` exists — verify and update it.
 
-- `docker-compose.yml` → `docker compose ps`, `docker compose logs --tail=20`
-- Remote Docker → `ssh server "cd /path && docker compose ps"`
-- DB → check schema matches models, migrations applied
-- Web UI (Playwright MCP) → check main page
+```bash
+# Local Docker
+docker compose ps 2>/dev/null
 
-If no infrastructure — skip.
+# Remote Docker (if remote.server defined in infrastructure.yml)
+ssh server "docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'" 2>/dev/null
+
+# DB health (if databases defined)
+# Try connecting, check migrations status
+
+# Remote services
+ssh server "systemctl is-active app.service" 2>/dev/null
+```
+
+Update `.forge/infrastructure.yml`:
+- Container statuses (running/stopped/restarting)
+- New containers or removed ones
+- DB table count changes
+- Migration status (pending/applied)
+
+If Playwright MCP available — check main page is responding.
+
+If no `.forge/infrastructure.yml` — skip.
 
 ## Step 1.7: Enforce Project Structure
 

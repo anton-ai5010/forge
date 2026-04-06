@@ -75,6 +75,10 @@ catalog:
     path: .forge/learnings.yml
     tags: [lesson, learning, pattern, insight, remember, learned]
 
+  infrastructure:
+    path: .forge/infrastructure.yml
+    tags: [docker, server, database, deploy, nginx, ssh, containers, ports, services, api, infra]
+
   skills:
     path: .forge/skills-catalog.yml
     tags: [skill, workflow, how-to, process, tool]

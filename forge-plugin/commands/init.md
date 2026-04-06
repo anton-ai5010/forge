@@ -94,6 +94,130 @@ For each source directory:
 mkdir -p .forge/library/{directory_name}
 ```
 
+## Step 4.5: Scan Infrastructure
+
+Detect and document all infrastructure the project depends on.
+Run checks in parallel where possible.
+
+### Docker (local)
+
+```bash
+ls docker-compose.yml docker-compose.yaml Dockerfile 2>/dev/null
+docker compose ps 2>/dev/null
+docker compose config --services 2>/dev/null
+```
+
+If docker-compose found: document services, ports, volumes, health status.
+
+### Docker (remote server)
+
+```bash
+# Check if SSH server is available (from ~/.ssh/config or .env)
+ssh server "docker compose ls" 2>/dev/null
+ssh server "docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'" 2>/dev/null
+```
+
+If remote containers found: document what runs where, ports, status.
+
+### Database
+
+```bash
+# Detect DB type from configs
+grep -r "DATABASE_URL\|DB_HOST\|POSTGRES\|MYSQL\|MONGO\|REDIS" .env .env.* docker-compose.yml 2>/dev/null
+```
+
+If DB found: try connecting, list tables/collections, document schema overview.
+For PostgreSQL: `\dt` (tables), `\d table_name` (schema).
+For MongoDB: `show collections`.
+For Redis: `INFO keyspace`.
+
+### Web Server / Reverse Proxy
+
+```bash
+# Check remote server
+ssh server "nginx -T 2>/dev/null | grep -E 'server_name|proxy_pass|listen'" 2>/dev/null
+ssh server "systemctl list-units --type=service --state=running" 2>/dev/null
+ssh server "crontab -l" 2>/dev/null
+```
+
+### External Services
+
+```bash
+# Detect from code and configs
+grep -rh "api_key\|API_KEY\|webhook\|WEBHOOK\|https://api\." .env .env.* 2>/dev/null | grep -v '#'
+```
+
+Document: which APIs, webhooks, external services the project depends on.
+
+### Generate .forge/infrastructure.yml (L1)
+
+```yaml
+# Infrastructure detected by /forge:init
+# Updated by /forge:sync when infrastructure changes
+
+local:
+  docker:
+    compose_file: docker-compose.yml  # or null
+    services:
+      - name: app
+        image: "node:20-alpine"
+        ports: ["3000:3000"]
+        status: running  # or stopped/not-built
+        healthcheck: true
+      - name: db
+        image: "postgres:16"
+        ports: ["5432:5432"]
+        volumes: ["pgdata:/var/lib/postgresql/data"]
+        status: running
+
+remote:
+  server:  # SSH alias or null if no server
+    host: 192.168.31.183  # from ~/.ssh/config
+    containers:
+      - name: app
+        status: running
+        ports: ["3000:3000"]
+    nginx:
+      sites:
+        - domain: app.example.com
+          proxy_pass: "http://localhost:3000"
+          ssl: true
+    systemd:
+      - name: app.service
+        status: active
+    cron:
+      - schedule: "0 3 * * *"
+        command: "pg_dump mydb > /backups/daily.sql"
+
+databases:
+  - type: postgresql  # or mysql, mongodb, redis, sqlite
+    host: localhost  # or remote
+    port: 5432
+    name: mydb
+    tables: 12  # count
+    key_tables:
+      - users (id, email, name, created_at)
+      - orders (id, user_id, total, status, created_at)
+    migrations: alembic  # or prisma, django, raw-sql, null
+    backup: "daily at 03:00 via cron"  # or null
+
+external_services:
+  - name: "Yandex Market API"
+    env_var: YM_API_KEY
+    base_url: "https://api.partner.market.yandex.ru"
+  - name: "Telegram Bot"
+    env_var: TG_BOT_TOKEN
+
+monitoring:
+  uptime: null  # or healthchecks.io, uptimerobot
+  logging: journald  # or loki, cloudwatch, file
+  metrics: null  # or prometheus, grafana
+```
+
+If no infrastructure detected (pure library/CLI tool), skip this file.
+
+Show the generated infrastructure.yml to user: "Вот что я нашёл. Что исправить?"
+
 ## Step 5: Generate .forge/map.yml (L1)
 
 ```yaml
@@ -231,6 +355,10 @@ catalog:
   learnings:
     path: .forge/learnings.yml
     tags: [lesson, learning, pattern, insight, remember, learned]
+
+  infrastructure:
+    path: .forge/infrastructure.yml
+    tags: [docker, server, database, deploy, nginx, ssh, containers, ports, services, api, infra]
 
 session:
   started: {time}
@@ -377,6 +505,7 @@ L1 (load by tags):
 - `.forge/dead-ends.yml` — failed approaches [tags: failed, tried, avoid]
 - `.forge/journal.yml` — session history [tags: history, last-session, resume]
 - `.forge/learnings.yml` — project lessons [tags: lesson, learning, insight]
+- `.forge/infrastructure.yml` — Docker, servers, DBs, APIs [tags: docker, server, database, infra]
 L2 (load rarely): `.forge/library/*/spec.yml`, `.forge/dead-ends/*.md`
 
 DO NOT load all L1 files. Match catalog tags to current task.
