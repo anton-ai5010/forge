@@ -79,7 +79,7 @@ if [ -n "$skill_hint" ]; then
     context="${context}\n\nSKILL HINT: Consider using ${skill_hint} for this task."
 fi
 
-context="${context}\n\nROUTING: Match catalog[].tags with current task to decide which L1 files to load. Do NOT load all files — only what matches."
+context="${context}\n\nROUTING: Match catalog[].tags with current task to decide which L1 files to load. Do NOT load all files — only what matches.\n\nDOC DISCIPLINE: If you just made a technical decision — record in .forge/decisions.yml. If an approach failed — record in .forge/dead-ends.yml. If you learned something non-obvious — record in .forge/learnings.yml. Do it NOW, not later."
 
 escaped=$(escape_for_json "$context")
 
