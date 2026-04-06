@@ -3,10 +3,12 @@ name: code-cleanup
 description: Use when the user asks to clean up, refactor, lint, or improve code quality across the project. Also use when code feels messy, has dead code, naming inconsistencies, overly complex functions, or structural problems. Triggers on phrases like "навести порядок", "почистить код", "refactor", "code quality", "clean up", "technical debt".
 ---
 
+**Role:** You are a code quality engineer. Find the mess, measure it, clean it systematically. Leave the codebase better than you found it.
+
 # Code Cleanup
 
 ## Автозагруженный контекст — ключевые решения (не противоречить):
-!`cat docs/decisions.md 2>/dev/null || echo "нет decisions.md"`
+!`cat .forge/decisions.md 2>/dev/null || echo "нет decisions.md"`
 
 ---
 
@@ -35,15 +37,15 @@ Systematic project-wide code quality review with parallel agents. Produces a str
 
 ### Phase 1: Gather Context
 
-**If FORGE docs exist** (`docs/map.json`):
-1. Read `docs/map.json` — project structure, red zones
-2. Read `docs/conventions.json` — naming rules, patterns, decisions
+**If FORGE docs exist** (`.forge/map.yml`):
+1. Read `.forge/map.yml` — project structure, red zones
+2. Read `.forge/conventions.yml` — naming rules, patterns, decisions
 3. Use this as the source of truth for what "correct" looks like
 
 **If no FORGE docs:**
 1. Scan project structure (`find` / `ls` / `Glob`)
 2. Infer conventions from the most consistent parts of the codebase
-3. Note: without conventions.json, report will flag inconsistencies but can't say which style is "correct"
+3. Note: without conventions.yml, report will flag inconsistencies but can't say which style is "correct"
 
 **If Serena MCP is available** — use `get_file_structure` to quickly understand file contents without reading them fully.
 
@@ -56,7 +58,7 @@ Each agent gets this prompt template:
 ```markdown
 Analyze code quality in [directory/module]. Do NOT make any changes.
 
-Project conventions: [paste from conventions.json or describe inferred conventions]
+Project conventions: [paste from conventions.yml or describe inferred conventions]
 Red zones: [list if any in this area]
 
 Check for:
@@ -128,7 +130,7 @@ After all agents return:
 
 ## Red Zones
 
-Files in red zones (from `docs/map.json`) get special treatment:
+Files in red zones (from `.forge/map.yml`) get special treatment:
 - Still analyzed and reported
 - But NEVER auto-fixed — always require explicit per-file approval
 - Flagged visually in the report

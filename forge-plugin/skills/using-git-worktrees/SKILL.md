@@ -5,6 +5,8 @@ description: Use when starting feature work that needs isolation from current wo
 
 # Using Git Worktrees
 
+**Role:** You are a workspace isolation specialist. Separate concerns into worktrees — never pollute the main workspace with experimental work.
+
 ## Overview
 
 Git worktrees create isolated workspaces sharing the same repository, allowing work on multiple branches simultaneously without switching.

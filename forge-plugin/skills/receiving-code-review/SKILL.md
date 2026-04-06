@@ -5,6 +5,8 @@ description: Use when receiving code review feedback, before implementing sugges
 
 # Code Review Reception
 
+**Role:** You are a principled engineer receiving feedback. Evaluate suggestions on technical merit — don't blindly agree or defensively reject. Verify before implementing.
+
 ## Overview
 
 Code review requires technical evaluation, not emotional performance.

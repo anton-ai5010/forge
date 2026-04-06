@@ -11,7 +11,7 @@ description: Validate code against implementation plan and documentation - finds
 ## Pre-Check: FORGE Documentation Exists?
 
 ```bash
-ls docs/map.json 2>/dev/null
+ls .forge/map.yml .forge/map.json 2>/dev/null
 ```
 
 **If not exists:**
@@ -28,27 +28,27 @@ Stop.
 Read project documentation:
 
 ```bash
-cat docs/map.json
-cat docs/index.md
+cat .forge/map.yml 2>/dev/null || cat .forge/map.json
+cat .forge/index.yml 2>/dev/null || cat .forge/index.md
 ```
 
-For each directory in `docs/library/`:
+For each directory in `.forge/library/`:
 
 ```bash
-cat docs/library/*/spec.json
+cat .forge/library/*/spec.yml 2>/dev/null || cat .forge/library/*/spec.json
 ```
 
 Store in memory:
-- Expected file structure (from map.json)
-- Expected file purposes (from spec.json files)
-- Current task and stage (from index.md)
+- Expected file structure (from map.yml)
+- Expected file purposes (from spec.yml files)
+- Current task and stage (from index.yml)
 
 ## Step 2: Find Active Plan
 
 Check for implementation plans:
 
 ```bash
-ls -t docs/plans/*.md 2>/dev/null | head -1
+ls -t .forge/plans/*.md 2>/dev/null | head -1
 ```
 
 **If no plan exists:**
@@ -126,7 +126,7 @@ Generate report in this format:
 Plan Validation
 ═══════════════
 
-Plan: docs/plans/2026-02-15-polymarket-smart-money.md
+Plan: .forge/plans/2026-02-15-polymarket-smart-money.md
 Tasks: 13 total
 
 ✅ Task 1: SmartMoneyStore implementation
@@ -148,8 +148,8 @@ Tasks: 13 total
    Action: Update weight to match plan
 
 ❌ Task 13: Documentation sync
-   Expected: docs/library/ updated with new files
-   Found: spec.json missing entries for:
+   Expected: .forge/library/ updated with new files
+   Found: spec.yml missing entries for:
      - src/database/smart_money_store.py
      - src/parsers/polymarket_parser.py
    Action: Run /forge:sync
@@ -172,15 +172,15 @@ If all tasks ✅:
 
 Compare documentation against actual codebase.
 
-### For Each docs/library/[folder]/spec.json
+### For Each .forge/library/[folder]/spec.yml
 
-Read spec.json to get expected files and their purposes.
+Read spec.yml to get expected files and their purposes.
 
 Scan actual directory on disk:
 
 ```bash
 # Get files documented in spec
-jq -r '.files | keys[]' docs/library/{folder}/spec.json
+yq -r '.files | keys[]' .forge/library/{folder}/spec.yml
 
 # Get actual files in directory
 find {folder} -type f -name "*.py" -o -name "*.js" -o -name "*.ts"
@@ -191,7 +191,7 @@ Compare:
 **Files in spec but NOT on disk:**
 ```
 ❌ Documented but missing: {folder}/{file}
-   Action: Remove from spec.json or restore file
+   Action: Remove from spec.yml or restore file
 ```
 
 **Files on disk but NOT in spec:**
@@ -209,7 +209,7 @@ For each file in spec, read actual file and check:
 grep "^import\|^from" {file_path}
 ```
 
-Compare against `depends_on` in spec.json:
+Compare against `depends_on` in spec.yml:
 
 ```
 ⚠️ Import mismatch: {folder}/{file}
@@ -225,7 +225,7 @@ Compare against `depends_on` in spec.json:
 Documentation Validation
 ════════════════════════
 
-Scanning 8 directories in docs/library/
+Scanning 8 directories in .forge/library/
 
 ✅ analyzers/ (9 files)
    Spec: 9 files documented
@@ -264,15 +264,15 @@ Summary:
 Documentation coverage: 95% (57/59 files)
 ```
 
-## Step 5: Validate map.json Accuracy
+## Step 5: Validate map.yml Accuracy
 
-Check if file counts in map.json match reality:
+Check if file counts in map.yml match reality:
 
-For each directory in map.json:
+For each directory in map.yml:
 
 ```bash
-# Expected count from map.json
-jq -r '.directories["{folder}"].files' docs/map.json
+# Expected count from map.yml
+yq -r '.directories["{folder}"].files' .forge/map.yml
 
 # Actual count on disk
 find {folder} -type f | wc -l
@@ -282,7 +282,7 @@ Compare:
 
 ```
 ⚠️ Count mismatch: indicators/
-   map.json: 5 files
+   map.yml: 5 files
    Actual: 6 files
    Action: Run /forge:sync
 ```
@@ -290,8 +290,8 @@ Compare:
 For red zones:
 
 ```bash
-# Expected red zones from map.json
-jq -r '.red_zones[]' docs/map.json
+# Expected red zones from map.yml
+yq -r '.red_zones[]' .forge/map.yml
 
 # Check each exists
 for file in {red_zones}; do
@@ -301,7 +301,7 @@ done
 
 ```
 ❌ Red zone file missing: strategies/production_v1.py
-   Listed in map.json but doesn't exist
+   Listed in map.yml but doesn't exist
    Action: Remove from red_zones or restore file
 ```
 
@@ -318,7 +318,7 @@ Project: {project_name}
 
 Plan Compliance
 ───────────────
-Plan: docs/plans/{latest_plan}
+Plan: .forge/plans/{latest_plan}
 ✅ Implemented: {N}/{total} tasks
 ⚠️ Partial: {M} tasks
 ❌ Missing: {K} tasks
@@ -335,7 +335,7 @@ Documentation Coverage
 Discrepancies:
 {list each undocumented file and mismatch}
 
-map.json Accuracy
+map.yml Accuracy
 ─────────────────
 ✅ File counts: {N}/{total} directories match
 ⚠️ Count mismatches: {M} directories
@@ -412,8 +412,8 @@ If you're about to:
 - Report: "No plan to validate against"
 - Continue with documentation validation
 
-**spec.json malformed:**
-- Report which spec.json is broken
+**spec.yml malformed:**
+- Report which spec.yml is broken
 - Skip that directory
 - Continue with other directories
 - Suggest manual inspection
@@ -429,7 +429,7 @@ If you're about to:
 - Continue with accessible files
 
 **Conflicting sources:**
-- If plan says one thing, spec.json says another:
+- If plan says one thing, spec.yml says another:
   - Report the conflict explicitly
   - Mark as ⚠️ inconsistent
   - Suggest resolving the conflict manually
@@ -441,14 +441,14 @@ If you're about to:
 ```
 You: /forge:validate
 
-[Reads docs/, scans codebase]
+[Reads .forge/, scans codebase]
 
 FORGE Validation Summary
 ════════════════════════
 
 Plan Compliance: 15/15 tasks ✅
 Documentation Coverage: 100% (42/42 files)
-map.json Accuracy: ✅ All counts match
+map.yml Accuracy: ✅ All counts match
 
 ═══════════════════════════════════════
 Overall Status: ✅ ALL CLEAR
@@ -462,14 +462,14 @@ Overall Status: ✅ ALL CLEAR
 ```
 You: /forge:validate
 
-[Reads docs/, scans codebase, finds problems]
+[Reads .forge/, scans codebase, finds problems]
 
 FORGE Validation Summary
 ════════════════════════
 
 Plan Compliance
 ───────────────
-Plan: docs/plans/2026-02-15-caching.md
+Plan: .forge/plans/2026-02-15-caching.md
 ✅ Implemented: 10/12 tasks
 ⚠️ Partial: 1 task
 ❌ Missing: 1 task
@@ -482,8 +482,8 @@ Discrepancies:
    Missing: miss_rate, eviction_count
 
 ❌ Task 12: Documentation not synced
-   Expected: docs/library/ updated
-   Found: Missing spec.json entries
+   Expected: .forge/library/ updated
+   Found: Missing spec.yml entries
 
 Documentation Coverage
 ──────────────────────
@@ -511,15 +511,15 @@ Next Steps:
 ## Optimization
 
 **Smart Scanning:**
-- Only read files mentioned in plan or spec.json
+- Only read files mentioned in plan or spec.yml
 - Don't scan entire codebase unnecessarily
 - Use grep for quick content checks before full file read
 - Cache file lists per directory
 
 **Performance:**
 - Validation should complete in <30 seconds for typical project
-- Use parallel checks where possible (checking multiple spec.json files)
-- Bail early if critical errors found (missing docs/map.json)
+- Use parallel checks where possible (checking multiple spec.yml files)
+- Bail early if critical errors found (missing .forge/map.yml)
 
 **Accuracy vs Speed:**
 - Prefer accuracy over speed

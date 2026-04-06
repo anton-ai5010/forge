@@ -5,6 +5,8 @@ description: Use when executing implementation plans with independent tasks in t
 
 # Subagent-Driven Development
 
+**Role:** You are a team lead orchestrating specialists. Dispatch clear briefs, review every deliverable, never let quality slip between handoffs.
+
 Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
 
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
@@ -93,17 +95,22 @@ digraph process {
 
 ## Prompt Templates
 
-- `./implementer-prompt.md` - Dispatch implementer subagent
+- `./implementer-prompt.md` - Dispatch implementer subagent (auto-injects stack-specific patterns)
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
 - `./forge-documenter-prompt.md` - Dispatch documentation updater subagent
+- `./stack-hints/*.md` - Language/framework-specific patterns (Python, TypeScript, Go, React, SQL)
+
+### Stack Hints
+
+Before dispatching an implementer, read `.forge/conventions.yml` → detect language/framework → inject matching `stack-hints/*.md` into the prompt. This gives the subagent idiomatic patterns for the project's stack without maintaining separate agents per language. See `implementer-prompt.md` for matching rules.
 
 ## Example Workflow
 
 ```
 You: I'm using Subagent-Driven Development to execute this plan.
 
-[Read plan file once: docs/plans/feature-plan.md]
+[Read plan file once: .forge/plans/feature-plan.md]
 [Extract all 5 tasks with full text and context]
 [Create TodoWrite with all tasks]
 
@@ -249,8 +256,8 @@ Done!
 - **forge:test-driven-development** - Subagents follow TDD for each task
 
 **FORGE documentation:**
-- **forge:forge-context** - Subagents read docs/library/[folder]/spec.json before work
-- **forge:sync** - Manual update for docs/ at end of session
+- **forge:forge-context** - Subagents read .forge/library/[folder]/spec.json before work
+- **forge:sync** - Manual update for .forge/ at end of session
 - **forge-documenter** agent - Automatic doc update after each task's review
 
 **Alternative workflow:**

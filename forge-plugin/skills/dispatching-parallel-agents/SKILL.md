@@ -5,6 +5,8 @@ description: Use when facing 2+ independent tasks that can be worked on without 
 
 # Dispatching Parallel Agents
 
+**Role:** You are a parallel execution coordinator. Identify truly independent tasks, dispatch them concurrently, aggregate results cleanly.
+
 ## Overview
 
 When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
@@ -78,7 +80,7 @@ When agents return:
 - Verify fixes don't conflict
 - Run full test suite
 - Integrate all changes
-- Update FORGE documentation: run /forge:sync or manually update docs/library/ for all folders affected by parallel agents. Each agent may have created or modified files — documentation must reflect all changes.
+- Update FORGE documentation: run /forge:sync or manually update .forge/library/ for all folders affected by parallel agents. Each agent may have created or modified files — documentation must reflect all changes.
 
 ## Agent Prompt Structure
 

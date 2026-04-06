@@ -8,10 +8,10 @@ description: "You MUST use this before any creative work - creating features, bu
 ## Автозагруженный контекст
 
 ### Провальные подходы (не повторять):
-!`for f in docs/dead-ends/*.md; do [ -f "$f" ] && echo "=== $(basename $f) ===" && cat "$f"; done 2>/dev/null || echo "нет dead-ends"`
+!`for f in .forge/dead-ends/*.md; do [ -f "$f" ] && echo "=== $(basename $f) ===" && cat "$f"; done 2>/dev/null || echo "нет dead-ends"`
 
 ### Ключевые решения:
-!`cat docs/decisions.md 2>/dev/null || echo "нет decisions.md"`
+!`cat .forge/decisions.md 2>/dev/null || echo "нет decisions.md"`
 
 ---
 
@@ -26,10 +26,12 @@ Do NOT invoke any implementation skill, write any code, scaffold any project, or
 </HARD-GATE>
 
 <FORGE-GATE>
-You MUST read docs/library/ spec.json files BEFORE exploring the project in any other way. If you find yourself running `find`, `ls`, `tree`, or reading source code files before reading docs/library/ — you are violating this gate. STOP and read docs/library/ first.
+You MUST read .forge/library/ spec files (spec.yml or spec.json) BEFORE exploring the project in any other way. If you find yourself running `find`, `ls`, `tree`, or reading source code files before reading .forge/library/ — you are violating this gate. STOP and read .forge/library/ first.
 
 You MUST generate and get approval for requirements BEFORE proposing any design approaches. If you find yourself proposing architecture before requirements are approved — STOP.
 </FORGE-GATE>
+
+**Role:** You are a senior product architect. Explore requirements ruthlessly before committing to any design. Challenge assumptions, surface hidden constraints.
 
 ## Anti-Pattern: "This Is Too Simple To Need A Design"
 
@@ -46,14 +48,14 @@ Every project goes through this process. A todo list, a single-function utility,
 
 You MUST create a task for each of these items and complete them in order:
 
-1. **Load FORGE context (MANDATORY FIRST STEP)** — Before doing ANYTHING else, read these files in this exact order:
-   - `docs/map.json` — project structure and red zones
-   - `docs/conventions.json` — project rules
-   - `docs/index.md` — project goal, stage, current task, session state
-   - `docs/dead-ends/` — check `ls` for failed approaches related to this topic
-   - ALL `docs/library/*/spec.json` files — complete project knowledge
+1. **Load FORGE context (MANDATORY FIRST STEP)** — L0 (index.yml) is auto-injected via hook. Load L1 files relevant to brainstorming:
+   - `.forge/map.yml` (or .json) — project structure and red zones
+   - `.forge/conventions.yml` (or .json) — project rules
+   - `.forge/dead-ends.yml` — check for failed approaches related to this topic
+   - `.forge/learnings.yml` — project lessons from previous sessions (if exists)
+   - ALL `.forge/library/*/spec.yml` (or spec.json) files — complete project knowledge
 
-   DO NOT read source code. DO NOT scan the filesystem. DO NOT read .kiro/, .claude/, or any other config directories. Everything you need to know about the project is in docs/library/. If docs/map.json does not exist, tell the user to run /forge:init first and STOP.
+   DO NOT read source code. DO NOT scan the filesystem. Everything you need is in .forge/library/. If neither .forge/index.yml nor .forge/index.md exists, tell the user to run /forge:init first and STOP.
 
 2. **Confirm understanding of goal** — Restate what you believe the user wants to build and ask for confirmation before proceeding
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
@@ -87,7 +89,7 @@ You MUST create a task for each of these items and complete them in order:
 
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` and commit. Design doc MUST include Requirements section at the beginning (copy approved requirements from step 3.5)
+6. **Write design doc** — save to `.forge/plans/YYYY-MM-DD-<topic>-design.md` and commit. Design doc MUST include Requirements section at the beginning (copy approved requirements from step 3.5)
 7. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
@@ -157,7 +159,7 @@ digraph brainstorming {
 - Lead with your recommended option and explain why
 
 **Presenting the design:**
-- Before presenting, verify: Does this touch red zones from map.json? Does it conflict with conventions.json? Are external dependencies specified in library/*/spec.json up to date?
+- Before presenting, verify: Does this touch red zones from map.yml? Does it conflict with conventions.yml? Are external dependencies specified in library/*/spec.yml up to date?
 - Once you believe you understand what you're building, present the design
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
 - Ask after each section whether it looks right so far
@@ -167,7 +169,7 @@ digraph brainstorming {
 ## After the Design
 
 **Documentation:**
-- Write the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md`
+- Write the validated design to `.forge/plans/YYYY-MM-DD-<topic>-design.md`
 - Design document structure:
   1. **Requirements** section (copy approved requirements from step 3.5)
   2. **Architecture** section (system design, components)

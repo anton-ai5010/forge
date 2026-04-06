@@ -11,12 +11,12 @@ description: Search Claude Code marketplace for skills and plugins matching your
 ## Pre-Check: Plan Exists?
 
 ```bash
-ls docs/plans/*.md 2>/dev/null | tail -1
+ls .forge/plans/*.md 2>/dev/null | tail -1
 ```
 
 **If no plan:**
 ```
-No implementation plan found in docs/plans/
+No implementation plan found in .forge/plans/
 
 Run `/forge:brainstorming` and `/forge:writing-plans` first to create a plan.
 ```
@@ -27,8 +27,8 @@ Stop.
 ```
 Multiple plans found. Which plan should I analyze?
 
-1. docs/plans/2026-02-15-authentication.md
-2. docs/plans/2026-02-14-payment-integration.md
+1. .forge/plans/2026-02-15-authentication.md
+2. .forge/plans/2026-02-14-payment-integration.md
 ...
 
 Select number or 'latest':
@@ -38,7 +38,7 @@ Wait for user input.
 
 ## Step 1: Read and Analyze Plan
 
-Read the selected plan file from `docs/plans/`.
+Read the selected plan file from `.forge/plans/`.
 
 Extract from plan content:
 

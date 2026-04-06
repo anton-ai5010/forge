@@ -12,7 +12,7 @@ OUTPUT_DIR="/tmp/forge-tests/${TIMESTAMP}/explicit-skill-requests/extended-multi
 mkdir -p "$OUTPUT_DIR"
 
 PROJECT_DIR="$OUTPUT_DIR/project"
-mkdir -p "$PROJECT_DIR/docs/plans"
+mkdir -p "$PROJECT_DIR/.forge/plans"
 
 echo "=== Extended Multi-Turn Test ==="
 echo "Output dir: $OUTPUT_DIR"

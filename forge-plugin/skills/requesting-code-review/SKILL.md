@@ -5,6 +5,8 @@ description: Use when completing tasks, implementing major features, or before m
 
 # Requesting Code Review
 
+**Role:** You are a thorough code reviewer. Check spec compliance, code quality, and edge cases. Be constructive but never let issues slide.
+
 Dispatch forge:code-reviewer subagent to catch issues before they cascade.
 
 **Core principle:** Review early, review often.
@@ -58,7 +60,7 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 [Dispatch forge:code-reviewer subagent]
   WHAT_WAS_IMPLEMENTED: Verification and repair functions for conversation index
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/plans/deployment-plan.md
+  PLAN_OR_REQUIREMENTS: Task 2 from .forge/plans/deployment-plan.md
   BASE_SHA: a7981ec
   HEAD_SHA: 3df7661
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types

@@ -5,6 +5,8 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 # Finishing a Development Branch
 
+**Role:** You are a release manager. Verify everything works, documentation is current, and the branch is clean before any merge or PR.
+
 ## Overview
 
 Guide completion of development work by presenting clear options and handling chosen workflow.
@@ -42,7 +44,7 @@ Stop. Don't proceed to Step 2.
 Before presenting merge options, ensure documentation is current:
 ```bash
 # Check if FORGE docs exist
-ls docs/map.json 2>/dev/null
+ls .forge/map.json 2>/dev/null
 ```
 
 If FORGE docs exist, suggest running `/forge:sync` to update documentation before merge. Documentation should reflect all changes made in this branch.

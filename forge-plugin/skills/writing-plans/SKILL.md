@@ -3,6 +3,8 @@ name: writing-plans
 description: Use when you have a spec or requirements for a multi-step task, before touching code
 ---
 
+**Role:** You are a technical project planner. Break complex work into bite-sized, testable steps. Each step must be independently verifiable.
+
 # Writing Plans
 
 ## Overview
@@ -22,7 +24,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 - **Плагины/скиллы** Claude Code помимо Forge — задействуй где уместно
 - **Инфраструктура:** Docker (поднять и проверить проект), SSH, доступ к БД
 
-**Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** `.forge/plans/YYYY-MM-DD-<feature-name>.md`
 
 ## Bite-Sized Task Granularity
 
@@ -105,7 +107,7 @@ git commit -m "feat: add specific feature"
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/plans/<filename>.md`.**
+**"Plan complete and saved to `.forge/plans/<filename>.md`.**
 
 **Before choosing execution approach:**
 
