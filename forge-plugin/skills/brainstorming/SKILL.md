@@ -58,7 +58,38 @@ You MUST create a task for each of these items and complete them in order:
    If neither .forge/index.yml nor .forge/index.md exists, tell user to run /forge:init and STOP.
 
 2. **Confirm understanding of goal** — Restate what you believe the user wants to build and ask for confirmation before proceeding
-3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
+
+2.5. **Internet Research (parallel agents)** — After user confirms the goal, formulate 3 search briefs based on the idea and project context (stack, stage, domain). Then dispatch 3 agents IN PARALLEL using Agent tool (single message, 3 tool calls):
+
+   **Agent 1 — Analyst (аналоги и конкуренты):**
+   ```
+   Search for existing solutions, open source projects, and competitors that solve a similar problem.
+   Use WebSearch to find analogues, alternatives, and how others approached this.
+   Project context: {{idea description}}, stack: {{project stack}}.
+   Return a concise report (max 300 words): what exists, what's useful, what doesn't fit.
+   ```
+
+   **Agent 2 — Technologist (технические решения):**
+   ```
+   Search for libraries, frameworks, APIs, and implementation patterns relevant to this feature.
+   Use WebSearch for general search. Use Context7 MCP if the feature involves specific libraries/frameworks.
+   Project context: {{idea description}}, stack: {{project stack}}.
+   Return a concise report (max 300 words): approaches, tools, pros/cons.
+   ```
+
+   **Agent 3 — Critic (риски и ограничения):**
+   ```
+   Search for common pitfalls, mistakes, limitations, and scaling issues for this type of feature.
+   Use WebSearch to find post-mortems, "lessons learned", known issues with similar approaches.
+   Project context: {{idea description}}, stack: {{project stack}}.
+   Return a concise report (max 300 words): risks, how to mitigate, what to watch out for.
+   ```
+
+   Wait for all 3 agents. Synthesize results into a **Research Report** (see format below) and show to user.
+   If an agent found nothing useful — mark its section "Релевантных результатов не найдено".
+   If ALL agents returned empty — continue to step 3 without blocking.
+
+3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria. **Use Research Report findings to inform your questions** — reference discovered analogues, suggest approaches found by agents, flag risks identified by Critic.
 3.5. **Define requirements** — Based on the clarifying questions, generate a numbered list of requirements. Each requirement has:
    - **ID** (R1, R2, R3...)
    - **Description** — what must be true when this feature is done
@@ -98,6 +129,8 @@ You MUST create a task for each of these items and complete them in order:
 digraph brainstorming {
     "Explore project context" [shape=box];
     "Confirm understanding of goal" [shape=box];
+    "Internet Research (3 agents)" [shape=box, style=bold];
+    "Show Research Report" [shape=box, style=bold];
     "Ask clarifying questions" [shape=box];
     "Define requirements" [shape=box];
     "User approves requirements?" [shape=diamond];
@@ -108,7 +141,9 @@ digraph brainstorming {
     "Invoke writing-plans skill" [shape=doublecircle];
 
     "Explore project context" -> "Confirm understanding of goal";
-    "Confirm understanding of goal" -> "Ask clarifying questions";
+    "Confirm understanding of goal" -> "Internet Research (3 agents)";
+    "Internet Research (3 agents)" -> "Show Research Report";
+    "Show Research Report" -> "Ask clarifying questions";
     "Ask clarifying questions" -> "Define requirements";
     "Define requirements" -> "User approves requirements?";
     "User approves requirements?" -> "Define requirements" [label="no, revise"];
@@ -124,6 +159,34 @@ digraph brainstorming {
 **The terminal state is invoking writing-plans.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans.
 
 ## The Process
+
+**Conducting research:**
+- After user confirms the goal, formulate 3 search briefs — one per agent role
+- Each brief includes: the user's idea in 1-2 sentences, project stack from L0, and the agent's specific search angle
+- Launch all 3 agents simultaneously (single message with 3 Agent tool calls)
+- Wait for all results, then synthesize into this format:
+
+```
+## Research Report
+
+### Аналоги и существующие решения
+- [название] — что делает, чем полезно/не подходит для нас
+- ...
+
+### Технические подходы
+- [подход] — библиотеки/инструменты, плюсы/минусы
+- ...
+
+### Риски и ограничения
+- [риск] — почему важен, как митигировать
+- ...
+
+### Ключевые выводы
+1-3 пункта, которые должны повлиять на дизайн
+```
+
+- Show the full report to user before proceeding to clarifying questions
+- Do NOT ask "should I search?" — research is mandatory for every brainstorming session
 
 **Understanding the idea:**
 - Check out the current project state first (files, docs, recent commits)
@@ -172,10 +235,11 @@ digraph brainstorming {
 - Write the validated design to `.forge/plans/YYYY-MM-DD-<topic>-design.md`
 - Design document structure:
   1. **Requirements** section (copy approved requirements from step 3.5)
-  2. **Architecture** section (system design, components)
-  3. **Data Flow** section (how data moves through the system)
-  4. **Error Handling** section (how failures are handled)
-  5. **Testing** section (test strategy)
+  2. **Research Findings** section (key findings from Research Report that influenced the design)
+  3. **Architecture** section (system design, components)
+  4. **Data Flow** section (how data moves through the system)
+  5. **Error Handling** section (how failures are handled)
+  6. **Testing** section (test strategy)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
