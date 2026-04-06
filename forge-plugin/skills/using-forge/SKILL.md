@@ -138,6 +138,13 @@ Suggest: "Run `/forge:sync` to update project documentation."
 
 The skill itself tells you which.
 
+## Communication
+
+- **Все вопросы пользователю — на русском.** Код, коммиты, документация — на английском. Но диалог, уточнения, чеклисты, отчёты — по-русски.
+- Кратко. Без воды.
+- Один уточняющий вопрос за раз, не список.
+- Ссылки на код: `file_path:line_number`
+
 ## User Instructions
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.

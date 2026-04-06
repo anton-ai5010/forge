@@ -252,6 +252,9 @@ Updated:
 
 Structure: {N files moved|no violations|skipped}
 Infrastructure: {checked|skipped}
+  Docker: {N containers: M running, K stopped|no docker}
+  Server: {services checked|no remote server}
+  DB: {tables: N, migrations: applied/pending|no DB}
 
 Current as of {commit_sha_short}.
 ```
