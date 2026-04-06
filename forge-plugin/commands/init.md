@@ -46,26 +46,36 @@ ls -d .kiro/ 2>/dev/null
 
 **If .kiro/ exists:** Ask to remove (FORGE and Kiro may conflict).
 
-## Step 1: Scan Project Structure
+## Step 1: Scan Project (PARALLEL — dispatch subagents)
 
+Launch 3-4 subagents simultaneously to scan the project. Do NOT scan sequentially — it's too slow.
+
+**Agent 1: Project structure + code analysis**
 ```bash
-find . -type d \
-  ! -path "*/node_modules/*" \
-  ! -path "*/.git/*" \
-  ! -path "*/dist/*" \
-  ! -path "*/build/*" \
-  ! -path "*/__pycache__/*" \
-  ! -path "*/venv/*" \
-  -print
+find . -type d ! -path "*/node_modules/*" ! -path "*/.git/*" ! -path "*/dist/*" ! -path "*/build/*" ! -path "*/__pycache__/*" ! -path "*/venv/*" ! -path "*/.next/*" -print
+find . -type f ! -path "*/node_modules/*" ! -path "*/.git/*" ! -path "*/dist/*" ! -path "*/build/*" ! -path "*/__pycache__/*" ! -path "*/venv/*" ! -path "*/.next/*" -printf "%h\n" | sort | uniq -c
+```
+Read: package.json/requirements.txt/go.mod, README, CLAUDE.md, tsconfig/pyproject.toml.
+Detect: language, framework, stack, test runner, linter, build tool.
 
-find . -type f \
-  ! -path "*/node_modules/*" \
-  ! -path "*/.git/*" \
-  ! -path "*/dist/*" \
-  ! -path "*/build/*" \
-  ! -path "*/__pycache__/*" \
-  ! -path "*/venv/*" \
-  -printf "%h\n" | sort | uniq -c
+**Agent 2: Git history + code health**
+```bash
+git log --oneline -20
+git shortlog -sn --all | head -10
+grep -rn "TODO\|FIXME\|HACK\|XXX" --include='*.{ts,tsx,js,py,go}' . | head -30
+```
+Find: recent activity, contributors, TODOs, dead code signals.
+
+**Agent 3: Infrastructure scan** (Step 4.5 content)
+Scan: Docker (local + remote), databases, nginx, systemd, cron, external APIs.
+See Step 4.5 below for full details.
+
+**Agent 4: Source code reading** (if <50 source files)
+Read each source file → extract: purpose, exports, imports, key functions.
+This data feeds into .forge/library/*/spec.yml generation later.
+If >50 source files — skip, will generate spec.yml incrementally.
+
+Wait for all agents to complete. Aggregate results before proceeding.
 ```
 
 ## Step 2: Identify Red Zones
@@ -96,8 +106,8 @@ mkdir -p .forge/library/{directory_name}
 
 ## Step 4.5: Scan Infrastructure
 
-Detect and document all infrastructure the project depends on.
-Run checks in parallel where possible.
+This runs as Agent 3 from Step 1 (already launched in parallel).
+If Agent 3 hasn't completed yet — wait for it. Do not re-scan.
 
 ### Docker (local)
 
@@ -409,7 +419,10 @@ entries:
     files: [.forge/]
 ```
 
-## Step 13: Generate library/ Documentation
+## Step 13: Generate library/ Documentation (PARALLEL)
+
+If Agent 4 from Step 1 already read source files — use its results.
+Otherwise, dispatch parallel subagents: one per source directory (max 5 concurrent).
 
 For each source directory:
 
