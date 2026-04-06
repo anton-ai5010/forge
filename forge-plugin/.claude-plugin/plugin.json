@@ -1,7 +1,7 @@
 {
   "name": "forge",
   "description": "Project knowledge layer and workflow automation for Claude Code - systematic development practices, context management, and intelligent documentation",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "author": {
     "name": "Forge Contributors",
     "email": "noreply@forge.dev"
