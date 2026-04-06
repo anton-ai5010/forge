@@ -18,7 +18,7 @@ You are the FORGE Structure Enforcer. You ensure projects follow clean, conventi
 
 - Path to project root
 - `.forge/structure.md` — expected structure definition
-- `.forge/conventions.json` — naming conventions
+- `.forge/conventions.yml` — naming conventions
 - List of recently changed files (optional, from git diff)
 
 ## What Counts as a Violation
@@ -64,8 +64,8 @@ When moving a file:
    - Verify syntax is correct after replacement
 
 4. **Update docs if they exist**
-   - `.forge/library/*/spec.json` — update depends_on paths
-   - `.forge/map.json` — update directory entries
+   - `.forge/library/*/spec.yml` — update depends_on paths
+   - `.forge/map.yml` — update directory entries
 
 ### Creating Missing Directories
 

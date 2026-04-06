@@ -159,7 +159,7 @@ digraph brainstorming {
 - Lead with your recommended option and explain why
 
 **Presenting the design:**
-- Before presenting, verify: Does this touch red zones from map.json? Does it conflict with conventions.json? Are external dependencies specified in library/*/spec.json up to date?
+- Before presenting, verify: Does this touch red zones from map.yml? Does it conflict with conventions.yml? Are external dependencies specified in library/*/spec.yml up to date?
 - Once you believe you understand what you're building, present the design
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
 - Ask after each section whether it looks right so far

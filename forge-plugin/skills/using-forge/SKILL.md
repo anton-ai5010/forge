@@ -108,20 +108,27 @@ Suggest: "Run `/forge:sync` to update project documentation."
 | Skill | Purpose |
 |-------|---------|
 | forge:brainstorming | Pre-implementation design/requirements exploration |
-| forge:ui-ux-design | UI/UX design system: styles, palettes, fonts, UX guidelines, chart types |
-| forge:test-driven-development | RED-GREEN-REFACTOR cycle enforcement |
-| forge:systematic-debugging | 4-phase root cause investigation |
 | forge:writing-plans | Bite-sized implementation plans from spec |
 | forge:executing-plans | Run plans with review checkpoints |
+| forge:dispatching-parallel-agents | Parallel dispatch of 2+ independent tasks |
+| forge:subagent-driven-development | Execute plans via fresh subagent per task with two-stage review |
+| forge:systematic-debugging | 4-phase root cause investigation |
+| forge:requesting-code-review | Structured code review with spec + quality checks |
+| forge:receiving-code-review | Evaluate review feedback on technical merit before implementing |
 | forge:verification-before-completion | Evidence before claims |
+| forge:finishing-a-development-branch | Complete branch merge/PR |
+| forge:test-driven-development | RED-GREEN-REFACTOR cycle enforcement |
+| forge:ui-ux-design | UI/UX design system: styles, palettes, fonts, UX guidelines, chart types |
 | forge:security-review | OWASP-based security checklist before PR/merge |
 | forge:api-design | REST API contract design: resources, endpoints, pagination |
 | forge:database-migrations | Zero-downtime schema changes with rollback strategy |
 | forge:deployment | Docker, CI/CD, health checks, rollback plans |
 | forge:code-cleanup | Refactor and simplify code |
+| forge:using-git-worktrees | Isolate feature work in git worktrees |
 | forge:session-awareness | Track session state and context |
 | forge:project-unblocker | Unblock stuck sessions |
-| forge:finishing-a-development-branch | Complete branch merge/PR |
+| forge:forge-context | L0/L1/L2 context loading at session start |
+| forge:writing-skills | Create and test new skills using TDD methodology |
 
 ## Skill Types
 
