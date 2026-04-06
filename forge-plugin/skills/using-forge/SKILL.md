@@ -82,17 +82,20 @@ When multiple skills could apply, use this order:
 "Let's build X" → brainstorming first, then implementation skills.
 "Fix this bug" → debugging first, then domain-specific skills.
 
-## FORGE Project Context
+## FORGE Project Context (L0/L1/L2)
 
-At session start, check if project has `docs/map.json`.
+At session start, check if project has FORGE docs.
 
-**If docs/map.json exists:**
-1. Read `docs/map.json` — project structure and red zones
-2. Read `docs/conventions.json` — project rules and patterns
-3. Read `docs/index.md` — project goal, stage, current task, session state
-4. You now have full project context. Proceed with skill checks.
+**If docs/index.yml exists (v3):**
+L0 is auto-injected via hook (~200 tokens). You already see the project catalog.
+Do NOT load all L1 files — match `catalog[].tags` to the current task.
+Proceed with skill checks.
 
-**If docs/map.json does not exist:**
+**If docs/index.md exists (v2 legacy):**
+Read docs/index.md (~400 tokens). L1/L2 routing not available.
+After completing task, suggest upgrading: "Run `/forge:init` to upgrade to v3."
+
+**If neither exists:**
 Suggest: "This project doesn't have FORGE documentation yet. Run `/forge:init` to set up project context."
 
 **After completing any task:**

@@ -26,7 +26,7 @@ Do NOT invoke any implementation skill, write any code, scaffold any project, or
 </HARD-GATE>
 
 <FORGE-GATE>
-You MUST read docs/library/ spec.json files BEFORE exploring the project in any other way. If you find yourself running `find`, `ls`, `tree`, or reading source code files before reading docs/library/ — you are violating this gate. STOP and read docs/library/ first.
+You MUST read docs/library/ spec files (spec.yml or spec.json) BEFORE exploring the project in any other way. If you find yourself running `find`, `ls`, `tree`, or reading source code files before reading docs/library/ — you are violating this gate. STOP and read docs/library/ first.
 
 You MUST generate and get approval for requirements BEFORE proposing any design approaches. If you find yourself proposing architecture before requirements are approved — STOP.
 </FORGE-GATE>
@@ -46,14 +46,13 @@ Every project goes through this process. A todo list, a single-function utility,
 
 You MUST create a task for each of these items and complete them in order:
 
-1. **Load FORGE context (MANDATORY FIRST STEP)** — Before doing ANYTHING else, read these files in this exact order:
-   - `docs/map.json` — project structure and red zones
-   - `docs/conventions.json` — project rules
-   - `docs/index.md` — project goal, stage, current task, session state
-   - `docs/dead-ends/` — check `ls` for failed approaches related to this topic
-   - ALL `docs/library/*/spec.json` files — complete project knowledge
+1. **Load FORGE context (MANDATORY FIRST STEP)** — L0 (index.yml) is auto-injected via hook. Load L1 files relevant to brainstorming:
+   - `docs/map.yml` (or .json) — project structure and red zones
+   - `docs/conventions.yml` (or .json) — project rules
+   - `docs/dead-ends.yml` — check for failed approaches related to this topic
+   - ALL `docs/library/*/spec.yml` (or spec.json) files — complete project knowledge
 
-   DO NOT read source code. DO NOT scan the filesystem. DO NOT read .kiro/, .claude/, or any other config directories. Everything you need to know about the project is in docs/library/. If docs/map.json does not exist, tell the user to run /forge:init first and STOP.
+   DO NOT read source code. DO NOT scan the filesystem. Everything you need is in docs/library/. If neither docs/index.yml nor docs/index.md exists, tell the user to run /forge:init first and STOP.
 
 2. **Confirm understanding of goal** — Restate what you believe the user wants to build and ask for confirmation before proceeding
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria

@@ -1,6 +1,6 @@
 ---
 name: forge-documenter
-description: Updates FORGE project documentation after code changes — maintains docs/library/ spec.json and README.md files, and docs/map.json
+description: Updates FORGE project documentation after code changes — maintains docs/library/ spec.yml (or spec.json) and README.md files, and docs/map.yml (or map.json)
 model: sonnet
 tools: Read, Write, Edit, Bash, Glob, Grep
 ---
@@ -9,10 +9,16 @@ You are the FORGE Documentation Updater. You maintain project documentation afte
 
 ## Your Job
 
-Update FORGE documentation files to reflect code changes:
-- `docs/library/[folder]/spec.json` — machine-readable file specifications (English)
+Update FORGE documentation files to reflect code changes.
+
+**Detect format:** Check if `docs/index.yml` exists → v3 (YAML). Else → v2 (JSON).
+- v3: `docs/library/[folder]/spec.yml`, `docs/map.yml`
+- v2: `docs/library/[folder]/spec.json`, `docs/map.json`
+
+Files to maintain:
+- `docs/library/[folder]/spec.yml` (or .json) — machine-readable file specs (English)
 - `[folder]/README.md` — human-readable folder descriptions in project folders (Russian)
-- `docs/map.json` — project structure and red zones
+- `docs/map.yml` (or .json) — project structure and red zones
 
 ## Input You Receive
 

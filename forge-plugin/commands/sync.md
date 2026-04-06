@@ -1,5 +1,5 @@
 ---
-description: Update FORGE documentation after code changes - syncs docs/library/, docs/map.json, and project state with current codebase
+description: Update FORGE documentation after code changes - syncs docs/ YAML files with current codebase state
 ---
 
 # FORGE Sync
@@ -9,19 +9,19 @@ description: Update FORGE documentation after code changes - syncs docs/library/
 ## Pre-Check: FORGE Documentation Exists?
 
 ```bash
-ls docs/index.md 2>/dev/null
+ls docs/index.yml docs/index.md 2>/dev/null
 ```
 
-**If not exists:**
+**If neither exists:**
 ```
-FORGE documentation not found.
-Run `/forge:init` first to initialize project documentation.
+FORGE documentation not found. Run `/forge:init` first.
 ```
 Stop.
 
-## Step 1: Determine Changes Since Last Sync
+**Detect format:** If `docs/index.yml` exists → v3 (YAML). Else → v2 (legacy MD/JSON).
+Use detected format for all updates below.
 
-Check for sync marker:
+## Step 1: Determine Changes Since Last Sync
 
 ```bash
 git config --get forge.last-sync-sha 2>/dev/null
@@ -33,15 +33,12 @@ LAST_SYNC=$(git config --get forge.last-sync-sha)
 git diff --name-status $LAST_SYNC..HEAD
 ```
 
-**If no marker (first sync):**
+**If no marker:**
 ```bash
 git diff --name-status HEAD~1..HEAD
 ```
 
-**If not in git repository:**
-- Warn: "Not a git repository - cannot determine changes automatically"
-- Ask: "Proceed with manual update?"
-- If yes: scan all files and update all documentation
+**If not in git:** Warn and ask to proceed with manual update.
 
 Collect: Created (A), Modified (M), Deleted (D) files.
 
@@ -49,182 +46,158 @@ Collect: Created (A), Modified (M), Deleted (D) files.
 
 If project has server infrastructure — check its state.
 
-**Determine infrastructure:**
-- `docker-compose.yml` / `Dockerfile` — containers?
-- `.env` / configs — server addresses, SSH, DBs?
-- `docs/tech.md` — described infrastructure?
-- MCP servers (Playwright etc.) — can check UI?
+- `docker-compose.yml` → `docker compose ps`, `docker compose logs --tail=20`
+- Remote Docker → `ssh server "cd /path && docker compose ps"`
+- DB → check schema matches models, migrations applied
+- Web UI (Playwright MCP) → check main page
 
-**If Docker (local or remote):**
-```bash
-docker compose ps 2>/dev/null
-docker compose logs --tail=20 2>/dev/null
+If no infrastructure — skip.
 
-# Remote (if SSH available)
-ssh server "cd /path && docker compose ps" 2>/dev/null
+## Step 1.7: Enforce Project Structure
+
+If `docs/structure.md` exists — dispatch structure enforcer agent:
+
+```
+Agent tool (general-purpose):
+  model: sonnet
+  description: "Enforce project structure conventions"
+  prompt: |
+    You are the FORGE Structure Enforcer.
+    Read docs/structure.md and docs/conventions.yml (or .json for legacy).
+    Compare expected vs actual structure.
+    Focus on recently changed files: {Created list}, {Modified list}
+    Move misplaced files, update ALL imports.
+    DO NOT move: root configs, dotfiles, docs/, generated dirs.
+    Report: Moved, Created dirs, Warnings.
 ```
 
-**If DB exists:** check schema matches code models, migrations applied.
-
-**If web UI (and Playwright MCP available):** open main page, check not broken.
-
-**If no infrastructure** — skip.
+If agent moved files — add to changed files list.
 
 ## Step 2: Launch Documentation Updater Subagent
-
-Dispatch sonnet subagent to update documentation:
 
 ```
 Agent tool (general-purpose):
   model: sonnet
   description: "Update FORGE documentation for recent changes"
   prompt: |
-    Update FORGE project documentation to reflect code changes.
+    Update FORGE project documentation for code changes.
 
-    ## Project Documentation
+    Format: YAML (if docs/index.yml exists) or JSON (if legacy docs/index.md)
 
-    - docs/map.json — project structure and red zones
-    - docs/library/[folders]/spec.json — file intents and dependencies
-    - [folders]/README.md — human-readable descriptions in project folders
+    Docs to update:
+    - docs/map.yml (or map.json) — structure, red zones, directory counts
+    - docs/library/[folders]/spec.yml (or spec.json) — file specs
+    - [folders]/README.md — human-readable descriptions
 
-    ## Changes to Document
+    Changes:
+    Created: {list}
+    Modified: {list}
+    Deleted: {list}
 
-    Created files: {list}
-    Modified files: {list}
-    Deleted files: {list}
+    For CREATED files: read → add to spec.yml → update README.md → update map.yml
+    For MODIFIED files: check behavior change → update if needed
+    For DELETED files: remove from spec.yml, README.md, map.yml
 
-    ## Your Job
-
-    For each CREATED file:
-    1. Read the file to understand its purpose
-    2. Add entry to docs/library/{folder}/spec.json
-    3. Update {folder}/README.md
-    4. Update docs/map.json directory counts
-    5. If new directory — create docs/library/ subfolder
-
-    For each MODIFIED file:
-    1. Read and check if behavior changed
-    2. Update spec.json if intent/inputs/outputs changed
-    3. Update README.md if description needs updating
-
-    For each DELETED file:
-    1. Remove from spec.json
-    2. Remove from README.md
-    3. Update map.json counts
-    4. Remove from red_zones if applicable
-
-    Output format:
-    - spec.json: English, machine-readable
-    - README.md: Russian, simple language, no code
+    spec.yml format: English, machine-readable YAML
+    README.md format: Russian, simple language
 ```
 
-Wait for subagent to complete.
+Wait for subagent.
 
-## Step 3: Update index.md
+## Step 3: Update index.yml (or index.md)
 
-Read current `docs/index.md`. Update:
+**For v3 (YAML):** Update fields:
+- `stage`, `progress` — based on current state
+- `now.task` — current work description
+- `now.branch` — current git branch
+- `last_session` — summary of this sync
 
-- `Stage.Progress` — based on current state
-- `Current.Modified` — files changed in this session
-- `Last Session` — summary of this sync
+Do NOT overwrite `session:` — that's maintained by session-awareness skill.
 
-Do NOT overwrite `Session (live)` section — that's maintained by session-awareness skill.
+**For v2 (legacy):** Update Stage, Current, Last Session sections in index.md.
 
-## Step 4: Update status.md
+## Step 4: Update status.yml (or status.md)
 
 Ask or infer:
-- Did anything new start working? → add to `## Working`
-- Did anything break? → add to `## Broken`
-- Any new blockers? → add to `## Blocked`
+- Anything new working? → add to `working:`
+- Anything broke? → add to `broken:`
+- New blockers? → add to `blocked:`
 
-If tests were run, use results to auto-update.
+If tests were run, use results.
 
 ## Step 5: Check for Dead Ends
 
 ```
 Были ли подходы, которые не сработали?
-
-Примеры:
-- "Пробовал websockets — слишком сложно, polling лучше"
-- "Мокал базу — ложные срабатывания"
-
-Опишите (или 'нет'):
+(или 'нет')
 ```
 
-**If 'нет'** — skip.
+**If yes:**
 
-**If user describes failure:**
+Add entry to `docs/dead-ends.yml`:
+```yaml
+  - id: {slug}
+    date: {date}
+    summary: "{что не сработало и почему}"
+    tags: [{relevant, keywords}]
+    detail: null  # или путь к L2 если нужен полный анализ
+```
 
-```
-К какой теме это относится? (auth, database, ui, api, ...)
-```
-
-```
-Что делать вместо этого?
-```
-
-Create or append to `docs/dead-ends/<тема>.md`:
-
-```markdown
-## <краткое описание>
-Date: {date}
-Approach: {что пробовали}
-Why failed: {почему не работает}
-Lesson: {что делать вместо}
-```
+Create L2 file `docs/dead-ends/{id}.md` only if summary insufficient.
 
 ## Step 6: Check for Decisions
 
-If significant technical decisions were made in this session:
-
 ```
 Были ли важные технические решения?
-(выбор библиотеки, архитектуры, подхода)
-
-Опишите (или 'нет'):
+(или 'нет')
 ```
 
-If yes — append to `docs/decisions.md`.
-
-## Step 7: Update journal.md
-
-Append entry at the TOP of journal.md:
-
-```markdown
-## {date} — {summary}
-Did: {what was done, 2-4 points}
-Result: {outcome}
-Next: {what's next}
-Files: {key files changed}
+If yes — add entry to `docs/decisions.yml`:
+```yaml
+  - id: {slug}
+    date: {date}
+    decision: "{что решили}"
+    why: "{почему}"
+    tags: [{keywords}]
 ```
 
-If journal.md has >7 entries — move oldest to `docs/journal-archive/YYYY-MM.md`.
+## Step 7: Update journal.yml (or journal.md)
+
+Add entry at TOP of `entries:`:
+
+```yaml
+  - date: {date}
+    summary: "{что делали}"
+    result: "{итог}"
+    next: "{что дальше}"
+    files: [{key files}]
+```
+
+If entries >7 — remove oldest.
 
 ## Step 8: Mark Sync Point
 
 ```bash
-CURRENT_SHA=$(git rev-parse HEAD)
-git config forge.last-sync-sha $CURRENT_SHA
+git config forge.last-sync-sha $(git rev-parse HEAD)
 ```
 
-## Step 9: Confirm Completion
+## Step 9: Confirm
 
 ```
 FORGE documentation synced
 
 Updated:
 - docs/library/ ({N} directories)
-  - Created: {M} file entries
-  - Modified: {K} file entries
-  - Deleted: {L} file entries
-- docs/map.json (updated counts)
-- docs/index.md (stage, last session)
-- docs/status.md ({updated|no changes})
-- docs/dead-ends/ ({new entries|no changes})
-- docs/decisions.md ({new entries|no changes})
-- docs/journal.md (new entry added)
+  Created: {M} | Modified: {K} | Deleted: {L}
+- docs/map.yml (counts updated)
+- docs/index.yml (stage, last session)
+- docs/status.yml ({updated|no changes})
+- docs/dead-ends.yml ({new entries|no changes})
+- docs/decisions.yml ({new entries|no changes})
+- docs/journal.yml (new entry)
 
-Infrastructure: {checked|no infrastructure|skipped}
+Structure: {N files moved|no violations|skipped}
+Infrastructure: {checked|skipped}
 
-Documentation is current as of {commit_sha_short}.
+Current as of {commit_sha_short}.
 ```
