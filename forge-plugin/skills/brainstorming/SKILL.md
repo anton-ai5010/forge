@@ -121,7 +121,20 @@ You MUST create a task for each of these items and complete them in order:
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
 6. **Write design doc** — save to `.forge/plans/YYYY-MM-DD-<topic>-design.md` and commit. Design doc MUST include Requirements section at the beginning (copy approved requirements from step 3.5)
-7. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+
+<HARD-GATE>
+STOP. Before step 7, verify ALL of the following:
+- [ ] Design doc file EXISTS at `.forge/plans/YYYY-MM-DD-<topic>-design.md`
+- [ ] Design doc is COMMITTED to git (run `git log --oneline -1` to confirm)
+- [ ] Design doc contains sections: Requirements, Research Findings, Architecture, Data Flow, Error Handling, Testing
+- [ ] User has EXPLICITLY approved the design ("ок", "да", "согласен", etc.)
+
+If ANY check fails — STOP and fix it. Do NOT proceed to step 7.
+Do NOT combine the design doc and implementation plan into one document.
+The design doc is the OUTPUT of brainstorming. The plan is the OUTPUT of writing-plans. They are SEPARATE files.
+</HARD-GATE>
+
+7. **Transition to implementation** — invoke writing-plans skill to create implementation plan. This is a SEPARATE step that produces a SEPARATE file.
 
 ## Process Flow
 
