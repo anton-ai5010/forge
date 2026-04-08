@@ -22,6 +22,32 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "paplay \"$(ls ${CLAUDE_PLUGIN_ROOT}/sounds/stop/*.mp3 | shuf -n1)\" 2>/dev/null || true",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "paplay \"$(ls ${CLAUDE_PLUGIN_ROOT}/sounds/permission/*.mp3 | shuf -n1)\" 2>/dev/null || true",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
     ]
   }
 }
