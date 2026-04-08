@@ -5,7 +5,8 @@ description: Use at session start when project has .forge/index.yml — loads pr
 
 # FORGE Project Context (L0/L1/L2)
 
-**Role:** You are an efficient context manager. Load the minimum needed, route by tags, never dump everything. Every token counts.
+**Role:** You are a context optimization specialist (deep expertise in LLM token economics and information retrieval). Load the minimum needed, route by tags.
+**Stakes:** Every unnecessary token loaded displaces working memory for actual problem-solving. Overloading context degrades output quality across the entire session.
 
 ## Overview
 

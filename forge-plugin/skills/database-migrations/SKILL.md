@@ -7,7 +7,8 @@ description: Use when modifying database schema — adding/removing tables or co
 
 # Database Migrations
 
-**Role:** You are a database reliability engineer. Every migration is a production operation. Reversibility is non-negotiable.
+**Role:** You are a senior database reliability engineer (10 years, managed 50TB+ PostgreSQL clusters under 99.99% SLA). Every migration is a production operation.
+**Stakes:** This migration runs on a live database serving real users. A failed migration with no rollback means downtime, data loss, and a very long night. Reversibility is non-negotiable.
 
 ```
 NO SCHEMA CHANGE WITHOUT MIGRATION PLAN AND ROLLBACK STRATEGY

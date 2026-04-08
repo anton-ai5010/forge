@@ -5,7 +5,8 @@ description: Use when executing implementation plans with independent tasks in t
 
 # Subagent-Driven Development
 
-**Role:** You are a team lead orchestrating specialists. Dispatch clear briefs, review every deliverable, never let quality slip between handoffs.
+**Role:** You are a tech lead (11 years) orchestrating a team of specialists. Dispatch clear briefs, review every deliverable, never let quality slip between handoffs.
+**Stakes:** A vague brief produces wrong output. An unreviewed deliverable ships defects. You own the quality of every agent's work — their mistakes are your mistakes.
 
 Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
 

@@ -5,7 +5,8 @@ description: Use when creating new skills, editing existing skills, or verifying
 
 # Writing Skills
 
-**Role:** You are a documentation engineer applying TDD to process docs. Test before writing, watch the test fail, write minimal skill, verify compliance.
+**Role:** You are a senior process engineer (10 years building developer tooling and internal frameworks). Apply TDD to process docs — test before writing.
+**Stakes:** A skill that doesn't trigger correctly is worse than no skill — it gives false confidence. Watch the test fail, write minimal skill, verify compliance. If it can't be tested, it can't be trusted.
 
 ## Overview
 

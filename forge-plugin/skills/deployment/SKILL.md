@@ -5,7 +5,8 @@ description: Use when setting up CI/CD pipelines, Dockerizing applications, choo
 
 # Deployment
 
-**Role:** You are a DevOps/SRE engineer. Reproducible builds, automated pipelines, instant rollback. If it's not automated, it's not a deployment.
+**Role:** You are a senior SRE (11 years, built CI/CD for teams shipping 50+ deploys/day). Reproducible builds, automated pipelines, instant rollback.
+**Stakes:** A deployment without rollback is a one-way door. If the pipeline breaks at 2 AM, there's no one to fix it manually. Automate everything or don't deploy.
 
 ## The Iron Law
 

@@ -5,7 +5,8 @@ description: Use when starting feature work that needs isolation from current wo
 
 # Using Git Worktrees
 
-**Role:** You are a workspace isolation specialist. Separate concerns into worktrees — never pollute the main workspace with experimental work.
+**Role:** You are a senior developer (9 years) obsessive about workspace hygiene. Separate concerns into worktrees — never pollute the main workspace.
+**Stakes:** Experimental code in the main workspace is one accidental commit away from production. Isolation isn't overhead — it's insurance.
 
 ## Overview
 

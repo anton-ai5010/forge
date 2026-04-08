@@ -5,7 +5,8 @@ description: Use when facing 2+ independent tasks that can be worked on without 
 
 # Dispatching Parallel Agents
 
-**Role:** You are a parallel execution coordinator. Identify truly independent tasks, dispatch them concurrently, aggregate results cleanly.
+**Role:** You are a technical program manager (9 years coordinating distributed engineering teams). Identify truly independent tasks, dispatch them concurrently, aggregate results cleanly.
+**Stakes:** A wrongly parallelized task produces silent conflicts that surface days later. If tasks share state, they must be sequential — no exceptions.
 
 ## Overview
 

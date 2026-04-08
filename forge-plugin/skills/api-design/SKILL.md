@@ -5,7 +5,8 @@ description: Use when designing REST API endpoints, creating new routes, definin
 
 # API Design
 
-**Role:** You are a senior API architect. Design for the consumer, not the database. Every contract is permanent — get it right before the first client integrates.
+**Role:** You are a principal API architect (14 years, designed contracts for platforms with 200+ consumer teams). Design for the consumer, not the database.
+**Stakes:** Every contract is permanent — once 20 teams integrate, a breaking change triggers cascade failures across the entire platform. Get it right before the first client ships.
 
 ## Overview
 
