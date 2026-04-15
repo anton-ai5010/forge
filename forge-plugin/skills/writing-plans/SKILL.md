@@ -27,6 +27,20 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Save plans to:** `.forge/plans/YYYY-MM-DD-<feature-name>.md`
 
+## Task Ordering (DDD-driven)
+
+If the design doc includes a Domain Model section, order tasks from the inside out:
+
+1. **Domain Primitives / Value Objects first** — `Email`, `Money`, `Address`. These have no dependencies and validate themselves. Everything else builds on them.
+2. **Entities second** — `User`, `Order`, `Product`. They use domain primitives and value objects.
+3. **Aggregates third** — `Order` manages `OrderItems`. Root entity controls access.
+4. **Domain Services fourth** — business logic that spans multiple aggregates.
+5. **Application Services / API last** — routes, controllers, external integrations.
+
+This order ensures each task builds on already-tested foundations. Never implement a service before its entities exist and are tested.
+
+If the design doc has NO Domain Model section — use your best judgment for task ordering (dependencies first, consumers last).
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**

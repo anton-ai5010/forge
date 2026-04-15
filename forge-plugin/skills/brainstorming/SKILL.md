@@ -119,15 +119,55 @@ You MUST create a task for each of these items and complete them in order:
 
    DO NOT proceed to design (step 4) until requirements are approved.
 
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
+3.7. **Domain modeling (DDD)** — Before proposing approaches, identify the domain structure:
+
+   **Bounded Contexts** — separate areas of the system where the same words mean different things.
+   Example: "Product" in the catalog context (title, description, price) vs "Product" in the warehouse context (weight, dimensions, shelf location).
+
+   **Entities** — objects with a unique ID and lifecycle (statuses, transitions).
+   For each entity define: name, key attributes, lifecycle states, what transitions are allowed.
+   Example: `Order: draft → paid → shipped → delivered | cancelled`
+
+   **Value Objects** — objects without ID, defined only by their properties. Immutable.
+   Example: `Address(street, city, zip)`, `Money(amount, currency)`, `Email(validated string)`
+
+   **Aggregates** — groups of entities managed as a unit through one root entity.
+   Example: `Order (root)` manages `OrderItems`. External code talks to Order, never directly to OrderItems.
+
+   **Domain Primitives** — value objects with built-in validation. If created successfully, guaranteed valid.
+   Example: `Email` — if `new Email("bad")` throws, then any existing `Email` instance is always valid.
+
+   Present domain model to user:
+   ```
+   Доменная модель
+
+   Контексты:
+     📦 [Context name] — [what it's responsible for]
+
+   Сущности:
+     [Name] — [key attributes]
+       Жизненный цикл: state1 → state2 → state3
+       Агрегат: [manages what]
+
+   Value Objects:
+     [Name]([properties]) — immutable, no ID
+
+   Доменные примитивы:
+     [Name] — [what it validates]
+   ```
+
+   Get user approval: "Доменная модель верна? Что добавить/убрать?"
+   DO NOT proceed to approaches until domain model is approved.
+
+4. **Propose 2-3 approaches** — with trade-offs and your recommendation. Approaches must respect the approved domain model — entities, aggregates, and bounded contexts from step 3.7.
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `.forge/plans/YYYY-MM-DD-<topic>-design.md` and commit. Design doc MUST include Requirements section at the beginning (copy approved requirements from step 3.5)
+6. **Write design doc** — save to `.forge/plans/YYYY-MM-DD-<topic>-design.md` and commit. Design doc MUST include Requirements section and Domain Model section at the beginning (copy from steps 3.5 and 3.7)
 
 <HARD-GATE>
 STOP. Before step 7, verify ALL of the following:
 - [ ] Design doc file EXISTS at `.forge/plans/YYYY-MM-DD-<topic>-design.md`
 - [ ] Design doc is COMMITTED to git (run `git log --oneline -1` to confirm)
-- [ ] Design doc contains sections: Requirements, Research Findings, Architecture, Data Flow, Error Handling, Testing
+- [ ] Design doc contains sections: Requirements, Domain Model, Research Findings, Architecture, Data Flow, Error Handling, Testing
 - [ ] User has EXPLICITLY approved the design ("ок", "да", "согласен", etc.)
 
 If ANY check fails — STOP and fix it. Do NOT proceed to step 7.
@@ -249,11 +289,12 @@ digraph brainstorming {
 - Write the validated design to `.forge/plans/YYYY-MM-DD-<topic>-design.md`
 - Design document structure:
   1. **Requirements** section (copy approved requirements from step 3.5)
-  2. **Research Findings** section (key findings from Research Report that influenced the design)
-  3. **Architecture** section (system design, components)
-  4. **Data Flow** section (how data moves through the system)
-  5. **Error Handling** section (how failures are handled)
-  6. **Testing** section (test strategy)
+  2. **Domain Model** section (copy approved model from step 3.7 — contexts, entities, value objects, aggregates, lifecycles)
+  3. **Research Findings** section (key findings from Research Report that influenced the design)
+  4. **Architecture** section (system design, components — must align with domain model)
+  5. **Data Flow** section (how data moves through the system)
+  6. **Error Handling** section (how failures are handled)
+  7. **Testing** section (test strategy)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
