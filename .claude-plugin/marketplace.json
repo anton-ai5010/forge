@@ -9,7 +9,7 @@
     {
       "name": "forge",
       "description": "Project knowledge layer and workflow automation for Claude Code — systematic development practices, context management, and intelligent documentation",
-      "version": "6.0.0",
+      "version": "6.1.0",
       "source": "./forge-plugin",
       "author": {
         "name": "Anton",
