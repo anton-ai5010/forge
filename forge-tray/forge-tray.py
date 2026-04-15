@@ -27,6 +27,8 @@ COMMANDS = [
     ("forge:security-review", "Секьюрити ревью"),
     ("forge:migrate", "Миграция"),
     ("forge:discover", "Поиск в маркетплейсе"),
+    # Диагностика
+    ("forge:investigate", "Разбор проблемы (до фикса)"),
     # Визуализация и граф
     ("forge:graph", "Графовая карта кода"),
     ("forge:product-map", "Навигатор проекта (HTML)"),
