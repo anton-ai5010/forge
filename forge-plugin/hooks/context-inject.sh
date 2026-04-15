@@ -28,32 +28,44 @@ user_prompt=$(printf '%s' "$hook_input" | sed -n 's/.*"input"[[:space:]]*:[[:spa
 skill_hint=""
 
 # R1: Keyword-based skill matching (first match wins)
-if printf '%s' "$user_prompt" | grep -qiE 'почему|разбер|пойм|что происходит|в чём проблем|что не так|странно|непонятно|weird|investigate|diagnose|что случил'; then
+if printf '%s' "$user_prompt" | grep -qiE 'почему|разбер|пойм|что происходит|в чём проблем|в чем проблем|что не так|странно|непонятно|weird|investigate|diagnose|что случил|откуда берётся|откуда берется|из-за чего|с чем связан|в чём дело|в чем дело|что пошло не так|не пойму|не понимаю|разобраться|копни|покопай|выясни|расследуй|чё за фигня|чё за хрень|что за ерунда|хз почему|фиг знает|нифига не понятно'; then
     skill_hint="forge:problem-investigation"
-elif printf '%s' "$user_prompt" | grep -qiE 'fix|почини|исправ|debug|отладк|bug|баг|ошибк|сломал|не работа|broken|fail|crash'; then
+elif printf '%s' "$user_prompt" | grep -qiE 'fix|почини|исправ|debug|отладк|bug|баг|ошибк|сломал|не работа|broken|fail|crash|падает|валится|вылетает|крашит|глючит|зависает|фикс|поправ|пофикс|чини|ломается|выбрасывает|exception|error|трейс|stacktrace|полетел|отвалил|коряв|кривой|кривая|кривое|дохнет|сдохл|не пашет|не фурыч|не запускается|вылезает|выскакивает'; then
     skill_hint="forge:systematic-debugging"
-elif printf '%s' "$user_prompt" | grep -qiE 'design|ui |ux |color|font|palette|палитр|дизайн|стиль|шрифт|макет|layout'; then
+elif printf '%s' "$user_prompt" | grep -qiE 'design|ui |ux |color|font|palette|палитр|дизайн|стиль|шрифт|макет|layout|верстк|компонент|кнопк|форм|интерфейс|отступ|выравнив|анимац|тема|темн|светл|адаптив|респонсив|красив|уродлив|страшн|некрасив|пикселе|цвет|иконк|модалк|попап|тултип|дропдаун|сайдбар|хедер|футер'; then
     skill_hint="forge:ui-ux-design"
-elif printf '%s' "$user_prompt" | grep -qiE 'test|tdd|тест|покры'; then
+elif printf '%s' "$user_prompt" | grep -qiE 'api|апи|endpoint|route|маршрут|эндпоинт|rest|swagger|ручк|хэндлер|handler|контракт|запрос.*ответ|request.*response|роут|апишк|метод.*запрос'; then
+    skill_hint="forge:api-design"
+elif printf '%s' "$user_prompt" | grep -qiE 'миграци|schema|таблиц|колонк|столбец|alter|database|бд |база данных|базу данных|базе данных|индекс.*табл|foreign.?key|внешний ключ|констрейнт|constraint|модель.*данн|pgmigrat|knex|prisma|sequelize|схема.*бд|схема.*баз|постгрес|postgres|mysql|sqlite|монго|mongo'; then
+    skill_hint="forge:database-migrations"
+elif printf '%s' "$user_prompt" | grep -qiE 'deploy|docker|ci.?cd|pipeline|деплой|контейнер|rollback|откат|прод|продакшн|production|релиз|release|кубер|k8s|helm|nginx|сервер.*наст|выкат|раскат|сборк|билд.*прод|закинь на серв|залей на серв|выложи на серв|запусти на серв|подними серв|задеплой|в прод|на прод|докер'; then
+    skill_hint="forge:deployment"
+elif printf '%s' "$user_prompt" | grep -qiE 'безопасност|секьюрити|security|xss|sql.?inject|auth|авториз|аутентифик|токен|уязвим|vulnerability|пароль|password|шифрован|encrypt|csrf|cors|sanitiz|валидац.*вход|escape|доступ.*прав|привилег|дыр.*безопасн|утечк|leak'; then
+    skill_hint="forge:security-review"
+elif printf '%s' "$user_prompt" | grep -qiE 'test|tdd|тест|покры|юнит|unit|mock|мок|assert|проверк.*код|спек|spec'; then
     skill_hint="forge:test-driven-development"
-elif printf '%s' "$user_prompt" | grep -qiE 'plan|план|архитектур|спроектир|decompos'; then
+elif printf '%s' "$user_prompt" | grep -qiE 'plan|план|архитектур|спроектир|decompos|декомпоз|разбить на|этапы|дорожн|roadmap|стратеги|подход к реализ'; then
     skill_hint="forge:writing-plans"
-elif printf '%s' "$user_prompt" | grep -qiE 'refactor|cleanup|dead.?code|почист|рефактор|порядок|качеств'; then
+elif printf '%s' "$user_prompt" | grep -qiE 'refactor|cleanup|dead.?code|почист|рефактор|порядок|качеств|мусор|неиспользуем|дублиров|упрост|вычист|причес|навести порядок|убрать лишн|удалить.*ненужн|разгрести|хлам|говнокод|лапша|спагетти|нечитаем'; then
     skill_hint="forge:code-cleanup"
-elif printf '%s' "$user_prompt" | grep -qiE 'review|ревью|проверь|посмотри код'; then
+elif printf '%s' "$user_prompt" | grep -qiE 'review|ревью|проверь|посмотри код|оцени код|глянь код|код.*нормальн'; then
     skill_hint="forge:requesting-code-review"
-elif printf '%s' "$user_prompt" | grep -qiE 'stuck|застрял|не знаю|что делать|с чего начать|потерял|контекст'; then
+elif printf '%s' "$user_prompt" | grep -qiE 'stuck|застрял|не знаю|что делать|с чего начать|потерял|контекст|тупик|заблокирован|не могу продвинуть|куда двигать|куда дальше|что дальше|потерялся|запутал|голова кругом|не въезжаю|хз что делать|без понятия'; then
     skill_hint="forge:project-unblocker"
-elif printf '%s' "$user_prompt" | grep -qiE 'brainstorm|мозговой|придумай|обсудим|давай подумаем|новая фича|новый функционал'; then
+elif printf '%s' "$user_prompt" | grep -qiE 'brainstorm|мозговой|придумай|обсудим|давай подумаем|новая фича|новый функционал|идея|предлож|как бы ты сделал|как лучше|варианты|обмозгу|накидай|порассужда|хочу сделать|хочу добавить|а что если|было бы круто|прикинь'; then
     skill_hint="forge:brainstorming"
-elif printf '%s' "$user_prompt" | grep -qiE 'merge|pr |pull.?request|finish|branch|ветк.*готов|мерж'; then
+elif printf '%s' "$user_prompt" | grep -qiE 'merge|pr |pull.?request|finish|branch|ветк.*готов|мерж|влить|смержить|закрыть ветк|готов к мерж|пулл реквест'; then
     skill_hint="forge:finishing-a-development-branch"
-elif printf '%s' "$user_prompt" | grep -qiE 'sync|синх|обнови.*док|документац'; then
+elif printf '%s' "$user_prompt" | grep -qiE 'sync|синх|обнови.*док|документац|обнови forge|forge sync'; then
     skill_hint="forge:sync"
-elif printf '%s' "$user_prompt" | grep -qiE 'как работает|как устроен|объясни.*как|покажи как|визуализируй|explain how|what happens'; then
+elif printf '%s' "$user_prompt" | grep -qiE 'как работает|как устроен|объясни.*как|покажи как|визуализируй|explain how|what happens|расскажи про|что делает|как связан|как взаимодейств|поток.*данн|flow|схема работ'; then
     skill_hint="forge:explaining"
-elif printf '%s' "$user_prompt" | grep -qiE 'карта проекта|обзор проекта|product.?map|из чего состоит|полная картина|навигатор'; then
+elif printf '%s' "$user_prompt" | grep -qiE 'карта проекта|обзор проекта|product.?map|из чего состоит|полная картина|навигатор|структура проект|что есть в проект|покажи проект'; then
     skill_hint="forge:product-mapping"
+elif printf '%s' "$user_prompt" | grep -qiE 'готово|done|завершил|закончил|финиш|всё сделал|все сделал|проверь результат|убедись что работа|работает ли|всё ли ок|все ли ок|можно мержить'; then
+    skill_hint="forge:verification-before-completion"
+elif printf '%s' "$user_prompt" | grep -qiE 'создать скилл|новый скилл|написать скилл|редактировать скилл|изменить скилл|skill.*creat|write.*skill|edit.*skill'; then
+    skill_hint="forge:writing-skills"
 fi
 
 # R6: File-context hints (only if no keyword match)
