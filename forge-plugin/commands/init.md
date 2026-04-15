@@ -75,6 +75,18 @@ Read each source file → extract: purpose, exports, imports, key functions.
 This data feeds into .forge/library/*/spec.yml generation later.
 If >50 source files — skip, will generate spec.yml incrementally.
 
+**Agent 5: Build code knowledge graph** (if graphify installed)
+```bash
+if which graphify &>/dev/null; then
+  graphify update . 2>&1 | tail -3
+  mkdir -p .forge
+  cp graphify-out/graph.json .forge/graph.json 2>/dev/null
+  cp graphify-out/GRAPH_REPORT.md .forge/graph-report.md 2>/dev/null
+  echo "Graph: $(python3 -c "import json; d=json.load(open('.forge/graph.json')); print(len(d.get('nodes',d.get('elements',{}).get('nodes',[]))))" 2>/dev/null || echo '?') nodes"
+fi
+```
+If graphify is not installed — skip silently. Graph is optional but recommended for large projects.
+
 Wait for all agents to complete. Aggregate results before proceeding.
 ```
 
@@ -369,6 +381,11 @@ catalog:
   infrastructure:
     path: .forge/infrastructure.yml
     tags: [docker, server, database, deploy, nginx, ssh, containers, ports, services, api, infra]
+
+  graph:
+    path: .forge/graph.json
+    tags: [graph, dependencies, architecture, navigate, code-map, imports, calls]
+    note: "Code knowledge graph (graphify). Use: graphify query/path/explain --graph .forge/graph.json"
 
 session:
   started: {time}
@@ -738,6 +755,7 @@ Created:
 - .forge/dead-ends.yml (L1 — failed approaches index)
 - .forge/journal.yml (L1 — session history)
 - .forge/infrastructure.yml (L1 — Docker, servers, DBs, APIs)
+- .forge/graph.json (code knowledge graph — if graphify installed)
 - .forge/structure.md (expected layout)
 - .forge/library/ ({N} directories documented as L2)
 

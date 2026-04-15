@@ -90,6 +90,19 @@ Agent tool (general-purpose):
 
 If agent moved files — add to changed files list.
 
+## Step 1.9: Update Code Knowledge Graph (if exists)
+
+If graphify is installed and `.forge/graph.json` exists — update the graph incrementally (no LLM needed, fast):
+
+```bash
+if which graphify &>/dev/null && [ -f ".forge/graph.json" ]; then
+  graphify update . 2>&1 | tail -3
+  cp graphify-out/graph.json .forge/graph.json 2>/dev/null
+fi
+```
+
+If graphify not installed or no graph — skip silently.
+
 ## Step 2: Launch Documentation Updater Subagent
 
 ```
@@ -250,6 +263,7 @@ Updated:
 - .forge/journal.yml (new entry)
 - .forge/learnings.yml ({new entries|no changes|created})
 
+Graph: {updated N nodes|no graphify|no graph}
 Structure: {N files moved|no violations|skipped}
 Infrastructure: {checked|skipped}
   Docker: {N containers: M running, K stopped|no docker}

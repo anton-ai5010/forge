@@ -104,6 +104,22 @@ Suggest: "This project doesn't have FORGE documentation yet. Run `/forge:init` t
 **After completing any task:**
 Suggest: "Run `/forge:sync` to update project documentation."
 
+## Code Knowledge Graph
+
+If `.forge/graph.json` exists — the project has a code knowledge graph built by graphify.
+
+**Before searching code with grep, find, or glob — check the graph first:**
+
+1. `graphify query "your question" --graph .forge/graph.json` — finds relevant code paths in seconds
+2. `graphify path "ModuleA" "ModuleB" --graph .forge/graph.json` — traces dependencies between components
+3. `graphify explain "ClassName" --graph .forge/graph.json` — explains a node and its neighbors
+
+**This applies to ALL skills.** Whether debugging, planning, brainstorming, or reviewing — the graph gives you architecture context faster than reading files.
+
+**If `.forge/graph.json` does not exist** — work without it. Don't suggest building it unless user asks.
+
+**To build or update the graph:** `/forge:graph` (full build) or `/forge:graph --update` (incremental, no LLM).
+
 ## Available Skills
 
 | Skill | Purpose |

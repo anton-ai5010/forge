@@ -60,6 +60,13 @@ if [ -z "$skill_hint" ]; then
     fi
 fi
 
+# ============ GRAPH HINT ============
+graph_hint=""
+if [ -f ".forge/graph.json" ]; then
+    node_count=$(python3 -c "import json; d=json.load(open('.forge/graph.json')); print(len(d.get('nodes',d.get('elements',{}).get('nodes',[]))))" 2>/dev/null || echo "?")
+    graph_hint="--- Graph: .forge/graph.json (${node_count} nodes). Before grep/find, try: graphify query/path/explain --graph .forge/graph.json"
+fi
+
 # ============ BUILD CONTEXT ============
 # Escape for JSON
 escape_for_json() {
@@ -73,6 +80,11 @@ escape_for_json() {
 }
 
 context="FORGE L0 CONTEXT (auto-injected):\n\n${index_content}\n\n--- Branch: ${branch}\n--- Recent: ${git_log}"
+
+# Add graph hint if available
+if [ -n "$graph_hint" ]; then
+    context="${context}\n${graph_hint}"
+fi
 
 # Add skill hint if found
 if [ -n "$skill_hint" ]; then
