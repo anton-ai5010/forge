@@ -1,0 +1,11 @@
+{
+  "eval_id": 2,
+  "config": "with_skill",
+  "expectations": [
+    {"text": "Restates the problem before proposing anything", "passed": true, "evidence": "Opens with 'Если я правильно понял, проблема в том, что форма регистрации сабмитится успешно...'"},
+    {"text": "Asks at least one clarifying question before offering fixes", "passed": true, "evidence": "Asks about Network tab to determine if request reaches backend"},
+    {"text": "Does NOT propose a concrete fix/command in the first response", "passed": true, "evidence": "No fix proposed — only investigation question"},
+    {"text": "Separates symptom from possible root causes", "passed": true, "evidence": "Explicitly lists expected vs actual, then says 'Разрыв между этими двумя точками — это где живёт баг'"},
+    {"text": "Asks ONE question at a time (not a barrage of 3+)", "passed": true, "evidence": "Single focused question about Network tab"}
+  ]
+}

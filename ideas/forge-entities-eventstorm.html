@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge — Event Storming</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #fafaf8; color: #1a1a1a; font-family: 'Inter', sans-serif; padding: 40px; min-height: 100vh; }
+
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+  .subtitle { color: #888; font-size: 14px; margin-bottom: 48px; }
+
+  /* Timeline */
+  .timeline { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 32px; margin-bottom: 48px; }
+
+  .phase {
+    min-width: 220px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .phase-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;
+    color: #999; text-align: center; padding-bottom: 10px;
+    border-bottom: 2px solid #e0e0e0; margin-bottom: 4px;
+  }
+
+  /* Sticker cards — Event Storming colors */
+  .sticker {
+    padding: 14px 16px; border-radius: 4px; font-size: 13px; line-height: 1.5;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.06); position: relative;
+    min-height: 60px;
+  }
+  /* Оранжевый — событие (Domain Event) */
+  .event { background: #ff9b2e; color: #4a2800; }
+  /* Синий — команда (Command) */
+  .command { background: #5b9bff; color: #002060; }
+  /* Жёлтый — сущность (Aggregate) */
+  .aggregate { background: #ffe066; color: #5a4a00; }
+  /* Зелёный — read model / view */
+  .readmodel { background: #66d9a0; color: #004a2a; }
+  /* Фиолетовый — policy / правило */
+  .policy { background: #c4a3ff; color: #2a0060; }
+  /* Красный — проблема / дыра */
+  .hotspot { background: #ff6b6b; color: #4a0000; }
+  /* Серый — внешняя система */
+  .external { background: #e0e0e0; color: #444; }
+
+  .sticker-type {
+    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    opacity: 0.6; margin-bottom: 4px;
+  }
+  .sticker strong { font-weight: 600; }
+
+  /* Connector arrow between phases */
+  .phase::after {
+    content: "→"; position: absolute; right: -15px; top: 40px;
+    font-size: 20px; color: #ccc;
+  }
+  .phase { position: relative; }
+  .phase:last-child::after { content: ""; }
+
+  /* Entity section */
+  .entities-section { margin-top: 16px; }
+  .entities-section h2 { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+
+  .entity-row {
+    display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 32px;
+  }
+  .entity-sticky {
+    background: #ffe066; color: #5a4a00; padding: 16px; border-radius: 4px;
+    width: 240px; box-shadow: 2px 2px 8px rgba(0,0,0,0.06);
+    font-size: 12px; line-height: 1.6;
+  }
+  .entity-sticky h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; color: #3a3000; }
+  .entity-sticky .attr { padding: 2px 0; border-bottom: 1px solid rgba(0,0,0,0.08); }
+  .entity-sticky .attr:last-child { border-bottom: none; }
+  .entity-sticky .attr b { color: #6a5a00; }
+
+  /* Hotspots / Gaps */
+  .hotspots-section { margin-top: 16px; }
+  .hotspots-section h2 { font-size: 20px; font-weight: 700; margin-bottom: 20px; color: #cc0000; }
+  .hotspot-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .hotspot-sticky {
+    background: #ff6b6b; color: #4a0000; padding: 16px; border-radius: 4px;
+    width: 260px; box-shadow: 2px 2px 8px rgba(0,0,0,0.06);
+    font-size: 13px; line-height: 1.5;
+  }
+  .hotspot-sticky h4 { font-weight: 700; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<h1>Forge Plugin — Event Storming</h1>
+<p class="subtitle">Оранжевый = событие, Синий = команда, Жёлтый = сущность, Фиолетовый = правило, Красный = проблема</p>
+
+<!-- ===== TIMELINE ===== -->
+<div class="timeline">
+
+  <!-- Phase 1: Session Start -->
+  <div class="phase">
+    <div class="phase-label">Session Start</div>
+
+    <div class="sticker event">
+      <div class="sticker-type">событие</div>
+      <strong>Claude Code открыт</strong>
+    </div>
+    <div class="sticker command">
+      <div class="sticker-type">команда</div>
+      <strong>session-start.sh</strong><br>Загрузить using-forge скилл
+    </div>
+    <div class="sticker command">
+      <div class="sticker-type">команда</div>
+      <strong>context-inject.sh</strong><br>Инжект L0 (~200 токенов)
+    </div>
+    <div class="sticker policy">
+      <div class="sticker-type">правило</div>
+      <strong>Keyword matching</strong><br>bug→debugging, test→TDD, plan→writing-plans
+    </div>
+    <div class="sticker aggregate">
+      <div class="sticker-type">сущность</div>
+      <strong>Session</strong><br>goal, done, now, next
+    </div>
+  </div>
+
+  <!-- Phase 2: Brainstorm -->
+  <div class="phase">
+    <div class="phase-label">Brainstorm</div>
+
+    <div class="sticker event">
+      <div class="sticker-type">событие</div>
+      <strong>Новая фича запрошена</strong>
+    </div>
+    <div class="sticker command">
+      <div class="sticker-type">команда</div>
+      <strong>/forge:brainstorm</strong><br>3 агента исследуют
+    </div>
+    <div class="sticker aggregate">
+      <div class="sticker-type">сущность</div>
+      <strong>Design Doc</strong><br>requirements, acceptance criteria
+    </div>
+    <div class="sticker policy">
+      <div class="sticker-type">gate</div>
+      <strong>Дизайн одобрен?</strong><br>Без одобрения — дальше нельзя
+    </div>
+    <div class="sticker aggregate">
+      <div class="sticker-type">сущность</div>
+      <strong>Decision</strong><br>what, why, alternatives
+    </div>
+  </div>
+
+  <!-- Phase 3: Planning -->
+  <div class="phase">
+    <div class="phase-label">Planning</div>
+
+    <div class="sticker event">
+      <div class="sticker-type">событие</div>
+      <strong>Дизайн одобрен</strong>
+    </div>
+    <div class="sticker command">
+      <div class="sticker-type">команда</div>
+      <strong>/forge:write-plan</strong><br>Декомпозиция на задачи
+    </div>
+    <div class="sticker aggregate">
+      <div class="sticker-type">сущность</div>
+      <strong>Plan</strong><br>goal, architecture, tasks[]
+    </div>
+    <div class="sticker aggregate">
+      <div class="sticker-type">сущность</div>
+      <strong>Task</strong><br>files, test, code, verify
+    </div>
+  </div>
+
+  <!-- Phase 4: Execution -->
+  <div class="phase">
+    <div class="phase-label">Execution</div>
+
+    <div class="sticker command">
+      <div class="sticker-type">команда</div>
+      <strong>/forge:execute-plan</strong><br>Запуск субагентов
+    </div>
+    <div class="sticker aggregate">
+      <div class="sticker-type">сущность</div>
+      <strong>Subagent</strong><br>implementer, role, brief
+    </div>
+    <div class="sticker policy">
+      <div class="sticker-type">правило</div>
+      <strong>TDD обязателен</strong><br>RED → GREEN → REFACTOR
+    </div>
+    <div class="sticker event">
+      <div class="sticker-type">событие</div>
+      <strong>Задача выполнена</strong>
+    </div>
+    <div class="sticker policy">
+      <div class="sticker-type">gate</div>
+      <strong>Spec Review</strong><br>Код = спецификация?
+    </div>
+    <div class="sticker policy">
+      <div class="sticker-type">gate</div>
+      <strong>Quality Review</strong><br>Код качественный?
+    </div>
+  </div>
+
+  <!-- Phase 5: Debug (parallel) -->
+  <div class="phase">
+    <div class="phase-label">Debug</div>
+
+    <div class="sticker event">
+      <div class="sticker-type">событие</div>
+      <strong>Баг обнаружен</strong>
+    </div>
+    <div class="sticker command">
+      <div class="sticker-type">команда</div>
+      <strong>systematic-debugging</strong><br>4 фазы расследования
+    </div>
+    <div class="sticker policy">
+      <div class="sticker-type">правило</div>
+      <strong>Нет фикса без Phase 1</strong><br>Расследование обязательно
+    </div>
+    <div class="sticker aggregate">
+      <div class="sticker-type">сущность</div>
+      <strong>Dead End</strong><br>summary, why_failed, tags
+    </div>
+    <div class="sticker event">
+      <div class="sticker-type">событие</div>
+      <strong>Баг починен</strong>
+    </div>
+  </div>
+
+  <!-- Phase 6: Sync & Finish -->
+  <div class="phase">
+    <div class="phase-label">Sync & Finish</div>
+
+    <div class="sticker command">
+      <div class="sticker-type">команда</div>
+      <strong>/forge:sync</strong><br>Обновить документацию
+    </div>
+    <div class="sticker aggregate">
+      <div class="sticker-type">сущность</div>
+      <strong>Context Layer</strong><br>L0: 200tok, L1: by tags, L2: rare
+    </div>
+    <div class="sticker command">
+      <div class="sticker-type">команда</div>
+      <strong>/forge:validate</strong><br>Проверка перед merge
+    </div>
+    <div class="sticker event">
+      <div class="sticker-type">событие</div>
+      <strong>Ветка готова</strong>
+    </div>
+    <div class="sticker readmodel">
+      <div class="sticker-type">результат</div>
+      <strong>Merge / PR</strong><br>Code review → merge
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== СУЩНОСТИ (жёлтые стикеры) ===== -->
+<div class="entities-section">
+  <h2>Сущности (Aggregates)</h2>
+  <div class="entity-row">
+    <div class="entity-sticky">
+      <h3>Skill</h3>
+      <div class="attr"><b>name:</b> kebab-case (23 шт)</div>
+      <div class="attr"><b>trigger:</b> keyword → skill</div>
+      <div class="attr"><b>type:</b> rigid | flexible</div>
+      <div class="attr"><b>stage:</b> pre | exec | verify</div>
+    </div>
+    <div class="entity-sticky">
+      <h3>Session</h3>
+      <div class="attr"><b>goal:</b> цель сессии</div>
+      <div class="attr"><b>done:</b> что сделали</div>
+      <div class="attr"><b>now:</b> текущее</div>
+      <div class="attr"><b>next:</b> следующее</div>
+    </div>
+    <div class="entity-sticky">
+      <h3>Context Layer</h3>
+      <div class="attr"><b>L0:</b> 200 tok, всегда</div>
+      <div class="attr"><b>L1:</b> 500-2000, по тегам</div>
+      <div class="attr"><b>L2:</b> без лимита, редко</div>
+    </div>
+    <div class="entity-sticky">
+      <h3>Plan</h3>
+      <div class="attr"><b>goal:</b> что делаем</div>
+      <div class="attr"><b>tasks:</b> шаги по 2-5 мин</div>
+      <div class="attr"><b>file:</b> .forge/plans/*.md</div>
+    </div>
+    <div class="entity-sticky">
+      <h3>Task</h3>
+      <div class="attr"><b>files:</b> что трогать</div>
+      <div class="attr"><b>test:</b> RED первым</div>
+      <div class="attr"><b>code:</b> GREEN минимум</div>
+      <div class="attr"><b>verify:</b> проверка</div>
+    </div>
+    <div class="entity-sticky">
+      <h3>Subagent</h3>
+      <div class="attr"><b>role:</b> impl | review | doc</div>
+      <div class="attr"><b>brief:</b> полный контекст</div>
+      <div class="attr"><b>model:</b> inherit | sonnet</div>
+    </div>
+    <div class="entity-sticky">
+      <h3>Review Gate</h3>
+      <div class="attr"><b>type:</b> design | test | spec | quality</div>
+      <div class="attr"><b>blocking:</b> ВСЕГДА true</div>
+    </div>
+    <div class="entity-sticky">
+      <h3>Dead End</h3>
+      <div class="attr"><b>summary:</b> что пробовали</div>
+      <div class="attr"><b>why:</b> почему провал</div>
+      <div class="attr"><b>tags:</b> для поиска</div>
+    </div>
+    <div class="entity-sticky">
+      <h3>Decision</h3>
+      <div class="attr"><b>what:</b> решение</div>
+      <div class="attr"><b>why:</b> обоснование</div>
+      <div class="attr"><b>alts:</b> отвергнутые</div>
+    </div>
+    <div class="entity-sticky">
+      <h3>Hook</h3>
+      <div class="attr"><b>start:</b> load using-forge</div>
+      <div class="attr"><b>prompt:</b> inject L0</div>
+      <div class="attr"><b>stop:</b> звук MP3</div>
+    </div>
+    <div class="entity-sticky" style="background:#e0e0e0; color:#444;">
+      <h3>Marketplace</h3>
+      <div class="attr"><b>status:</b> STUB</div>
+      <div class="attr"><b>local:</b> работает</div>
+      <div class="attr"><b>remote:</b> не реализован</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ПРОБЛЕМЫ (красные стикеры) ===== -->
+<div class="hotspots-section">
+  <h2>Проблемы / Hotspots</h2>
+  <div class="hotspot-row">
+    <div class="hotspot-sticky">
+      <h4>Marketplace API</h4>
+      Discover ищет только локально. Удалённый поиск не работает.
+    </div>
+    <div class="hotspot-sticky">
+      <h4>Skill Chaining</h4>
+      Вручную вызывать brainstorm → plan → execute. Нет автоцепочки.
+    </div>
+    <div class="hotspot-sticky">
+      <h4>Learning Extraction</h4>
+      Не извлекает инсайты из ошибок и коммитов автоматически.
+    </div>
+    <div class="hotspot-sticky">
+      <h4>Cross-Project</h4>
+      Нет переноса learnings между проектами. Каждый .forge/ изолирован.
+    </div>
+    <div class="hotspot-sticky">
+      <h4>Auto-Detection</h4>
+      Только keyword matching. Нет семантического понимания.
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

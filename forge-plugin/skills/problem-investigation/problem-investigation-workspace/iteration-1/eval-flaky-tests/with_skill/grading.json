@@ -1,0 +1,11 @@
+{
+  "eval_id": 3,
+  "config": "with_skill",
+  "expectations": [
+    {"text": "Restates the problem before proposing anything", "passed": true, "evidence": "Opens with 'Если я правильно понял, проблема в том, что тесты проходили вчера...'"},
+    {"text": "Asks at least one clarifying question before offering fixes", "passed": true, "evidence": "Asks about pattern of failures — one area or scattered"},
+    {"text": "Does NOT propose a concrete fix/command in the first response", "passed": true, "evidence": "No fixes proposed — only diagnostic questions"},
+    {"text": "Separates symptom from possible root causes", "passed": true, "evidence": "Explains why the pattern matters: one area = dependency, scattered = environment"},
+    {"text": "Asks ONE question at a time (not a barrage of 3+)", "passed": true, "evidence": "One main question about failure pattern, one lightweight follow-up about error messages"}
+  ]
+}

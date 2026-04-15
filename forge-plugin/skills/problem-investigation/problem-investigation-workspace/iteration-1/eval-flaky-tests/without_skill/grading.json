@@ -1,0 +1,11 @@
+{
+  "eval_id": 3,
+  "config": "without_skill",
+  "expectations": [
+    {"text": "Restates the problem before proposing anything", "passed": false, "evidence": "No restatement — starts with 'Раз ты ничего не менял, причина скорее всего внешняя'"},
+    {"text": "Asks at least one clarifying question before offering fixes", "passed": true, "evidence": "Asks for test output — but after already listing 5 causes and proposing commands"},
+    {"text": "Does NOT propose a concrete fix/command in the first response", "passed": false, "evidence": "Proposes running 'git status', 'git diff HEAD~1', 'npm test' immediately"},
+    {"text": "Separates symptom from possible root causes", "passed": false, "evidence": "Lists causes but doesn't separate what user sees from what's wrong"},
+    {"text": "Asks ONE question at a time (not a barrage of 3+)", "passed": false, "evidence": "Proposes 3 commands to run plus asks for test output — multiple simultaneous requests"}
+  ]
+}

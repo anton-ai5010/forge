@@ -1,0 +1,11 @@
+{
+  "eval_id": 2,
+  "config": "without_skill",
+  "expectations": [
+    {"text": "Restates the problem before proposing anything", "passed": false, "evidence": "No restatement — jumps to 'это классический silent failure. Мне нужно посмотреть код'"},
+    {"text": "Asks at least one clarifying question before offering fixes", "passed": true, "evidence": "Asks for stack and handler file — but also dumps 6 possible causes simultaneously"},
+    {"text": "Does NOT propose a concrete fix/command in the first response", "passed": false, "evidence": "Lists 6 specific fix directions without investigating first"},
+    {"text": "Separates symptom from possible root causes", "passed": false, "evidence": "No explicit separation — goes straight to listing causes"},
+    {"text": "Asks ONE question at a time (not a barrage of 3+)", "passed": false, "evidence": "Asks 2 questions plus dumps 6 possible causes"}
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "eval_id": 1,
+  "config": "without_skill",
+  "expectations": [
+    {"text": "Restates the problem before proposing anything", "passed": false, "evidence": "Jumps straight to 'Это классическая проблема с путями в Node.js' — no restatement"},
+    {"text": "Asks at least one clarifying question before offering fixes", "passed": true, "evidence": "Asks for error text, which file does the import, directory listing — but simultaneously dumps 5 possible causes"},
+    {"text": "Does NOT propose a concrete fix/command in the first response", "passed": false, "evidence": "Proposes 'ls -la lib/' and 'ls -la lib/utils*' commands and lists 5 fix directions"},
+    {"text": "Separates symptom from possible root causes", "passed": false, "evidence": "Lists causes but doesn't explicitly separate what user sees vs what's actually wrong"},
+    {"text": "Asks ONE question at a time (not a barrage of 3+)", "passed": false, "evidence": "Asks 3 things at once: exact error, which file, directory listing"}
+  ]
+}

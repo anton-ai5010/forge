@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge — Navigator v6</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, createElement: h } = React;
+const BG="#0d1117",CARD="#161b22",BRD="#30363d",DIM="#7d8590",TXT="#e6edf3",
+  GRN="#3fb950",YEL="#d29922",RED="#f85149",BLU="#58a6ff",PUR="#bc8cff",
+  ORG="#f0883e",CYN="#4dd0e1",PNK="#f778ba";
+
+// ---- UI primitives ----
+function Sub({text,children,warn,pink,color}){
+  const [o,setO]=useState(false); const has=!!children;
+  return h('div',{style:{marginBottom:4}},
+    h('div',{onClick:has?()=>setO(!o):undefined,style:{
+      fontSize:13,color:warn?YEL:pink?PNK:color||"#b0b8c8",lineHeight:1.6,padding:"5px 10px",borderRadius:6,
+      cursor:has?"pointer":"default",background:o?(pink?`${PNK}08`:`${BLU}06`):"transparent",
+      borderLeft:`2px solid ${o?(pink?PNK:CYN):`${BRD}50`}`,transition:"all 0.15s"}},
+      has&&h('span',{style:{color:DIM,fontSize:9,marginRight:6}},o?"▼":"▶"),
+      warn&&"⚠️ ",pink&&"🔍 ",text),
+    o&&has&&h('div',{style:{padding:"6px 8px 6px 22px",animation:"fadeIn 0.15s ease"}},children)
+  );
+}
+function Code({children}){
+  return h('pre',{style:{fontSize:11,color:CYN,background:"#0a0c10",border:`1px solid ${BRD}`,borderRadius:8,padding:"12px 14px",overflow:"auto",lineHeight:1.6,fontFamily:"'Courier New',monospace",whiteSpace:"pre-wrap",wordBreak:"break-word",marginBottom:8}},children);
+}
+function Badge({text,color}){
+  return h('span',{style:{fontSize:10,padding:"2px 8px",borderRadius:8,fontWeight:600,background:`${color||GRN}18`,color:color||GRN,marginLeft:6}},text);
+}
+
+// ---- Flow step (the core mechanism view) ----
+function FlowStep({icon,title,desc,badge,badgeColor,children,fork}){
+  const [o,setO]=useState(false); const has=!!children;
+  return h('div',{style:{marginBottom:2}},
+    h('div',{onClick:has?()=>setO(!o):undefined,style:{
+      display:"flex",alignItems:"center",gap:10,padding:"10px 14px",borderRadius:10,
+      cursor:has?"pointer":"default",background:o?`${CYN}06`:CARD,border:`1px solid ${o?CYN+"30":BRD}`,transition:"all 0.2s"}},
+      h('span',{style:{fontSize:22,flexShrink:0}},icon),
+      h('div',{style:{flex:1}},
+        h('div',{style:{fontSize:14,fontWeight:600,color:TXT}},title,badge&&h(Badge,{text:badge,color:badgeColor})),
+        desc&&h('div',{style:{fontSize:12,color:DIM,lineHeight:1.4,marginTop:2}},desc)),
+      has&&h('span',{style:{color:DIM,fontSize:10,transition:"transform 0.2s",transform:o?"rotate(90deg)":"rotate(0deg)"}},has?"▶":"")
+    ),
+    o&&has&&h('div',{style:{padding:"8px 4px 4px 32px",animation:"fadeIn 0.2s ease"}},children),
+    !fork&&h('div',{style:{display:"flex",justifyContent:"center",padding:"2px 0"}},
+      h('div',{style:{width:2,height:16,background:`${BRD}60`}}))
+  );
+}
+
+// Fork (decision point)
+function Fork({question,options}){
+  const [sel,setSel]=useState(null);
+  return h('div',{style:{margin:"4px 0 4px 0"}},
+    h('div',{style:{background:`${YEL}10`,border:`1px solid ${YEL}30`,borderRadius:10,padding:"10px 14px"}},
+      h('div',{style:{fontSize:13,fontWeight:600,color:YEL,marginBottom:8}},"🔀 ",question),
+      h('div',{style:{display:"flex",gap:6,flexWrap:"wrap"}},
+        options.map((opt,i)=>h('button',{key:i,onClick:()=>setSel(sel===i?null:i),style:{
+          padding:"6px 14px",borderRadius:8,fontSize:12,fontWeight:500,cursor:"pointer",
+          border:`1px solid ${sel===i?CYN:BRD}`,background:sel===i?`${CYN}15`:CARD,color:sel===i?CYN:DIM,transition:"all 0.2s"
+        }},opt.label))
+      ),
+      sel!==null&&h('div',{style:{marginTop:10,animation:"fadeIn 0.2s ease"}},options[sel].content)
+    ),
+    h('div',{style:{display:"flex",justifyContent:"center",padding:"2px 0"}},
+      h('div',{style:{width:2,height:16,background:`${BRD}60`}}))
+  );
+}
+
+// Entity reference (inline, clickable)
+function Entity({name,icon,color,children}){
+  const [o,setO]=useState(false);
+  return h('div',{style:{marginBottom:4}},
+    h('div',{onClick:children?()=>setO(!o):undefined,style:{
+      display:"inline-flex",alignItems:"center",gap:6,padding:"4px 10px",borderRadius:6,
+      background:`${color||BLU}12`,border:`1px solid ${color||BLU}20`,cursor:children?"pointer":"default",fontSize:12}},
+      h('span',{style:{fontSize:14}},icon),
+      h('span',{style:{color:color||BLU,fontWeight:500}},name),
+      children&&h('span',{style:{color:DIM,fontSize:9,marginLeft:4}},o?"▼":"▶")),
+    o&&children&&h('div',{style:{padding:"6px 12px 6px 20px",animation:"fadeIn 0.15s ease"}},children)
+  );
+}
+
+function SectionTitle({children}){
+  return h('div',{style:{fontSize:11,color:DIM,fontWeight:600,textTransform:"uppercase",letterSpacing:1.5,margin:"16px 0 8px",paddingBottom:6,borderBottom:`1px solid ${BRD}40`}},children);
+}
+
+// ====== MAIN ======
+function App(){
+  const [tab,setTab]=useState("flows");
+  const [flow,setFlow]=useState(null);
+
+  const flows = [
+    {id:"init",icon:"🏗️",title:"Первый запуск",desc:"Новый проект → полная структура памяти за 2-3 минуты",badge:"1 раз"},
+    {id:"session",icon:"🚀",title:"Начало сессии",desc:"Открыл Claude Code → контекст загружен, скилл предложен",badge:"авто"},
+    {id:"feature",icon:"💡",title:"Новая фича",desc:"Идея → обсуждение → план → код → проверка → merge",badge:"основной"},
+    {id:"bug",icon:"🔍",title:"Починка бага",desc:"Ошибка → расследование → гипотеза → фикс → тест",badge:"по ситуации"},
+    {id:"sync",icon:"📦",title:"Завершение работы",desc:"Обновить память проекта, записать решения, merge/PR",badge:"каждый раз"},
+  ];
+
+  return h('div',{style:{background:BG,color:TXT,minHeight:"100vh",fontFamily:"'DM Sans',-apple-system,sans-serif",padding:"20px 16px"}},
+    h('div',{style:{maxWidth:700,margin:"0 auto"}},
+
+      // Header
+      h('div',{style:{marginBottom:20}},
+        h('div',{style:{fontSize:12,color:DIM,textTransform:"uppercase",letterSpacing:2}},"Навигатор проекта"),
+        h('div',{style:{fontSize:26,fontWeight:800}},"Forge Plugin ",h('span',{style:{fontSize:14,fontWeight:400,color:DIM}},"v5.6.0")),
+        h('div',{style:{fontSize:14,color:CYN,marginTop:6,padding:"10px 14px",background:`${CYN}10`,borderRadius:8,borderLeft:`3px solid ${CYN}`,lineHeight:1.5}},
+          "🎯 Claude следует процессам, помнит контекст, объясняет куда двигаться")),
+
+      // Tabs
+      h('div',{style:{display:"flex",gap:4,marginBottom:20,background:CARD,borderRadius:10,padding:3}},
+        [{id:"flows",label:"⚙️ Как работает"},{id:"entities",label:"🧩 Из чего состоит"},{id:"gaps",label:"🚨 Что не готово"}].map(t=>
+          h('button',{key:t.id,onClick:()=>{setTab(t.id);setFlow(null)},style:{
+            flex:1,padding:"10px 0",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",
+            background:tab===t.id?CYN:"transparent",color:tab===t.id?BG:DIM,transition:"all 0.2s"}},t.label))),
+
+// ============ FLOWS TAB ============
+tab==="flows"&&!flow&&h('div',null,
+  h('div',{style:{fontSize:13,color:DIM,marginBottom:14}},"Выбери поток — увидишь как работает механизм шаг за шагом."),
+  flows.map(f=>h('div',{key:f.id,onClick:()=>setFlow(f.id),style:{
+    display:"flex",alignItems:"center",gap:12,padding:"14px 16px",borderRadius:12,cursor:"pointer",
+    background:CARD,border:`1px solid ${BRD}`,marginBottom:8,transition:"all 0.2s"}},
+    h('span',{style:{fontSize:28}},f.icon),
+    h('div',{style:{flex:1}},
+      h('div',{style:{fontSize:16,fontWeight:600,color:TXT}},f.title),
+      h('div',{style:{fontSize:12,color:DIM}},f.desc)),
+    h(Badge,{text:f.badge,color:CYN}),
+    h('span',{style:{color:DIM,fontSize:12}},"→")))),
+
+// ---- FLOW: INIT ----
+tab==="flows"&&flow==="init"&&h('div',null,
+  h('div',{onClick:()=>setFlow(null),style:{fontSize:12,color:CYN,cursor:"pointer",marginBottom:12}},"← Все потоки"),
+  h('div',{style:{fontSize:18,fontWeight:700,marginBottom:4}},"🏗️ Первый запуск проекта"),
+  h('div',{style:{fontSize:13,color:DIM,marginBottom:16}},"Промпт: /forge:init → 5 агентов сканируют → .forge/ создана → хуки настроены"),
+
+  h(FlowStep,{icon:"📝",title:"Ты пишешь /forge:init",desc:"Одна команда запускает весь процесс"}),
+  h(FlowStep,{icon:"🔍",title:"Проверка: уже есть .forge/?",desc:"Если да — предложит обновить или пересоздать"},
+    h(Sub,{text:"Если есть index.yml (v3) — спросит 'перегенерировать?'"}),
+    h(Sub,{text:"Если есть index.md (v2) — предложит мигрировать на v3"})),
+  h(FlowStep,{icon:"🤖",title:"5 агентов сканируют ПАРАЛЛЕЛЬНО",desc:"Каждый смотрит на свою часть проекта, не мешая другим"},
+    h(Entity,{name:"Агент 1: Структура",icon:"📁",color:BLU},
+      h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6}},"Сканирует директории, package.json/requirements.txt, определяет язык, фреймворк, стек.")),
+    h(Entity,{name:"Агент 2: История",icon:"📜",color:PUR},
+      h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6}},"Git log, контрибьюторы, TODO/FIXME в коде.")),
+    h(Entity,{name:"Агент 3: Инфраструктура",icon:"🐳",color:ORG},
+      h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6}},"Docker, базы данных, серверы, nginx, cron, внешние API.")),
+    h(Entity,{name:"Агент 4: Код",icon:"💻",color:GRN},
+      h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6}},"Если <50 файлов — читает каждый, извлекает функции, импорты, назначение.")),
+    h(Entity,{name:"Агент 5: Граф",icon:"🗺",color:PNK},
+      h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6}},"Если graphify установлен — строит карту зависимостей кода. Опционально.")),
+    h(Sub,{text:"🔍 Все 5 запускаются ОДНОВРЕМЕННО через Agent tool",pink:true},
+      h(Code,null,`Agent 1: "Просканируй директории, определи стек"\nAgent 2: "Прочитай git log, найди TODO"\nAgent 3: "Найди Docker, БД, серверы"\nAgent 4: "Прочитай код <50 файлов"\nAgent 5: "graphify update . → .forge/graph.json"\n\n// Все запущены параллельно\n// Claude ждёт пока ВСЕ завершатся`))),
+  h(FlowStep,{icon:"❓",title:"Claude спрашивает тебя",desc:"Red zones, цель проекта, особые правила"},
+    h(Sub,{text:"Какие файлы критичные (red zones)?",children:h('div',{style:{fontSize:12,color:"#9ca3af"}},"Ты указываешь файлы где нужна особая осторожность. Claude будет предупреждать перед их изменением.")}),
+    h(Sub,{text:"Цель проекта в одно предложение?",children:h('div',{style:{fontSize:12,color:"#9ca3af"}},"Эта строка будет в L0 — Claude увидит её при КАЖДОМ сообщении.")})),
+  h(FlowStep,{icon:"📚",title:"Генерация .forge/ — память проекта",desc:"~10 файлов создаются за секунды"},
+    h(Entity,{name:"index.yml",icon:"📌",color:CYN},h('div',{style:{fontSize:12,color:"#9ca3af"}},"L0 — загружается ВСЕГДА. Цель, стадия, каталог.")),
+    h(Entity,{name:"map.yml",icon:"🗂",color:BLU},h('div',{style:{fontSize:12,color:"#9ca3af"}},"Структура + red zones.")),
+    h(Entity,{name:"conventions.yml",icon:"📏",color:PUR},h('div',{style:{fontSize:12,color:"#9ca3af"}},"Именование, стиль кода.")),
+    h(Entity,{name:"infrastructure.yml",icon:"🐳",color:ORG},h('div',{style:{fontSize:12,color:"#9ca3af"}},"Docker, БД, серверы, API.")),
+    h(Entity,{name:"library/*/spec.yml",icon:"📖",color:GRN},h('div',{style:{fontSize:12,color:"#9ca3af"}},"Спецификации каждого модуля."))),
+  h(FlowStep,{icon:"🪝",title:"Настройка хуков и CLAUDE.md",desc:"Автоинжект контекста в каждый промпт"},
+    h(Sub,{text:"context-inject.sh — инжект L0 при каждом сообщении"}),
+    h(Sub,{text:"session-start.sh — загрузка using-forge при запуске"}),
+    h(Sub,{text:"CLAUDE.md — инструкции проекта для Claude"})),
+  h(FlowStep,{icon:"✅",title:"Готово — проект инициализирован",desc:"Теперь Claude помнит проект между сессиями",fork:true})),
+
+// ---- FLOW: SESSION ----
+tab==="flows"&&flow==="session"&&h('div',null,
+  h('div',{onClick:()=>setFlow(null),style:{fontSize:12,color:CYN,cursor:"pointer",marginBottom:12}},"← Все потоки"),
+  h('div',{style:{fontSize:18,fontWeight:700,marginBottom:4}},"🚀 Начало сессии"),
+  h('div',{style:{fontSize:13,color:DIM,marginBottom:16}},"Ты открыл Claude Code → всё загружается автоматически"),
+
+  h(FlowStep,{icon:"💻",title:"Ты открываешь Claude Code",desc:"В папке проекта где есть .forge/"}),
+  h(FlowStep,{icon:"🪝",title:"Хук session-start.sh срабатывает",desc:"Загружает скилл using-forge — главный 'дирижёр'"},
+    h(Sub,{text:"🔍 Что using-forge говорит Claude",pink:true},
+      h(Code,null,`"Если есть хотя бы 1% шанс что скилл подходит —\n ТЫ ОБЯЗАН его загрузить.\n\n Это не обсуждается. Это не опционально."\n\n Красные флаги:\n "Слишком просто"  → Проверь скиллы\n "Сначала код"     → Скилл скажет КАК\n "Сделаю потом"    → Нет. Сейчас.`))),
+  h(FlowStep,{icon:"📌",title:"Ты пишешь первое сообщение",desc:"Например: 'добавить оплату через Stripe'"}),
+  h(FlowStep,{icon:"🪝",title:"Хук context-inject.sh срабатывает",desc:"Добавляет к твоему сообщению контекст (ты этого не видишь)"},
+    h(Sub,{text:"🔍 Вот что Claude видит ПЕРЕД твоим сообщением",pink:true},
+      h(Code,null,`FORGE L0 CONTEXT (auto-injected):\n\nproject: my-shop\ngoal: "Интернет-магазин с оплатой"\nstage: active-dev\nprogress: 60%\nstack: [typescript, next.js, postgresql]\n\nnow:\n  task: "Добавить Stripe"\n  branch: feature/payments\n\ncatalog:\n  decisions: .forge/decisions.yml [tags: why, architecture]\n  dead-ends: .forge/dead-ends.yml [tags: failed, avoid]\n  ...\n\n--- Branch: feature/payments\n--- Recent: abc1234 feat: add cart...\n--- Graph: .forge/graph.json (128 nodes)\n\nSKILL HINT: Consider using forge:brainstorming`)),
+    h(Sub,{text:"Keyword matching: 'добавить' + новая функциональность → brainstorming",children:
+      h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6}},
+        "Хук проверяет твои слова через regex. Нашёл 'фича/добавить/новый' → подсказывает brainstorming. ",
+        "Нашёл 'баг/ошибка' → debugging. Не нашёл ничего → без подсказки.")})),
+  h(FlowStep,{icon:"⚡",title:"Claude загружает скилл",desc:"brainstorming, debugging, или другой — по подсказке или вручную"},
+    h(Sub,{text:"Не всегда угадывает — если неточно написал, подсказки не будет",warn:true},
+      h('div',{style:{fontSize:12,color:"#9ca3af"}},"'Что-то не так' — слишком расплывчато. Лучше: 'баг в оплате'. Или вызови вручную: /forge:brainstorm"))),
+  h(FlowStep,{icon:"🎯",title:"Claude следует скиллу и работает",desc:"Каждый скилл — пошаговая инструкция. Claude не импровизирует.",fork:true})),
+
+// ---- FLOW: FEATURE ----
+tab==="flows"&&flow==="feature"&&h('div',null,
+  h('div',{onClick:()=>setFlow(null),style:{fontSize:12,color:CYN,cursor:"pointer",marginBottom:12}},"← Все потоки"),
+  h('div',{style:{fontSize:18,fontWeight:700,marginBottom:4}},"💡 Новая фича"),
+  h('div',{style:{fontSize:13,color:DIM,marginBottom:16}},"От идеи до merge — самый длинный поток"),
+
+  h(FlowStep,{icon:"💬",title:"Ты описываешь идею",desc:"'Хочу добавить оплату через Stripe'"}),
+  h(FlowStep,{icon:"⚡",title:"Claude загружает скилл brainstorming",desc:"Исследование ПЕРЕД кодом. Нельзя пропустить."},
+    h(Sub,{text:"🔍 Что Claude получает в brainstorming",pink:true},
+      h(Code,null,`Role: "Главный архитектор (15 лет, ex-Stripe/Notion)"\n\nЖЁСТКИЙ БАРЬЕР:\n  "НЕ пиши код, НЕ создавай файлы\n   пока дизайн не одобрен. КАЖДЫЙ проект."\n\nЧеклист:\n  1. Загрузить контекст + dead-ends\n  2. Переспросить цель\n  3. 3 агента ПАРАЛЛЕЛЬНО\n  4. Требования: must-have / nice-to-have\n  5. Дизайн\n  6. СТОП → одобрение`)),
+    h(Sub,{text:"Claude загружает dead-ends — чтобы не повторять ошибки",children:
+      h(Code,null,`# Claude автоматически видит:\n\n=== paypal-integration ===\nЧто: пробовали PayPal SDK\nПочему: sandbox работал, production требовал\n        бизнес-аккаунт которого нет\nВывод: только Stripe`)})),
+  h(FlowStep,{icon:"🤖",title:"3 агента исследуют ПАРАЛЛЕЛЬНО",desc:"Каждый смотрит на задачу со своей стороны"},
+    h(Entity,{name:"Аналитик",icon:"🔎",color:BLU},
+      h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6}},"Ищет аналоги, конкуренты, готовые решения. Если есть граф → graphify query 'payments' находит что уже есть в проекте.")),
+    h(Entity,{name:"Технолог",icon:"⚙️",color:GRN},
+      h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6}},"Библиотеки, API, паттерны. Context7 MCP для актуальных доков Stripe. Если есть граф → показывает с чем новый модуль будет связан.")),
+    h(Entity,{name:"Критик",icon:"⚠️",color:RED},
+      h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6}},"Риски, сложности, что может сломаться. Если есть граф → graphify path показывает какие модули затронутся."))),
+  h(FlowStep,{icon:"📋",title:"Формируются требования",desc:"must-have: Stripe checkout, webhooks. nice-to-have: подписки"}),
+
+  h(Fork,{question:"Ты одобряешь дизайн?",options:[
+    {label:"✅ Да",content:h('div',{style:{fontSize:12,color:GRN}},"→ Переходим к плану")},
+    {label:"❌ Нет, переделать",content:h('div',{style:{fontSize:12,color:RED}},"→ Claude дорабатывает дизайн, снова показывает тебе")},
+    {label:"🔄 Частично",content:h('div',{style:{fontSize:12,color:YEL}},"→ Ты указываешь что исправить, Claude правит и снова показывает")}
+  ]}),
+
+  h(FlowStep,{icon:"📝",title:"Claude создаёт план (/forge:write-plan)",desc:"Дизайн → шаги по 2-5 минут, каждый с тестом и кодом"},
+    h(Sub,{text:"🔍 Что Claude получает в writing-plans",pink:true},
+      h(Code,null,`Role: "Планировщик (12 лет, 100+ фич)"\n\nКаждый шаг = 2-5 минут = один коммит\nФормат: файлы → failing test → minimal code\n        → verification → commit\n\nДля инженера с НУЛЕВЫМ контекстом.`)),
+    h(Sub,{text:"Пример задачи из плана",children:
+      h(Code,null,`Task 1: Модель платежа\n  Создать: src/models/payment.ts\n  Тест:    tests/models/payment.test.ts\n\n  Шаг 1: test("Payment.create → id")\n  Шаг 2: Запустить → FAIL\n  Шаг 3: class Payment { static create... }\n  Шаг 4: Запустить → PASS\n  Шаг 5: git commit`)})),
+
+  h(Fork,{question:"Как выполнять план?",options:[
+    {label:"🤖 Субагенты (авто)",content:h('div',null,
+      h('div',{style:{fontSize:12,color:"#9ca3af",marginBottom:6}},"Claude сам вызывает помощников — ты наблюдаешь"),
+      h(Sub,{text:"🔍 Как работают субагенты",pink:true},
+        h(Code,null,`На каждую задачу:\n  1. Свежий кодер → тест + код + self-review\n  2. Проверщик спецификации → "= задаче?"\n  3. Проверщик качества → "код хороший?"\n  4. Документатор → обновить .forge/\n\nКаждый с чистой головой.\nОшибка проверщика → кодер переделывает.`)))},
+    {label:"📋 Батчами",content:h('div',{style:{fontSize:12,color:"#9ca3af"}},"Claude делает 3 задачи → показывает → ты даёшь фидбек → следующие 3")},
+    {label:"🚀 Автономно",content:h('div',{style:{fontSize:12,color:"#9ca3af"}},"Claude делает всё сам через субагентов. Ты проверяешь результат в конце.")}
+  ]}),
+
+  h(FlowStep,{icon:"🔄",title:"Цикл выполнения задач",desc:"Для каждой задачи: код → spec review → quality review → docs"},
+    h(Entity,{name:"Кодер",icon:"👨‍💻",color:GRN},
+      h('div',{style:{fontSize:12,color:"#9ca3af"}},"Получает brief: задача + файлы + стек. Пишет тест первым, потом код. Self-review перед отчётом.")),
+    h(Entity,{name:"Проверщик спецификации",icon:"📐",color:BLU},
+      h('div',{style:{fontSize:12,color:"#9ca3af"}},"Сравнивает код с задачей. Нашёл расхождение → кодер переделывает.")),
+    h(Entity,{name:"Проверщик качества",icon:"🏆",color:PUR},
+      h('div',{style:{fontSize:12,color:"#9ca3af"}},"Читаемость, ошибки, naming. Нашёл проблему → кодер переделывает.")),
+    h(Entity,{name:"Документатор",icon:"📖",color:ORG},
+      h('div',{style:{fontSize:12,color:"#9ca3af"}},"Работает на sonnet (дешевле). Обновляет .forge/library/ и README.md."))),
+
+  h(FlowStep,{icon:"🔍",title:"Финальный code review",desc:"Вся реализация проверяется целиком"}),
+
+  h(Fork,{question:"Что дальше?",options:[
+    {label:"🔀 Merge",content:h('div',{style:{fontSize:12,color:GRN}},"Claude мержит ветку в main")},
+    {label:"📬 Pull Request",content:h('div',{style:{fontSize:12,color:BLU}},"Claude создаёт PR на GitHub")},
+    {label:"⏸ Оставить",content:h('div',{style:{fontSize:12,color:YEL}},"Ветка остаётся, доделаешь потом")}
+  ]}),
+
+  h(FlowStep,{icon:"📦",title:"/forge:sync — обновить память",desc:"Docs, граф, решения, dead-ends, journal",fork:true})),
+
+// ---- FLOW: BUG ----
+tab==="flows"&&flow==="bug"&&h('div',null,
+  h('div',{onClick:()=>setFlow(null),style:{fontSize:12,color:CYN,cursor:"pointer",marginBottom:12}},"← Все потоки"),
+  h('div',{style:{fontSize:18,fontWeight:700,marginBottom:4}},"🔍 Починка бага"),
+  h('div',{style:{fontSize:13,color:DIM,marginBottom:16}},"Нельзя чинить без расследования — это железное правило"),
+
+  h(FlowStep,{icon:"🐛",title:"Ты пишешь: 'баг в оплате'",desc:"Слово 'баг' → хук подсказывает скилл debugging"}),
+  h(FlowStep,{icon:"⚡",title:"Claude загружает systematic-debugging",desc:"4 фазы. Пропустить нельзя."},
+    h(Sub,{text:"🔍 Что Claude получает",pink:true},
+      h(Code,null,`Role: "Инженер-диагностик (12 лет).\n      Вызывают в 3 ночи когда никто не может."\n\nЖелезное правило:\n  "НЕЛЬЗЯ ЧИНИТЬ БЕЗ РАССЛЕДОВАНИЯ"\n\nНе прошёл Phase 1 → фиксить ЗАПРЕЩЕНО.`))),
+  h(FlowStep,{icon:"🔬",title:"Phase 1: Расследование",desc:"Воспроизвести баг, собрать факты, определить scope"},
+    h(Sub,{text:"Claude воспроизводит баг и собирает улики: логи, stack trace, состояние"}),
+    h(Sub,{text:"Если есть граф → graphify path от ошибки к точке входа",children:
+      h(Code,null,`> graphify path "PaymentService.charge" "API.checkout"\n→ API.checkout → OrderService.create → PaymentService.charge\n→ Ошибка в PaymentService, но данные приходят через Order`)}),
+    h(Sub,{text:"Загружает dead-ends — может это уже пробовали и не сработало"})),
+  h(FlowStep,{icon:"💭",title:"Phase 2: Гипотеза",desc:"Минимум 2 варианта причины"},
+    h(Sub,{text:"'Гипотеза A: webhook не приходит из-за URL'"}),
+    h(Sub,{text:"'Гипотеза B: amount передаётся в рублях а Stripe ждёт копейки'"})),
+  h(FlowStep,{icon:"🧪",title:"Phase 3: Верификация",desc:"Эксперимент который ДОКАЗЫВАЕТ гипотезу"},
+    h(Sub,{text:"Не 'наверное это' а 'вот доказательство: лог показывает amount=100 вместо 10000'"})),
+
+  h(Fork,{question:"Гипотеза подтвердилась?",options:[
+    {label:"✅ Да",content:h('div',{style:{fontSize:12,color:GRN}},"→ Phase 4: минимальный фикс + тест")},
+    {label:"❌ Нет",content:h('div',null,
+      h('div',{style:{fontSize:12,color:RED,marginBottom:4}},"→ Записать в dead-ends: что пробовали и почему не сработало"),
+      h('div',{style:{fontSize:12,color:YEL}},"→ Вернуться к Phase 2 с новой гипотезой"))},
+  ]}),
+
+  h(FlowStep,{icon:"🔧",title:"Phase 4: Минимальный фикс",desc:"Только то что исправляет причину. Не 'заодно почистим'."},
+    h(Sub,{text:"Фикс: amount * 100 перед отправкой в Stripe"}),
+    h(Sub,{text:"+ тест чтобы баг не вернулся: 'amount=100 → Stripe получает 10000'"})),
+  h(FlowStep,{icon:"✅",title:"Коммит + sync",desc:"Фикс закоммичен, dead-ends записаны, память обновлена",fork:true})),
+
+// ---- FLOW: SYNC ----
+tab==="flows"&&flow==="sync"&&h('div',null,
+  h('div',{onClick:()=>setFlow(null),style:{fontSize:12,color:CYN,cursor:"pointer",marginBottom:12}},"← Все потоки"),
+  h('div',{style:{fontSize:18,fontWeight:700,marginBottom:4}},"📦 Завершение работы"),
+  h('div',{style:{fontSize:13,color:DIM,marginBottom:16}},"Обновить память проекта чтобы следующая сессия началась с контекстом"),
+
+  h(FlowStep,{icon:"📝",title:"Ты пишешь /forge:sync",desc:"Или Claude предлагает сам после завершения работы"}),
+  h(FlowStep,{icon:"📊",title:"Claude смотрит git diff",desc:"Что изменилось с последнего sync"},
+    h(Sub,{text:"Сравнивает текущий коммит с отметкой forge.last-sync-sha"}),
+    h(Sub,{text:"Собирает: созданные, изменённые, удалённые файлы"})),
+  h(FlowStep,{icon:"🗺",title:"Обновление графа",desc:"Если graphify установлен и граф есть"},
+    h(Sub,{text:"graphify update . → быстро, без LLM, только tree-sitter"})),
+  h(FlowStep,{icon:"🤖",title:"Субагент обновляет документацию",desc:"spec.yml, README.md, map.yml — параллельно"},
+    h(Sub,{text:"Работает на sonnet (дешевле). Читает изменённые файлы, обновляет описания."})),
+  h(FlowStep,{icon:"❓",title:"Claude спрашивает тебя",desc:"Были ли решения? Провалы? Уроки?"},
+    h(Sub,{text:"'Были ли важные технические решения?'",children:
+      h('div',{style:{fontSize:12,color:"#9ca3af"}},"Если да → записывает в decisions.yml: что решили, почему, что отвергли.")}),
+    h(Sub,{text:"'Были ли подходы которые не сработали?'",children:
+      h('div',{style:{fontSize:12,color:"#9ca3af"}},"Если да → записывает в dead-ends.yml: что, почему, теги для поиска.")}),
+    h(Sub,{text:"'Какие уроки из этой сессии?'",children:
+      h('div',{style:{fontSize:12,color:"#9ca3af"}},"Если есть → записывает в learnings.yml.")})),
+  h(FlowStep,{icon:"📖",title:"Запись в journal.yml",desc:"Что сделали, итог, что дальше"}),
+  h(FlowStep,{icon:"🔖",title:"Отметка sync point",desc:"git config forge.last-sync-sha → текущий коммит"}),
+  h(FlowStep,{icon:"✅",title:"Готово",desc:"Память обновлена. Следующая сессия начнётся с контекстом.",fork:true})),
+
+// ============ ENTITIES TAB ============
+tab==="entities"&&h('div',null,
+  h('div',{style:{fontSize:13,color:DIM,marginBottom:14}},"Строительные блоки плагина. Нажми → что это, зачем, как устроено."),
+
+  h(SectionTitle,null,"Скиллы и команды"),
+  h(Entity,{name:"Скиллы (23 шт)",icon:"⚡",color:BLU},
+    h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6,marginBottom:8}},"Пошаговые инструкции для Claude. Без них Claude импровизирует — со скиллом следует проверенному процессу."),
+    h(Sub,{text:"Строгие: TDD, debugging, security — шаг влево нельзя"}),
+    h(Sub,{text:"Гибкие: дизайн, API, деплой — адаптируй под проект"}),
+    h(Sub,{text:"Автоподбор по словам: 'баг'→debugging, 'фича'→brainstorming",children:
+      h('div',{style:{fontSize:12,color:YEL}},"⚠️ Не 100% — неточные слова не сработают. Вызывай вручную если не угадал.")})),
+  h(Entity,{name:"Команды (16 шт)",icon:"⌨️",color:ORG},
+    h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6,marginBottom:8}},"Ручной вызов скиллов: /forge:brainstorm, /forge:write-plan, /forge:graph и т.д."),
+    h(Sub,{text:"Все 16 команд",children:h('div',null,
+      ["/forge:init","/forge:start","/forge:brainstorm","/forge:write-plan","/forge:execute-plan","/forge:graph","/forge:sync","/forge:validate","/forge:cleanup","/forge:design","/forge:api-design","/forge:migrate","/forge:deploy","/forge:security-review","/forge:discover","/forge:unblocker"
+      ].map((c,i)=>h('code',{key:i,style:{display:"inline-block",fontSize:11,color:ORG,background:`${ORG}12`,padding:"2px 8px",borderRadius:4,margin:"2px"}},c)))})),
+
+  h(SectionTitle,null,"Память проекта (.forge/)"),
+  h(Entity,{name:"L0 — index.yml",icon:"📌",color:CYN},
+    h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6}},"Загружается ВСЕГДА (~200 токенов). Цель, стадия, текущая задача, каталог ресурсов с тегами.")),
+  h(Entity,{name:"L1 — файлы по тегам",icon:"📂",color:BLU},
+    h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6,marginBottom:4}},"Загружаются когда нужны. Claude сопоставляет теги с задачей."),
+    h(Sub,{text:"map.yml, conventions.yml, status.yml, decisions.yml, dead-ends.yml, journal.yml, learnings.yml, infrastructure.yml, graph.json"})),
+  h(Entity,{name:"L2 — полные спеки",icon:"📖",color:PUR},
+    h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6}},"library/*/spec.yml, plans/*.md, dead-ends/*.md. Загружаются редко — только при глубоком анализе.")),
+
+  h(SectionTitle,null,"Хуки (автоматика)"),
+  h(Entity,{name:"context-inject.sh",icon:"🪝",color:GRN},
+    h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6}},"Срабатывает при КАЖДОМ сообщении. Инжектирует L0 + подсказку скилла + git info + граф hint.")),
+  h(Entity,{name:"session-start.sh",icon:"🪝",color:GRN},
+    h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6}},"Срабатывает при открытии Claude Code. Загружает using-forge.")),
+  h(Entity,{name:"Звуки (13 MP3)",icon:"🔊",color:ORG},
+    h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6}},"Stop (6 вариантов) — Claude закончил. Permission (7 вариантов) — просит разрешение.")),
+
+  h(SectionTitle,null,"Помощники (субагенты)"),
+  h(Entity,{name:"Кодер (implementer)",icon:"👨‍💻",color:GRN},
+    h('div',{style:{fontSize:12,color:"#9ca3af"}},"Пишет код по TDD. Чистая голова — не знает про другие задачи.")),
+  h(Entity,{name:"Проверщик спецификации",icon:"📐",color:BLU},
+    h('div',{style:{fontSize:12,color:"#9ca3af"}},"Код = задача? Нет → кодер переделывает.")),
+  h(Entity,{name:"Проверщик качества",icon:"🏆",color:PUR},
+    h('div',{style:{fontSize:12,color:"#9ca3af"}},"Код хороший? Нет → кодер переделывает.")),
+  h(Entity,{name:"Документатор (sonnet)",icon:"📖",color:ORG},
+    h('div',{style:{fontSize:12,color:"#9ca3af"}},"Обновляет .forge/ после изменений. Дешевле основной модели.")),
+
+  h(SectionTitle,null,"Контрольные точки (gates)"),
+  h(Entity,{name:"5 обязательных проверок",icon:"🚧",color:RED},
+    h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6,marginBottom:4}},"Claude не может обойти. Есть таблица 'отмазок' которая ловит попытки."),
+    h(Sub,{text:"Дизайн одобрен → нельзя кодить без brainstorm"}),
+    h(Sub,{text:"Тесты проходят → нельзя 'готово' без зелёных тестов"}),
+    h(Sub,{text:"Spec review → код = спецификация"}),
+    h(Sub,{text:"Quality review → код качественный"}),
+    h(Sub,{text:"Security → FAIL блокирует merge"})),
+
+  h(SectionTitle,null,"Графовая карта"),
+  h(Entity,{name:"graph.json (graphify)",icon:"🗺",color:PNK},
+    h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6,marginBottom:4}},"Связи между модулями. Claude использует для навигации. Строится tree-sitter без LLM."),
+    h(Sub,{text:"query — найти всё связанное с темой"}),
+    h(Sub,{text:"path — кратчайший путь между модулями"}),
+    h(Sub,{text:"explain — объяснить узел и его соседей"}),
+    h(Sub,{text:"Опционально — нужен pipx install graphifyy",warn:true})),
+
+  h(SectionTitle,null,"Магазин"),
+  h(Entity,{name:"Marketplace",icon:"🏪",color:DIM},
+    h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.6}},"Локальный поиск скиллов работает. Удалённый — нет. Автоустановка — нет."),
+    h(Sub,{text:"Удалённый API не реализован",warn:true})),
+),
+
+// ============ GAPS TAB ============
+tab==="gaps"&&h('div',null,
+  h('div',{style:{fontSize:13,color:DIM,marginBottom:14}},"Что не работает или работает не полностью."),
+  [{l:"Автоцепочка команд",d:"brainstorm→plan→execute вручную. Нужна одна кнопка.",s:"high"},
+   {l:"Удалённый магазин",d:"Поиск только среди скачанных. Нет установки из GitHub.",s:"medium"},
+   {l:"Автоизвлечение выводов",d:"Уроки только вручную через /forge:sync.",s:"medium"},
+   {l:"Умный подбор скиллов",d:"Keyword matching. 'Что-то не так' — не сработает.",s:"medium"},
+   {l:"Обмен между проектами",d:"Каждый .forge/ изолирован.",s:"low"},
+  ].map((g,i)=>h('div',{key:i,style:{background:`${sevColor(g.s)}10`,border:`1px solid ${sevColor(g.s)}30`,borderRadius:10,padding:"14px 16px",marginBottom:8}},
+    h('div',{style:{display:"flex",alignItems:"center",gap:8,marginBottom:4}},
+      h('span',{style:{fontSize:14,fontWeight:700,color:sevColor(g.s)}},g.l),
+      h('span',{style:{fontSize:10,padding:"2px 8px",borderRadius:8,background:`${sevColor(g.s)}20`,color:sevColor(g.s),fontWeight:600}},sevLabel(g.s))),
+    h('div',{style:{fontSize:13,color:"#9ca3af",lineHeight:1.5}},g.d))),
+  h('div',{style:{marginTop:20,padding:14,borderRadius:10,background:`${RED}10`,border:`1px solid ${RED}30`}},
+    h('div',{style:{fontSize:13,fontWeight:600,color:RED,marginBottom:4}},"⚡ Главное узкое место"),
+    h('div',{style:{fontSize:13,color:TXT,lineHeight:1.5}},h('b',null,"Автоцепочка")," — 3 команды вручную на каждую фичу."))
+),
+
+      // Footer
+      h('div',{style:{marginTop:24,padding:14,borderRadius:10,background:CARD,border:`1px solid ${BRD}`,textAlign:"center"}},
+        h('div',{style:{fontSize:11,color:DIM}},"Forge Plugin v5.6.0 — Navigator v6",h('br'),"⚙️ Потоки + 🧩 Сущности + 🔍 Под капотом"))
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(h(App));
+</script>
+</body>
+</html>

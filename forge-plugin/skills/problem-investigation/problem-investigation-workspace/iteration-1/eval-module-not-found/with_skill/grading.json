@@ -1,0 +1,11 @@
+{
+  "eval_id": 1,
+  "config": "with_skill",
+  "expectations": [
+    {"text": "Restates the problem before proposing anything", "passed": true, "evidence": "Opens with 'Если я правильно понял, проблема в следующем...' — clear restatement"},
+    {"text": "Asks at least one clarifying question before offering fixes", "passed": true, "evidence": "Asks 'это работало раньше, или это первый запуск после какого-то изменения?'"},
+    {"text": "Does NOT propose a concrete fix/command in the first response", "passed": true, "evidence": "Lists possible causes as context but does not say 'try this' or give fix commands"},
+    {"text": "Separates symptom from possible root causes", "passed": true, "evidence": "Explicitly states 'симптом (модуль не найден) и реальная причина (почему Node его не видит) — разные вещи'"},
+    {"text": "Asks ONE question at a time (not a barrage of 3+)", "passed": true, "evidence": "One primary question about timing/change, plus one follow-up request for stack trace"}
+  ]
+}

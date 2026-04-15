@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Plugin — Project Navigator</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+const ACCENT = "#4dd0e1";
+const BG = "#0d1117";
+const CARD = "#161b22";
+const BORDER = "#30363d";
+const DIM = "#7d8590";
+const TEXT = "#e6edf3";
+const GREEN = "#3fb950";
+const YELLOW = "#d29922";
+const RED = "#f85149";
+const BLUE = "#58a6ff";
+const PURPLE = "#bc8cff";
+const ORANGE = "#f0883e";
+const CYAN = "#4dd0e1";
+const PINK = "#f778ba";
+
+const project = {
+  name: "Forge Plugin",
+  version: "5.5.0",
+  goal: "Автоматизировать рабочие процессы разработки через скиллы, контекст и субагентов",
+  stats: { skills: 23, commands: 15, agents: 3, hooks: 4, sounds: 13 },
+
+  entities: [
+    {
+      id: "skill", label: "Skill", icon: "⚡", color: BLUE,
+      oneLiner: "Воркфлоу-паттерн, направляющий Claude",
+      details: {
+        what: "Файл SKILL.md с пошаговыми инструкциями для Claude. Когда ты говоришь 'починить баг' — Claude загружает скилл systematic-debugging и следует его 4 фазам вместо того чтобы сразу лезть чинить.",
+        analogy: "Как чеклист пилота перед взлётом. Можно и без него, но с ним не забудешь важные шаги и не разобьёшься.",
+        hasWhat: [
+          "name — kebab-case: test-driven-development",
+          "description — когда активировать (max 1024 символов)",
+          "trigger keywords — bug→debugging, test→TDD, plan→writing-plans",
+          "type — rigid (TDD: шаг влево нельзя) или flexible (ui-design: адаптируй)",
+          "stage — pre-implementation | execution | verification",
+          "hard gates — обязательные проверки которые нельзя пропустить"
+        ],
+        whereFrom: "forge-plugin/skills/ — 23 директории, каждая с SKILL.md",
+        count: "23 скилла: 7 процессных, 5 специализированных, 4 исполнительных, 4 завершающих, 3 документационных",
+        examples: [
+          "test-driven-development — RED→GREEN→REFACTOR, запрещает писать код без теста",
+          "systematic-debugging — 4 фазы: расследование → гипотеза → верификация → фикс",
+          "brainstorming — 3 параллельных агента (аналитик, технолог, критик) исследуют задачу",
+          "subagent-driven-development — свежий Claude на каждую задачу, потом 2 ревью",
+          "finishing-a-development-branch — merge/PR/reset решение после работы"
+        ],
+        status: "ok",
+        statusText: "23 скилла работают, покрыт весь цикл разработки",
+      },
+    },
+    {
+      id: "context", label: "Context Layer", icon: "📚", color: CYAN,
+      oneLiner: "Трёхуровневая память проекта",
+      details: {
+        what: "Система из YAML-файлов в .forge/ которая хранит всё что Claude нужно знать о проекте. Не загружается целиком — подгружается по кусочкам через теги, экономя токены.",
+        analogy: "Как библиотека. L0 — это каталог на входе (всегда видишь). L1 — оглавление нужной книги (берёшь по теме). L2 — полная книга (только если оглавления мало).",
+        hasWhat: [
+          "L0 (~200 токенов) — ВСЕГДА загружается: проект, цель, стадия, прогресс, текущая задача, каталог",
+          "L1 (~500-2000 токенов) — ПО ТЕГАМ: map, conventions, status, decisions, dead-ends, journal, learnings, infrastructure",
+          "L2 (без лимита) — РЕДКО: полные spec.yml по файлам, планы, детали провалов",
+          "tags — ключевые слова: 'structure'→map.yml, 'broken'→status.yml, 'why'→decisions.yml",
+          "token budget — типичная задача: 400-700 токенов контекста вместо 10000+"
+        ],
+        whereFrom: ".forge/ директория в корне проекта. Создаётся через /forge:init, обновляется через /forge:sync",
+        count: "9 L1 файлов + library/*/spec.yml (L2) + plans/*.md (L2) + dead-ends/*.md (L2)",
+        examples: [
+          "Ты говоришь 'почему мы выбрали PostgreSQL?' → Claude загружает decisions.yml (тег: why, architecture)",
+          "Ты говоришь 'что сломано?' → Claude загружает status.yml (тег: broken, blocked)",
+          "Ты говоришь 'что мы пробовали и не сработало?' → Claude загружает dead-ends.yml (тег: failed, avoid)"
+        ],
+        status: "ok",
+        statusText: "Работает, 62% точнее JSON (YAML выигрывает по бенчмаркам)",
+      },
+    },
+    {
+      id: "session", label: "Session", icon: "💬", color: GREEN,
+      oneLiner: "Рабочая сессия от открытия до закрытия",
+      details: {
+        what: "Каждый раз когда ты открываешь Claude Code — начинается сессия. Hook автоматически загружает контекст, подсказывает скиллы, и записывает что произошло в journal.",
+        analogy: "Как рабочий день. Утром приходишь — смотришь вчерашние заметки (L0). Работаешь. Вечером записываешь что сделал (journal). Если облажался — записываешь в книгу ошибок (dead-ends).",
+        hasWhat: [
+          "goal — цель сессии: 'сделать авторизацию'",
+          "done — что уже сделали: ['модель User', 'миграция', 'тесты']",
+          "now — что делаем прямо сейчас: 'JWT middleware'",
+          "next — что дальше: 'refresh tokens'",
+          "errors — ошибки за сессию: для записи в dead-ends",
+          "branch — текущая git ветка"
+        ],
+        whereFrom: "Создаётся автоматически хуком session-start.sh. Обновляется через session-awareness скилл.",
+        count: "1 активная сессия. История — в .forge/journal.yml",
+        examples: [
+          "При открытии Claude Code: hook загружает using-forge → инжектит L0 → подсказывает скилл по keyword",
+          "Ты пишешь 'баг в авторизации' → keyword match: 'баг' → hint: 'загрузи forge:systematic-debugging'",
+          "При закрытии: session-awareness записывает decisions, dead-ends, learnings в .forge/"
+        ],
+        status: "ok",
+        statusText: "Автоинжект работает, journal пишется",
+      },
+    },
+    {
+      id: "plan", label: "Plan", icon: "📋", color: PURPLE,
+      oneLiner: "Детальный план реализации фичи",
+      details: {
+        what: "Документ в .forge/plans/ с пошаговой декомпозицией. Каждая задача — 2-5 минут. Создаётся ТОЛЬКО после brainstorm (gate!) чтобы не писать код без понимания.",
+        analogy: "Как рецепт блюда. Не 'сделай ужин' а: 1) нарежь лук, 2) обжарь 3 мин, 3) добавь чеснок... Каждый шаг конкретный и проверяемый.",
+        hasWhat: [
+          "goal — что реализуем одним предложением",
+          "architecture — компоненты, потоки данных, зависимости",
+          "tech_stack — языки, фреймворки, инструменты",
+          "tasks[] — массив задач, каждая: { files, failing_test, minimal_code, verification, commit_msg }",
+          "assumptions — что считаем истинным (может сломаться)"
+        ],
+        whereFrom: "Создаётся через /forge:write-plan после одобренного brainstorm",
+        count: "1 план на фичу. Файл: .forge/plans/YYYY-MM-DD-название.md",
+        examples: [
+          "План 'JWT авторизация': 6 задач по 3-5 мин, каждая с тестом и файлами",
+          "Задача 1: создать модель User (files: models/user.ts, test: RED → user.test.ts, GREEN → поля id/email/hash)",
+          "Задача 2: JWT middleware (files: middleware/auth.ts, test: RED → auth.test.ts, GREEN → verify token)"
+        ],
+        status: "ok",
+        statusText: "Генерация работает, TDD-формат задач",
+      },
+    },
+    {
+      id: "task", label: "Task", icon: "✏️", color: YELLOW,
+      oneLiner: "Атомарная единица работы = 1 коммит",
+      details: {
+        what: "Одна задача из плана. 2-5 минут работы. Результат — один коммит с тестом и кодом. Выполняется через TDD: сначала падающий тест (RED), потом минимальный код (GREEN), потом рефакторинг.",
+        analogy: "Как один кирпич в стене. Маленький, конкретный, проверяемый. Если он кривой — сразу видно, не надо разбирать всю стену.",
+        hasWhat: [
+          "files — конкретные файлы: создать models/user.ts, изменить routes/index.ts",
+          "failing_test — ПЕРВЫМ: написать тест который ПАДАЕТ (RED)",
+          "minimal_code — минимальный код чтобы тест ПРОШЁЛ (GREEN)",
+          "verification — как убедиться: 'npm test && все 12 тестов зелёные'",
+          "commit — что коммитить и с каким сообщением"
+        ],
+        whereFrom: "Часть Plan. Выполняется Subagent'ом или вручную.",
+        count: "3-10 задач в типичном плане",
+        examples: [
+          "Task: 'Модель User' → test: 'User.create({email, pass}) должен вернуть id' (RED) → code: class User + поля (GREEN)",
+          "Task: 'JWT middleware' → test: 'запрос без токена → 401' (RED) → code: проверка Authorization header (GREEN)"
+        ],
+        status: "ok",
+        statusText: "TDD-формат задач работает",
+      },
+    },
+    {
+      id: "subagent", label: "Subagent", icon: "🤖", color: ORANGE,
+      oneLiner: "Свежий Claude на одну задачу",
+      details: {
+        what: "Отдельная сессия Claude с чистым контекстом. Не знает что было до него — получает только brief с задачей. Это важно: после 5 задач основной Claude 'замусорен' контекстом, а субагент — чистый.",
+        analogy: "Как приглашённый специалист. Ты вызываешь электрика — он не знает историю твоего ремонта, но у него есть конкретное задание и все нужные инструменты.",
+        hasWhat: [
+          "role — implementer (пишет код), spec-reviewer (проверяет спец), quality-reviewer (проверяет качество), documenter (обновляет docs)",
+          "brief — ПОЛНЫЙ контекст задачи: что сделать, какие файлы, какие тесты, какой стек",
+          "stack_hints — подсказки по языку: python.md, react.md, go.md, typescript.md, sql.md",
+          "model — implementer: inherit (тот же что у тебя), documenter: sonnet (дешевле, хватает для docs)"
+        ],
+        whereFrom: "Оркестрируется главным Claude (Controller) через Agent tool",
+        count: "4 субагента на задачу: implementer → spec-reviewer → quality-reviewer → documenter",
+        examples: [
+          "Controller: 'Задача 3 из плана: JWT middleware' → dispatch implementer с brief + stack-hints/typescript.md",
+          "Implementer сделал → dispatch spec-reviewer: 'код соответствует спецификации?' → если нет → implementer фиксит",
+          "Spec OK → dispatch quality-reviewer: 'код качественный?' → если нет → implementer фиксит",
+          "Всё ОК → dispatch documenter (sonnet): обновить .forge/library/spec.yml + README.md"
+        ],
+        status: "ok",
+        statusText: "Оркестрация работает, 4 роли субагентов",
+      },
+    },
+    {
+      id: "gate", label: "Review Gate", icon: "🚧", color: RED,
+      oneLiner: "Обязательная проверка — пропуск невозможен",
+      details: {
+        what: "Точка контроля которую НЕЛЬЗЯ пропустить. Если gate не пройден — дальше нельзя. Claude пытается обойти? В скилле есть таблица 'red flags' которая ловит рационализации.",
+        analogy: "Как турникет в метро. Без билета не пройдёшь, неважно как убедительно ты объясняешь что 'и так доеду'. Нет билета = стоишь.",
+        hasWhat: [
+          "design-approved — дизайн одобрен пользователем (после brainstorm)",
+          "test-passing — все тесты зелёные (после implementation)",
+          "spec-compliance — код соответствует спецификации (spec-reviewer)",
+          "code-quality — код качественный (quality-reviewer)",
+          "blocking: ВСЕГДА true — обхода нет"
+        ],
+        whereFrom: "Встроены в скиллы. brainstorming → gate: design approved. TDD → gate: test passing.",
+        count: "5 типов gates в 7+ скиллах",
+        examples: [
+          "Claude: 'Это простое изменение, можно без brainstorm' → RED FLAG → 'Нет, design-approved gate обязателен'",
+          "Claude: 'Тест наверное пройдёт' → RED FLAG → 'Нет, ЗАПУСТИ тест и покажи результат'",
+          "Claude: 'Я уверен что код правильный' → RED FLAG → 'Нет, запусти spec-reviewer субагент'"
+        ],
+        status: "ok",
+        statusText: "Gates работают, red flags таблица ловит обход",
+      },
+    },
+    {
+      id: "deadend", label: "Dead End", icon: "🚫", color: RED,
+      oneLiner: "Провальный подход — чтобы не повторять",
+      details: {
+        what: "Запись о том что пробовали и почему не сработало. Записывается СРАЗУ при провале, не в конце дня. Хранится в .forge/dead-ends.yml (L1) + детали в .forge/dead-ends/*.md (L2).",
+        analogy: "Как табличка 'Осторожно, скользко!' на мокром полу. Кто-то уже упал — теперь все знают что тут опасно.",
+        hasWhat: [
+          "date — когда пробовали",
+          "summary — что пробовали: 'Пытались использовать Redis для сессий'",
+          "why_failed — почему не сработало: 'Redis eviction удалял активные сессии при нагрузке'",
+          "tags — для поиска: [auth, redis, sessions, performance]",
+          "detail_path — ссылка на полный анализ: .forge/dead-ends/redis-sessions.md"
+        ],
+        whereFrom: "Записывается при debugging (Phase 4) или вручную через /forge:sync",
+        count: "Зависит от проекта. Типично: 3-15 dead ends за жизнь проекта",
+        examples: [
+          "Dead end: 'SQLite для продакшена' → why: 'concurrent writes блокировали друг друга при >5 пользователях'",
+          "Dead end: 'CSS-in-JS (styled-components)' → why: 'SSR гидрация ломала стили, перешли на Tailwind'",
+          "При следующем brainstorm Claude видит dead-ends и НЕ предлагает SQLite/styled-components"
+        ],
+        status: "ok",
+        statusText: "Запись работает, L1/L2 загрузка по тегам",
+      },
+    },
+    {
+      id: "decision", label: "Decision", icon: "⚖️", color: PURPLE,
+      oneLiner: "Архитектурное решение с обоснованием",
+      details: {
+        what: "Запись 'почему мы выбрали X а не Y'. Через полгода ты забудешь почему PostgreSQL а не MongoDB — а тут записано. Claude тоже читает и не предлагает то что уже отвергли.",
+        analogy: "Как протокол совещания. Не просто 'решили делать на React' а 'решили React потому что: команда знает, SSR через Next.js, Vue рассматривали но нет SSR-опыта'.",
+        hasWhat: [
+          "date — когда приняли",
+          "decision — что решили: 'PostgreSQL как основная БД'",
+          "why — обоснование: 'нужны транзакции, JSON-поля, полнотекстовый поиск'",
+          "alternatives — что рассматривали: 'MongoDB (нет транзакций), SQLite (нет concurrent writes)'",
+          "tags — для поиска: [database, architecture, postgresql]"
+        ],
+        whereFrom: "Записывается при brainstorm или вручную через /forge:sync",
+        count: "Типично: 5-20 решений за жизнь проекта",
+        examples: [
+          "Decision: 'Monorepo на Turborepo' → why: 'общие типы между фронтом и бэком' → alt: 'отдельные репо (сложнее синхронизировать типы)'",
+          "Decision: 'JWT + refresh tokens' → why: 'stateless, масштабируется' → alt: 'server sessions (нужен Redis, state)'"
+        ],
+        status: "ok",
+        statusText: "Запись работает",
+      },
+    },
+    {
+      id: "hook", label: "Hook", icon: "🪝", color: CYAN,
+      oneLiner: "Автоматический скрипт на событие Claude Code",
+      details: {
+        what: "Shell-скрипт который Claude Code запускает автоматически при определённом событии. Ты ничего не делаешь — hook сам инжектирует контекст, подсказывает скиллы и даже играет звук когда Claude закончил.",
+        analogy: "Как автоответчик на телефоне. Ты не берёшь трубку — он сам отвечает, записывает сообщение, перенаправляет вызов.",
+        hasWhat: [
+          "SessionStart — при открытии: загружает using-forge скилл, предупреждает о legacy директориях",
+          "UserPromptSubmit — КАЖДЫЙ промпт: инжектирует L0 + keyword matching → skill hint + git branch + last 3 commits",
+          "Stop — когда Claude закончил: играет случайный MP3 из sounds/stop/ (6 вариантов голоса)",
+          "PermissionRequest — когда Claude просит разрешение: играет MP3 из sounds/permission/ (7 вариантов 'разрешение?')"
+        ],
+        whereFrom: "forge-plugin/hooks/ — hooks.json + session-start.sh + context-inject.sh",
+        count: "4 хука, 2 shell-скрипта (45 + 96 строк), 13 MP3 файлов",
+        examples: [
+          "Ты открыл Claude Code → SessionStart hook → в контексте появилось: 'Ты используешь Forge. Проверяй скиллы перед каждым действием.'",
+          "Ты написал 'исправь баг в логине' → UserPromptSubmit → keyword 'баг' → hint: 'Загрузи forge:systematic-debugging'",
+          "Claude закончил работу → Stop hook → из колонки: 'Готово!' (голос VASKO, deep warm pleasant)"
+        ],
+        status: "ok",
+        statusText: "4 хука работают, звуковые уведомления через paplay",
+      },
+    },
+    {
+      id: "marketplace", label: "Marketplace", icon: "🏪", color: DIM,
+      oneLiner: "Каталог плагинов и скиллов для установки",
+      details: {
+        what: "Место где можно найти и установить новые скиллы и плагины. Сейчас работает только ЛОКАЛЬНЫЙ поиск — ищет по маркетплейсам которые уже склонированы. Удалённого API нет.",
+        analogy: "Как магазин приложений на телефоне, но пока работает только оффлайн — можешь смотреть что уже скачано, новое скачать не можешь.",
+        hasWhat: [
+          "name — идентификатор: 'forge', 'claude-plugins-official'",
+          "source — github repo: anton-ai5010/forge, anthropics/claude-plugins-official",
+          "plugins — список плагинов: [{name, version, description}]",
+          "installLocation — где на диске: ~/.claude/plugins/marketplaces/forge/"
+        ],
+        whereFrom: "~/.claude/plugins/known_marketplaces.json + ~/.claude/plugins/marketplaces/",
+        count: "2 маркетплейса: forge (свой) + claude-plugins-official (Anthropic)",
+        examples: [
+          "/forge:discover 'тестирование' → ищет скиллы по ключевому слову в ЛОКАЛЬНЫХ маркетплейсах",
+          "Удалённый поиск — НЕ РАБОТАЕТ, API не реализован"
+        ],
+        status: "warn",
+        statusText: "Локальный поиск — OK. Удалённый API — нет. Автоустановка — нет.",
+      },
+    },
+  ],
+
+  flow: [
+    { from: 0, to: 1, label: "скилл читает контекст" },
+    { from: 1, to: 2, label: "контекст загружается в сессию" },
+    { from: 2, to: 3, label: "сессия создаёт план" },
+    { from: 3, to: 4, label: "план содержит задачи" },
+    { from: 4, to: 5, label: "задачу выполняет субагент" },
+    { from: 5, to: 6, label: "субагент проходит gate" },
+    { from: 6, to: 7, label: "провал → dead end" },
+    { from: 7, to: 8, label: "решение записывается" },
+    { from: 8, to: 9, label: "hook автоматизирует" },
+    { from: 9, to: 10, label: "marketplace расширяет" },
+  ],
+
+  processes: [
+    {
+      label: "Session Start",
+      icon: "🚀",
+      desc: "Открытие Claude Code → автозагрузка контекста и скиллов",
+      input: "Событие: Claude Code открыт",
+      output: "L0 контекст + skill hint в промпте",
+      status: "ok",
+      steps: [
+        { text: "Hook session-start.sh загружает using-forge скилл", done: true },
+        { text: "Hook context-inject.sh читает .forge/index.yml", done: true },
+        { text: "Keyword matching по промпту → подсказка скилла", done: true },
+        { text: "Git branch + last 3 commits добавлены в контекст", done: true },
+        { text: "Автоматическая загрузка L1 по контексту задачи", done: false },
+      ],
+    },
+    {
+      label: "Brainstorm",
+      icon: "💡",
+      desc: "Исследовать задачу с 3 агентами → дизайн-документ → одобрение",
+      input: "Идея или запрос на фичу",
+      output: "Одобренный design doc + requirements",
+      status: "ok",
+      steps: [
+        { text: "3 параллельных агента: аналитик (конкуренты), технолог (как сделать), критик (риски)", done: true },
+        { text: "Требования: must-have vs nice-to-have + acceptance criteria", done: true },
+        { text: "Дизайн-документ с трассировкой до требований", done: true },
+        { text: "GATE: дизайн одобрен пользователем — без этого дальше нельзя", done: true },
+      ],
+    },
+    {
+      label: "Write Plan",
+      icon: "📝",
+      desc: "Дизайн → декомпозиция на задачи по 2-5 минут",
+      input: "Одобренный дизайн",
+      output: ".forge/plans/YYYY-MM-DD-feature.md",
+      status: "ok",
+      steps: [
+        { text: "Определить архитектуру и компоненты", done: true },
+        { text: "Разбить на задачи: каждая = файлы + тест + код + проверка", done: true },
+        { text: "Каждая задача рассчитана на инженера с НУЛЕВЫМ контекстом", done: true },
+      ],
+    },
+    {
+      label: "Execute Plan",
+      icon: "⚙️",
+      desc: "Субагенты выполняют задачи по TDD с двойным ревью",
+      input: "План + задачи",
+      output: "Рабочий код с тестами + обновлённая документация",
+      status: "ok",
+      steps: [
+        { text: "Controller (главный Claude) читает план ОДИН раз", done: true },
+        { text: "На каждую задачу — свежий субагент (implementer)", done: true },
+        { text: "Implementer: TDD (RED→GREEN→REFACTOR) + self-review + коммит", done: true },
+        { text: "Spec-reviewer: код = спецификация? Нет → implementer фиксит", done: true },
+        { text: "Quality-reviewer: код качественный? Нет → implementer фиксит", done: true },
+        { text: "Documenter (sonnet): обновить .forge/library + README.md", done: true },
+        { text: "Финальный code review всей реализации", done: true },
+        { text: "Auto skill chaining (brainstorm→plan→execute автоматически)", done: false },
+      ],
+    },
+    {
+      label: "Debug",
+      icon: "🔍",
+      desc: "4 фазы расследования — НЕЛЬЗЯ чинить без Phase 1",
+      input: "Баг, ошибка, неожиданное поведение",
+      output: "Root cause fix + dead end (если подход провалился)",
+      status: "ok",
+      steps: [
+        { text: "Phase 1: Расследование — воспроизвести, собрать улики (ОБЯЗАТЕЛЬНО)", done: true },
+        { text: "Phase 2: Гипотеза — что может быть причиной", done: true },
+        { text: "Phase 3: Верификация — доказать гипотезу экспериментом", done: true },
+        { text: "Phase 4: Фикс — минимальное исправление + тест", done: true },
+        { text: "GATE: нет фикса без Phase 1 — Claude не может 'сразу починить'", done: true },
+        { text: "Если подход провалился → запись Dead End", done: true },
+      ],
+    },
+    {
+      label: "Sync & Finish",
+      icon: "📦",
+      desc: "Обновить документацию → code review → merge/PR",
+      input: "Выполненная работа + git diff",
+      output: "Обновлённая .forge/ + merge в main",
+      status: "ok",
+      steps: [
+        { text: "Git diff определяет что изменилось с последнего sync", done: true },
+        { text: "Субагент (sonnet) обновляет library/spec.yml + map.yml", done: true },
+        { text: "Запись decisions, dead-ends, learnings в .forge/", done: true },
+        { text: "Запись в journal.yml (история сессии)", done: true },
+        { text: "Code review → выбор: merge locally / create PR / keep as-is", done: true },
+        { text: "Автоизвлечение dead-ends из логов ошибок", done: false },
+        { text: "Автоизвлечение learnings из git коммитов", done: false },
+      ],
+    },
+    {
+      label: "Init",
+      icon: "🏗️",
+      desc: "Инициализация .forge/ — 4 параллельных агента сканируют проект",
+      input: "Новый проект без .forge/",
+      output: "Полная структура .forge/ + CLAUDE.md + хуки",
+      status: "ok",
+      steps: [
+        { text: "4 агента: директории+стек, git history, инфраструктура, чтение кода", done: true },
+        { text: "Red zones (ввод пользователя), naming conventions", done: true },
+        { text: "Генерация: index.yml, map.yml, conventions.yml, status.yml, etc.", done: true },
+        { text: "library/*/spec.yml (параллельно по директориям)", done: true },
+        { text: "CLAUDE.md + .claude/settings.json + .gitignore", done: true },
+        { text: "Автоматическая детекция red zones (без ввода пользователя)", done: false },
+      ],
+    },
+    {
+      label: "UI/UX Design",
+      icon: "🎨",
+      desc: "Палитры, типографика, компоненты, accessibility",
+      input: "Описание интерфейса",
+      output: ".forge/plans/design-system-*.yml",
+      status: "ok",
+      steps: [
+        { text: "Анализ целевой аудитории", done: true },
+        { text: "BM25 поиск по паттернам дизайна", done: true },
+        { text: "Палитра + типографика + spacing", done: true },
+        { text: "Компоненты + accessibility", done: true },
+      ],
+    },
+    {
+      label: "Security Review",
+      icon: "🔐",
+      desc: "OWASP чеклист — FAIL блокирует merge",
+      input: "Код перед деплоем",
+      output: "PASS/FAIL по каждой категории",
+      status: "ok",
+      steps: [
+        { text: "Secrets — утечки ключей, .env в git", done: true },
+        { text: "Input validation — XSS, SQLi, path traversal", done: true },
+        { text: "Auth — JWT, сессии, RBAC", done: true },
+        { text: "API security, dependencies, data privacy", done: true },
+        { text: "GATE: FAIL в любой категории → merge заблокирован", done: true },
+      ],
+    },
+  ],
+
+  gaps: [
+    { label: "Marketplace API", desc: "Только локальный поиск. Удалённый поиск и автоустановка — нет.", severity: "medium" },
+    { label: "Skill Chaining", desc: "Нет автоцепочки brainstorm→plan→execute. Вручную каждый скилл.", severity: "high" },
+    { label: "Learning Extraction", desc: "Не извлекает инсайты из ошибок и коммитов автоматически.", severity: "medium" },
+    { label: "Cross-Project Patterns", desc: "Каждый .forge/ изолирован. Нет переноса между проектами.", severity: "low" },
+    { label: "Skill Auto-Detection", desc: "Только keyword matching. Нет семантического понимания.", severity: "medium" },
+    { label: "Auto L1 Loading", desc: "Claude сам решает загружать ли L1. Нет авто-подгрузки по задаче.", severity: "low" },
+    { label: "Auto Red Zone Detection", desc: "Red zones определяются только вручную при init.", severity: "low" },
+  ],
+};
+
+const statusIcon = (s) => s === "ok" ? "✅" : s === "warn" ? "⚠️" : "❌";
+const statusColor = (s) => s === "ok" ? GREEN : s === "warn" ? YELLOW : RED;
+const statusLabel = (s) => s === "ok" ? "Готово" : s === "warn" ? "Частично" : "Не готово";
+const sevColor = (s) => s === "high" ? RED : s === "medium" ? YELLOW : DIM;
+const sevLabel = (s) => s === "high" ? "Важно" : s === "medium" ? "Средне" : "Низкий";
+
+function EntityCard({ e, selected, onClick }) {
+  return (
+    <div onClick={onClick} style={{
+      background: selected ? `${e.color}15` : CARD,
+      border: `2px solid ${selected ? e.color : BORDER}`,
+      borderRadius: 14, padding: "16px 18px", cursor: "pointer",
+      transition: "all 0.25s ease", transform: selected ? "scale(1.01)" : "scale(1)",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+        <span style={{ fontSize: 28 }}>{e.icon}</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 17, fontWeight: 700, color: TEXT }}>{e.label}</div>
+          <div style={{ fontSize: 12, color: DIM }}>{e.oneLiner}</div>
+        </div>
+        <span style={{ fontSize: 16 }}>{statusIcon(e.details.status)}</span>
+      </div>
+      {!selected && <div style={{ fontSize: 11, color: `${e.color}aa`, marginTop: 4 }}>Нажми чтобы раскрыть →</div>}
+    </div>
+  );
+}
+
+function EntityDetails({ e }) {
+  const d = e.details;
+  const S = { marginBottom: 16 };
+  const L = { fontSize: 11, color: DIM, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6, fontWeight: 600 };
+  return (
+    <div style={{ background: `${e.color}08`, border: `1px solid ${e.color}30`, borderRadius: 14, padding: 20, animation: "fadeIn 0.3s ease" }}>
+      <div style={S}><div style={L}>Что это простыми словами</div><div style={{ fontSize: 14, color: TEXT, lineHeight: 1.6 }}>{d.what}</div></div>
+      <div style={{ ...S, background: `${e.color}10`, borderRadius: 10, padding: "12px 14px", borderLeft: `3px solid ${e.color}` }}>
+        <div style={{ fontSize: 11, color: e.color, fontWeight: 600, marginBottom: 4 }}>💡 АНАЛОГИЯ</div>
+        <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.5 }}>{d.analogy}</div>
+      </div>
+      <div style={S}><div style={L}>Что у него внутри</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          {d.hasWhat.map((a, i) => <div key={i} style={{ fontSize: 12, background: `${e.color}12`, color: TEXT, padding: "6px 10px", borderRadius: 6, border: `1px solid ${e.color}20`, lineHeight: 1.4 }}>{a}</div>)}
+        </div>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+        <div style={{ background: CARD, borderRadius: 10, padding: "10px 14px", border: `1px solid ${BORDER}` }}>
+          <div style={{ fontSize: 10, color: DIM, marginBottom: 3 }}>ОТКУДА БЕРЁТСЯ</div>
+          <div style={{ fontSize: 12, color: ACCENT, lineHeight: 1.4 }}>{d.whereFrom}</div>
+        </div>
+        <div style={{ background: CARD, borderRadius: 10, padding: "10px 14px", border: `1px solid ${BORDER}` }}>
+          <div style={{ fontSize: 10, color: DIM, marginBottom: 3 }}>СКОЛЬКО</div>
+          <div style={{ fontSize: 12, color: ACCENT, lineHeight: 1.4 }}>{d.count}</div>
+        </div>
+      </div>
+      {d.examples && <div style={S}><div style={L}>Примеры</div>
+        {d.examples.map((ex, i) => <div key={i} style={{ fontSize: 12, color: "#9ca3af", padding: "6px 10px", borderLeft: `2px solid ${e.color}40`, marginBottom: 4, lineHeight: 1.5 }}>{ex}</div>)}
+      </div>}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: `${statusColor(d.status)}15`, border: `1px solid ${statusColor(d.status)}30` }}>
+        <span style={{ fontSize: 16 }}>{statusIcon(d.status)}</span>
+        <span style={{ fontSize: 12, color: statusColor(d.status), fontWeight: 600 }}>{statusLabel(d.status)}</span>
+        <span style={{ fontSize: 12, color: DIM, marginLeft: 4 }}>{d.statusText}</span>
+      </div>
+    </div>
+  );
+}
+
+function ProcessCard({ p, expanded, onClick }) {
+  return (
+    <div>
+      <div onClick={onClick} style={{
+        display: "flex", alignItems: "center", gap: 12,
+        padding: "12px 14px", borderRadius: 10, cursor: "pointer",
+        background: expanded ? `${CARD}` : CARD, border: `1px solid ${expanded ? ACCENT + "40" : BORDER}`,
+        transition: "all 0.2s",
+      }}>
+        <span style={{ fontSize: 24 }}>{p.icon}</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{p.label}</div>
+          <div style={{ fontSize: 12, color: DIM }}>{p.desc}</div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: 11, color: ACCENT }}>{p.input} → {p.output}</div>
+          <div style={{ fontSize: 11, color: statusColor(p.status), display: "flex", alignItems: "center", gap: 4, justifyContent: "flex-end" }}>
+            {statusIcon(p.status)} {p.steps.filter(s=>s.done).length}/{p.steps.length}
+          </div>
+        </div>
+      </div>
+      {expanded && (
+        <div style={{ padding: "10px 14px 10px 50px", animation: "fadeIn 0.3s ease" }}>
+          {p.steps.map((s, i) => (
+            <div key={i} style={{ display: "flex", gap: 8, padding: "5px 0", fontSize: 13, color: s.done ? "#9ca3af" : RED }}>
+              <span style={{ color: s.done ? GREEN : RED, fontSize: 12 }}>{s.done ? "✓" : "✗"}</span>
+              <span>{s.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function App() {
+  const [view, setView] = useState("map");
+  const [selected, setSelected] = useState(null);
+  const [expandedProc, setExpandedProc] = useState(null);
+
+  return (
+    <div style={{ background: BG, color: TEXT, minHeight: "100vh", fontFamily: "'DM Sans', -apple-system, sans-serif", padding: "20px 16px" }}>
+      <div style={{ maxWidth: 680, margin: "0 auto" }}>
+
+        {/* Header */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 13, color: DIM, textTransform: "uppercase", letterSpacing: 2, marginBottom: 4 }}>Навигатор проекта</div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+            <span style={{ fontSize: 26, fontWeight: 800, color: TEXT }}>{project.name}</span>
+            <span style={{ fontSize: 13, color: DIM }}>v{project.version}</span>
+          </div>
+          <div style={{ fontSize: 14, color: ACCENT, marginTop: 6, padding: "8px 12px", background: `${ACCENT}10`, borderRadius: 8, borderLeft: `3px solid ${ACCENT}` }}>
+            🎯 {project.goal}
+          </div>
+          <div style={{ display: "flex", gap: 12, marginTop: 12, flexWrap: "wrap" }}>
+            {Object.entries(project.stats).map(([k, v]) => (
+              <div key={k} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "6px 12px", fontSize: 12 }}>
+                <span style={{ color: ACCENT, fontWeight: 700 }}>{v}</span> <span style={{ color: DIM }}>{k}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 4, marginBottom: 20, background: CARD, borderRadius: 10, padding: 3 }}>
+          {[
+            { id: "map", label: "🗺 Из чего состоит" },
+            { id: "process", label: "⚡ Что происходит" },
+            { id: "gaps", label: "🚨 Что не готово" },
+          ].map(t => (
+            <button key={t.id} onClick={() => { setView(t.id); setSelected(null); setExpandedProc(null); }}
+              style={{ flex: 1, padding: "10px 0", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
+                background: view === t.id ? ACCENT : "transparent", color: view === t.id ? BG : DIM, transition: "all 0.2s" }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* MAP */}
+        {view === "map" && (
+          <div>
+            <div style={{ fontSize: 12, color: DIM, marginBottom: 12 }}>Нажми на любой блок чтобы узнать подробности — что это, зачем, как работает</div>
+            {project.entities.map((e, i) => (
+              <div key={e.id}>
+                <EntityCard e={e} selected={selected === i} onClick={() => setSelected(selected === i ? null : i)} />
+                {selected === i && <div style={{ margin: "8px 0" }}><EntityDetails e={e} /></div>}
+                {i < project.entities.length - 1 && (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "6px 0" }}>
+                    <div style={{ fontSize: 11, color: project.entities[i].color, background: `${project.entities[i].color}15`, padding: "3px 12px", borderRadius: 20 }}>
+                      ↓ {project.flow[i]?.label}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* PROCESS */}
+        {view === "process" && (
+          <div>
+            <div style={{ fontSize: 12, color: DIM, marginBottom: 12 }}>Нажми на процесс чтобы увидеть шаги и статус каждого</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {project.processes.map((p, i) => (
+                <div key={i}>
+                  <ProcessCard p={p} expanded={expandedProc === i} onClick={() => setExpandedProc(expandedProc === i ? null : i)} />
+                  {i < project.processes.length - 1 && (
+                    <div style={{ display: "flex", justifyContent: "center", padding: "4px 0" }}>
+                      <span style={{ color: DIM, fontSize: 14 }}>↓</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* GAPS */}
+        {view === "gaps" && (
+          <div>
+            <div style={{ fontSize: 12, color: DIM, marginBottom: 12 }}>Что не реализовано или работает частично</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {project.gaps.map((g, i) => (
+                <div key={i} style={{
+                  background: `${sevColor(g.severity)}10`, border: `1px solid ${sevColor(g.severity)}30`,
+                  borderRadius: 10, padding: "12px 16px",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: sevColor(g.severity) }}>{g.label}</span>
+                    <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 8, background: `${sevColor(g.severity)}20`, color: sevColor(g.severity), fontWeight: 600 }}>{sevLabel(g.severity)}</span>
+                  </div>
+                  <div style={{ fontSize: 13, color: "#9ca3af", lineHeight: 1.5 }}>{g.desc}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginTop: 20, padding: 14, borderRadius: 10, background: `${RED}10`, border: `1px solid ${RED}30` }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: RED, marginBottom: 4 }}>⚡ Самая важная дыра</div>
+              <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.5 }}>
+                <b>Skill Chaining</b> — сейчас пользователь вручную вызывает brainstorm, потом plan, потом execute.
+                Автоцепочка сэкономила бы 3 ручных действия на каждую фичу.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Legend */}
+        <div style={{ marginTop: 24, padding: 14, borderRadius: 10, background: CARD, border: `1px solid ${BORDER}` }}>
+          <div style={{ fontSize: 11, color: DIM, marginBottom: 8, fontWeight: 600 }}>ОБОЗНАЧЕНИЯ</div>
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+            {[
+              { icon: "✅", label: "Готово", color: GREEN },
+              { icon: "⚠️", label: "Частично", color: YELLOW },
+              { icon: "❌", label: "Не готово", color: RED },
+            ].map(s => (
+              <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: s.color }}>{s.icon} {s.label}</div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ marginTop: 16, textAlign: "center", fontSize: 12, color: DIM, lineHeight: 1.6 }}>
+          Forge Plugin v{project.version} — Project Navigator<br />
+          Этот формат может стать скиллом /forge:product-map
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

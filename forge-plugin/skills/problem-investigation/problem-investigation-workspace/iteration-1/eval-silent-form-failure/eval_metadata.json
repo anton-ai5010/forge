@@ -1,0 +1,12 @@
+{
+  "eval_id": 2,
+  "eval_name": "eval-silent-form-failure",
+  "prompt": "форма регистрации отправляется но пользователь не создаётся в базе, ошибок нет нигде, в логах тоже чисто",
+  "assertions": [
+    {"text": "Restates the problem before proposing anything", "type": "boolean"},
+    {"text": "Asks at least one clarifying question before offering fixes", "type": "boolean"},
+    {"text": "Does NOT propose a concrete fix/command in the first response", "type": "boolean"},
+    {"text": "Separates symptom (form submits ok) from possible root causes", "type": "boolean"},
+    {"text": "Asks ONE question at a time (not a barrage of 3+)", "type": "boolean"}
+  ]
+}

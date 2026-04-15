@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge — Full Map (Scroll)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: #0f1117; color: #c8ccd8; font-family: 'Inter', sans-serif; }
+
+  /* Sidebar nav */
+  .sidebar {
+    position: fixed; left: 0; top: 0; width: 220px; height: 100vh;
+    background: #111318; border-right: 1px solid #1f2230;
+    padding: 20px 0; overflow-y: auto; z-index: 100;
+  }
+  .sidebar h2 { font-size: 14px; font-weight: 700; color: #fff; padding: 0 16px; margin-bottom: 16px; }
+  .nav-section { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #4b5563; padding: 12px 16px 4px; }
+  .nav-link {
+    display: block; padding: 6px 16px; font-size: 13px; color: #6b7280;
+    text-decoration: none; transition: all 0.15s; border-left: 2px solid transparent;
+  }
+  .nav-link:hover { color: #fff; background: rgba(255,255,255,0.03); }
+  .nav-link.active { color: #60a5fa; border-left-color: #60a5fa; background: rgba(96,165,250,0.05); }
+
+  /* Main content */
+  .main { margin-left: 220px; padding: 32px 40px 80px; max-width: 1100px; }
+
+  h1 { font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .subtitle { color: #6b7280; font-size: 14px; margin-bottom: 48px; }
+
+  /* Section */
+  .section { margin-bottom: 56px; scroll-margin-top: 24px; }
+  .section-header {
+    font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 6px;
+    padding-bottom: 10px; border-bottom: 1px solid #1f2230;
+  }
+  .section-desc { font-size: 13px; color: #6b7280; margin-bottom: 20px; }
+
+  /* Process flow */
+  .flow { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 8px; }
+  .flow-step {
+    min-width: 220px; max-width: 260px; flex-shrink: 0;
+    background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 10px; padding: 14px 16px;
+    position: relative;
+  }
+  .flow-step h4 { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+  .flow-step .desc { font-size: 11px; color: #6b7280; margin-bottom: 10px; }
+  .flow-step .arrow { position: absolute; right: -13px; top: 50%; transform: translateY(-50%); color: #2a2d3a; font-size: 16px; }
+
+  .mini-step { font-size: 12px; padding: 5px 0; display: flex; gap: 6px; align-items: flex-start; }
+  .mini-done { color: #9ca3af; }
+  .mini-miss { color: #ef4444; }
+  .mini-icon { flex-shrink: 0; font-size: 11px; margin-top: 2px; }
+  .mini-done .mini-icon { color: #22c55e; }
+  .mini-miss .mini-icon { color: #ef4444; }
+
+  /* Entity cards */
+  .e-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 12px; }
+  .e-card {
+    background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 10px; padding: 16px;
+  }
+  .e-card h4 { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+  .e-card .e-desc { font-size: 12px; color: #6b7280; margin-bottom: 10px; }
+  .e-badge { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 600; margin-bottom: 8px; }
+  .e-badge-ok { background: rgba(34,197,94,0.12); color: #22c55e; }
+  .e-badge-stub { background: rgba(251,146,60,0.12); color: #fb923c; }
+  .e-attr { font-size: 11px; padding: 3px 0; border-bottom: 1px solid #1f2230; display: flex; gap: 6px; }
+  .e-attr:last-child { border-bottom: none; }
+  .e-attr-k { color: #818cf8; font-weight: 500; min-width: 70px; flex-shrink: 0; }
+  .e-attr-v { color: #9ca3af; }
+
+  /* Gap cards */
+  .gap { background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.15); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; }
+  .gap h4 { font-size: 13px; font-weight: 600; color: #fca5a5; margin-bottom: 2px; }
+  .gap p { font-size: 12px; color: #888; }
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <h2>Forge Map</h2>
+  <div class="nav-section">Процессы</div>
+  <a class="nav-link" href="#main-flow">Основной поток</a>
+  <a class="nav-link" href="#init">Инициализация</a>
+  <a class="nav-link" href="#context">Context L0/L1/L2</a>
+  <a class="nav-link" href="#ui-design">UI/UX Дизайн</a>
+  <a class="nav-link" href="#api-design">API Дизайн</a>
+  <a class="nav-link" href="#migration">Миграции БД</a>
+  <a class="nav-link" href="#security">Security Review</a>
+  <a class="nav-link" href="#deploy">Деплой</a>
+  <a class="nav-link" href="#git">Git Worktrees</a>
+  <div class="nav-section">Данные</div>
+  <a class="nav-link" href="#entities">Сущности</a>
+  <a class="nav-link" href="#gaps">Дыры</a>
+</nav>
+
+<div class="main">
+<h1>Forge Plugin — Full Map</h1>
+<p class="subtitle">Все процессы, сущности и дыры. Навигация слева.</p>
+
+<!-- ОСНОВНОЙ ПОТОК -->
+<div class="section" id="main-flow">
+  <div class="section-header">Основной поток: Идея → Код → Merge</div>
+  <div class="section-desc">Главный процесс разработки. Обязательные gates на каждом переходе.</div>
+  <div class="flow">
+    <div class="flow-step"><h4>Session Start</h4><div class="desc">Открытие Claude Code</div><span class="arrow">→</span>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Hook → using-forge</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Инжект L0</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Keyword → skill hint</div>
+      <div class="mini-step mini-miss"><span class="mini-icon">✗</span> Авто L1</div>
+    </div>
+    <div class="flow-step"><h4>Brainstorm</h4><div class="desc">3 агента исследуют</div><span class="arrow">→</span>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Аналитик + технолог + критик</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Requirements + criteria</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> GATE: дизайн одобрен</div>
+    </div>
+    <div class="flow-step"><h4>Plan</h4><div class="desc">Декомпозиция</div><span class="arrow">→</span>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Задачи по 2-5 мин</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> файлы + тест + код</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> .forge/plans/*.md</div>
+    </div>
+    <div class="flow-step"><h4>Execute</h4><div class="desc">Субагенты работают</div><span class="arrow">→</span>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Свежий субагент на задачу</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> TDD: RED→GREEN→REFACTOR</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Spec + Quality review</div>
+      <div class="mini-step mini-miss"><span class="mini-icon">✗</span> Auto skill chaining</div>
+    </div>
+    <div class="flow-step"><h4>Debug</h4><div class="desc">Если баг</div><span class="arrow">→</span>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> 4 фазы расследования</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> GATE: нет фикса без Phase 1</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Запись Dead End</div>
+    </div>
+    <div class="flow-step"><h4>Sync & Finish</h4><div class="desc">Завершение</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Git diff → update docs</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> decisions, dead-ends</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Code review → merge/PR</div>
+      <div class="mini-step mini-miss"><span class="mini-icon">✗</span> Auto learnings</div>
+    </div>
+  </div>
+</div>
+
+<!-- ИНИЦИАЛИЗАЦИЯ -->
+<div class="section" id="init">
+  <div class="section-header">Инициализация проекта</div>
+  <div class="section-desc">/forge:init — 21 шаг, 4 параллельных агента. Создаёт всю структуру .forge/</div>
+  <div class="flow">
+    <div class="flow-step"><h4>Скан проекта</h4><div class="desc">4 агента параллельно</div><span class="arrow">→</span>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Директории, стек, зависимости</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Git history, TODO</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Docker, серверы, БД</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Чтение кода (<50 файлов)</div>
+    </div>
+    <div class="flow-step"><h4>Генерация .forge/</h4><div class="desc">Структура контекста</div><span class="arrow">→</span>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> map.yml, conventions.yml</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> index.yml (L0 каталог)</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> status, decisions, dead-ends</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> journal (первая запись)</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> library/*/spec.yml</div>
+    </div>
+    <div class="flow-step"><h4>Настройка</h4><div class="desc">Хуки и конфиги</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> CLAUDE.md</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> .claude/settings.json</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> .gitignore</div>
+      <div class="mini-step mini-miss"><span class="mini-icon">✗</span> Авто-детекция red zones</div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTEXT -->
+<div class="section" id="context">
+  <div class="section-header">Context L0 / L1 / L2</div>
+  <div class="section-desc">Как Claude узнаёт о проекте. Тегированная загрузка, экономия токенов.</div>
+  <div class="flow">
+    <div class="flow-step"><h4>L0 — Всегда</h4><div class="desc">~200 токенов, каждый промпт</div><span class="arrow">→</span>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Проект, цель, стадия</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Прогресс 0-100%</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Текущая задача + ветка</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Каталог L1/L2 с тегами</div>
+    </div>
+    <div class="flow-step"><h4>L1 — По тегам</h4><div class="desc">500-2000 tok, по запросу</div><span class="arrow">→</span>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> map → structure, files</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> conventions → naming</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> status → working/broken</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> decisions → architecture</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> dead-ends → avoid</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> journal → history</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> learnings → insights</div>
+    </div>
+    <div class="flow-step"><h4>L2 — Редко</h4><div class="desc">Без лимита</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> library/*/spec.yml</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> plans/*.md</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> dead-ends/*.md</div>
+    </div>
+  </div>
+</div>
+
+<!-- UI DESIGN -->
+<div class="section" id="ui-design">
+  <div class="section-header">UI/UX Дизайн</div>
+  <div class="section-desc">/forge:design — генерация design system с палитрами и типографикой.</div>
+  <div class="flow">
+    <div class="flow-step"><h4>Анализ</h4><div class="desc">Аудитория + контекст</div><span class="arrow">→</span>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Целевая аудитория</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> BM25 поиск по паттернам</div>
+    </div>
+    <div class="flow-step"><h4>Design System</h4><div class="desc">Результат</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Палитра + типографика</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Spacing, компоненты</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Accessibility</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> → design-system-*.yml</div>
+    </div>
+  </div>
+</div>
+
+<!-- API DESIGN -->
+<div class="section" id="api-design">
+  <div class="section-header">API Дизайн</div>
+  <div class="section-desc">/forge:api-design — REST контракт до реализации.</div>
+  <div class="flow">
+    <div class="flow-step"><h4>Ресурсы</h4><div class="desc">REST-модель</div><span class="arrow">→</span>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Эндпоинты + методы</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Пагинация, фильтры</div>
+    </div>
+    <div class="flow-step"><h4>Контракт</h4><div class="desc">Документ</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Error handling</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Версионирование</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> → api-*.yml</div>
+    </div>
+  </div>
+</div>
+
+<!-- MIGRATION -->
+<div class="section" id="migration">
+  <div class="section-header">Миграции БД</div>
+  <div class="section-desc">/forge:migrate — zero-downtime через expand-contract.</div>
+  <div class="flow">
+    <div class="flow-step"><h4>Стратегия</h4><div class="desc">Expand-contract</div><span class="arrow">→</span>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Zero-downtime план</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Forward миграция</div>
+    </div>
+    <div class="flow-step"><h4>Скрипты</h4><div class="desc">Генерация</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Rollback миграция</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> → migration-*.yml</div>
+    </div>
+  </div>
+</div>
+
+<!-- SECURITY -->
+<div class="section" id="security">
+  <div class="section-header">Security Review</div>
+  <div class="section-desc">/forge:security-review — OWASP чеклист. FAIL блокирует merge.</div>
+  <div class="flow">
+    <div class="flow-step"><h4>Аудит</h4><div class="desc">OWASP Top 10</div><span class="arrow">→</span>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Secrets, input validation</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Auth, JWT, сессии</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> API security</div>
+    </div>
+    <div class="flow-step"><h4>Результат</h4><div class="desc">PASS/FAIL</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Dependencies, data privacy</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> GATE: FAIL → блокировка</div>
+    </div>
+  </div>
+</div>
+
+<!-- DEPLOY -->
+<div class="section" id="deploy">
+  <div class="section-header">Деплой</div>
+  <div class="section-desc">/forge:deploy — Docker, CI/CD, health checks, rollback.</div>
+  <div class="flow">
+    <div class="flow-step"><h4>Подготовка</h4><div class="desc">Контейнеризация</div><span class="arrow">→</span>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Docker multi-stage build</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> CI/CD pipeline</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Health checks</div>
+    </div>
+    <div class="flow-step"><h4>Production</h4><div class="desc">Запуск</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Env vars, secrets</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Rollback стратегия</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> → deploy-*.yml</div>
+    </div>
+  </div>
+</div>
+
+<!-- GIT WORKTREES -->
+<div class="section" id="git">
+  <div class="section-header">Git Worktrees</div>
+  <div class="section-desc">Изоляция фич в отдельных worktree. Параллельная работа без stash.</div>
+  <div class="flow">
+    <div class="flow-step"><h4>Создание</h4><div class="desc">Новая фича</div><span class="arrow">→</span>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> git worktree add</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Автоматическая ветка</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Проверка setup</div>
+    </div>
+    <div class="flow-step"><h4>Работа</h4><div class="desc">Изолированно</div><span class="arrow">→</span>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Полная изоляция от main</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Safety checks</div>
+    </div>
+    <div class="flow-step"><h4>Cleanup</h4><div class="desc">После merge</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Удаление worktree</div>
+      <div class="mini-step mini-done"><span class="mini-icon">✓</span> Удаление ветки</div>
+    </div>
+  </div>
+</div>
+
+<!-- СУЩНОСТИ -->
+<div class="section" id="entities">
+  <div class="section-header">Сущности</div>
+  <div class="section-desc">11 бизнес-объектов проекта с атрибутами.</div>
+  <div class="e-grid">
+    <div class="e-card"><h4>Skill</h4><div class="e-desc">Воркфлоу-паттерн. 23 шт.</div><span class="e-badge e-badge-ok">ok</span>
+      <div class="e-attr"><span class="e-attr-k">name</span><span class="e-attr-v">kebab-case</span></div>
+      <div class="e-attr"><span class="e-attr-k">trigger</span><span class="e-attr-v">keyword → skill</span></div>
+      <div class="e-attr"><span class="e-attr-k">type</span><span class="e-attr-v">rigid | flexible</span></div>
+      <div class="e-attr"><span class="e-attr-k">stage</span><span class="e-attr-v">pre | exec | verify</span></div>
+    </div>
+    <div class="e-card"><h4>Session</h4><div class="e-desc">Рабочая сессия.</div><span class="e-badge e-badge-ok">ok</span>
+      <div class="e-attr"><span class="e-attr-k">goal</span><span class="e-attr-v">цель</span></div>
+      <div class="e-attr"><span class="e-attr-k">now</span><span class="e-attr-v">текущее</span></div>
+      <div class="e-attr"><span class="e-attr-k">next</span><span class="e-attr-v">следующее</span></div>
+    </div>
+    <div class="e-card"><h4>Context</h4><div class="e-desc">L0/L1/L2 контекст.</div><span class="e-badge e-badge-ok">ok</span>
+      <div class="e-attr"><span class="e-attr-k">L0</span><span class="e-attr-v">200 tok, всегда</span></div>
+      <div class="e-attr"><span class="e-attr-k">L1</span><span class="e-attr-v">по тегам</span></div>
+      <div class="e-attr"><span class="e-attr-k">L2</span><span class="e-attr-v">редко, полные</span></div>
+    </div>
+    <div class="e-card"><h4>Plan</h4><div class="e-desc">План фичи.</div><span class="e-badge e-badge-ok">ok</span>
+      <div class="e-attr"><span class="e-attr-k">goal</span><span class="e-attr-v">что делаем</span></div>
+      <div class="e-attr"><span class="e-attr-k">tasks</span><span class="e-attr-v">шаги 2-5 мин</span></div>
+    </div>
+    <div class="e-card"><h4>Task</h4><div class="e-desc">Атом работы = 1 коммит.</div><span class="e-badge e-badge-ok">ok</span>
+      <div class="e-attr"><span class="e-attr-k">test</span><span class="e-attr-v">RED первым</span></div>
+      <div class="e-attr"><span class="e-attr-k">code</span><span class="e-attr-v">GREEN минимум</span></div>
+    </div>
+    <div class="e-card"><h4>Subagent</h4><div class="e-desc">Свежий Claude на задачу.</div><span class="e-badge e-badge-ok">ok</span>
+      <div class="e-attr"><span class="e-attr-k">role</span><span class="e-attr-v">impl | review | doc</span></div>
+      <div class="e-attr"><span class="e-attr-k">model</span><span class="e-attr-v">inherit | sonnet</span></div>
+    </div>
+    <div class="e-card"><h4>Review Gate</h4><div class="e-desc">Обязательная проверка.</div><span class="e-badge e-badge-ok">ok</span>
+      <div class="e-attr"><span class="e-attr-k">type</span><span class="e-attr-v">design|test|spec|quality</span></div>
+      <div class="e-attr"><span class="e-attr-k">blocking</span><span class="e-attr-v">ВСЕГДА true</span></div>
+    </div>
+    <div class="e-card"><h4>Dead End</h4><div class="e-desc">Провальный подход.</div><span class="e-badge e-badge-ok">ok</span>
+      <div class="e-attr"><span class="e-attr-k">summary</span><span class="e-attr-v">что пробовали</span></div>
+      <div class="e-attr"><span class="e-attr-k">why</span><span class="e-attr-v">причина провала</span></div>
+    </div>
+    <div class="e-card"><h4>Decision</h4><div class="e-desc">Архитектурное решение.</div><span class="e-badge e-badge-ok">ok</span>
+      <div class="e-attr"><span class="e-attr-k">what</span><span class="e-attr-v">решение</span></div>
+      <div class="e-attr"><span class="e-attr-k">why</span><span class="e-attr-v">обоснование</span></div>
+    </div>
+    <div class="e-card"><h4>Hook</h4><div class="e-desc">Авто-скрипт Claude Code.</div><span class="e-badge e-badge-ok">ok</span>
+      <div class="e-attr"><span class="e-attr-k">events</span><span class="e-attr-v">start, prompt, stop, perm</span></div>
+    </div>
+    <div class="e-card"><h4>Marketplace</h4><div class="e-desc">Каталог плагинов.</div><span class="e-badge e-badge-stub">stub</span>
+      <div class="e-attr"><span class="e-attr-k">local</span><span class="e-attr-v">работает</span></div>
+      <div class="e-attr"><span class="e-attr-k">remote</span><span class="e-attr-v">НЕТ</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ДЫРЫ -->
+<div class="section" id="gaps">
+  <div class="section-header">Дыры и недоделки</div>
+  <div class="gap"><h4>Marketplace API</h4><p>Только локальный поиск. Удалённый — нет.</p></div>
+  <div class="gap"><h4>Skill Chaining</h4><p>Нет автоцепочки. Вручную каждый скилл.</p></div>
+  <div class="gap"><h4>Learning Extraction</h4><p>Не извлекает инсайты автоматически.</p></div>
+  <div class="gap"><h4>Cross-Project Patterns</h4><p>Каждый .forge/ изолирован.</p></div>
+  <div class="gap"><h4>Skill Auto-Detection</h4><p>Только keyword matching.</p></div>
+  <div class="gap"><h4>Авто-загрузка L1</h4><p>Claude сам запрашивает L1. Нет авто.</p></div>
+  <div class="gap"><h4>Auto Red Zone Detection</h4><p>Red zones — только вручную.</p></div>
+</div>
+
+</div>
+
+<script>
+// Highlight active nav link on scroll
+const sections = document.querySelectorAll('.section');
+const navLinks = document.querySelectorAll('.nav-link');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 60) current = s.id; });
+  navLinks.forEach(l => {
+    l.classList.remove('active');
+    if (l.getAttribute('href') === '#' + current) l.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

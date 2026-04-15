@@ -1,0 +1,12 @@
+{
+  "eval_id": 1,
+  "eval_name": "eval-module-not-found",
+  "prompt": "у меня при запуске npm run dev выскакивает Error: Cannot find module '../lib/utils' но файл точно есть, я проверял",
+  "assertions": [
+    {"text": "Restates the problem before proposing anything", "type": "boolean"},
+    {"text": "Asks at least one clarifying question before offering fixes", "type": "boolean"},
+    {"text": "Does NOT propose a concrete fix/command in the first response", "type": "boolean"},
+    {"text": "Separates symptom (module not found) from possible root causes", "type": "boolean"},
+    {"text": "Asks ONE question at a time (not a barrage of 3+)", "type": "boolean"}
+  ]
+}

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge — Navigator v7</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, createElement: h } = React;
+const BG="#0d1117",CARD="#161b22",BRD="#30363d",DIM="#7d8590",TXT="#e6edf3",
+  GRN="#3fb950",YEL="#d29922",RED="#f85149",BLU="#58a6ff",PUR="#bc8cff",
+  ORG="#f0883e",CYN="#4dd0e1",PNK="#f778ba";
+
+// ---- Primitives ----
+function Sub({text,children,warn,pink,color}){
+  const [o,setO]=useState(false);const has=!!children;
+  return h('div',{style:{marginBottom:4}},
+    h('div',{onClick:has?()=>setO(!o):undefined,style:{fontSize:13,color:warn?YEL:pink?PNK:color||"#b0b8c8",lineHeight:1.6,padding:"5px 10px",borderRadius:6,cursor:has?"pointer":"default",background:o?(pink?`${PNK}08`:`${BLU}06`):"transparent",borderLeft:`2px solid ${o?(pink?PNK:CYN):`${BRD}50`}`,transition:"all 0.15s"}},
+      has&&h('span',{style:{color:DIM,fontSize:9,marginRight:6}},o?"▼":"▶"),warn&&"⚠️ ",pink&&"🔍 ",text),
+    o&&has&&h('div',{style:{padding:"6px 8px 6px 22px",animation:"fadeIn 0.15s ease"}},children));
+}
+function Code({children}){return h('pre',{style:{fontSize:11,color:CYN,background:"#0a0c10",border:`1px solid ${BRD}`,borderRadius:8,padding:"12px 14px",overflow:"auto",lineHeight:1.6,fontFamily:"'Courier New',monospace",whiteSpace:"pre-wrap",wordBreak:"break-word",marginBottom:8}},children);}
+function Badge({text,color}){return h('span',{style:{fontSize:10,padding:"2px 8px",borderRadius:8,fontWeight:600,background:`${color||GRN}18`,color:color||GRN,marginLeft:6}},text);}
+
+function FlowStep({icon,title,desc,badge,badgeColor,children,fork}){
+  const [o,setO]=useState(false);const has=!!children;
+  return h('div',{style:{marginBottom:2}},
+    h('div',{onClick:has?()=>setO(!o):undefined,style:{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",borderRadius:10,cursor:has?"pointer":"default",background:o?`${CYN}06`:CARD,border:`1px solid ${o?CYN+"30":BRD}`,transition:"all 0.2s"}},
+      h('span',{style:{fontSize:22,flexShrink:0}},icon),
+      h('div',{style:{flex:1}},h('div',{style:{fontSize:14,fontWeight:600,color:TXT}},title,badge&&h(Badge,{text:badge,color:badgeColor})),desc&&h('div',{style:{fontSize:12,color:DIM,lineHeight:1.4,marginTop:2}},desc)),
+      has&&h('span',{style:{color:DIM,fontSize:10,transition:"transform 0.2s",transform:o?"rotate(90deg)":"rotate(0deg)"}},has?"▶":"")),
+    o&&has&&h('div',{style:{padding:"8px 4px 4px 32px",animation:"fadeIn 0.2s ease"}},children),
+    !fork&&h('div',{style:{display:"flex",justifyContent:"center",padding:"2px 0"}},h('div',{style:{width:2,height:16,background:`${BRD}60`}})));
+}
+
+function Fork({question,options}){
+  const [sel,setSel]=useState(null);
+  return h('div',{style:{margin:"4px 0"}},
+    h('div',{style:{background:`${YEL}10`,border:`1px solid ${YEL}30`,borderRadius:10,padding:"10px 14px"}},
+      h('div',{style:{fontSize:13,fontWeight:600,color:YEL,marginBottom:8}},"🔀 ",question),
+      h('div',{style:{display:"flex",gap:6,flexWrap:"wrap"}},options.map((opt,i)=>h('button',{key:i,onClick:()=>setSel(sel===i?null:i),style:{padding:"6px 14px",borderRadius:8,fontSize:12,fontWeight:500,cursor:"pointer",border:`1px solid ${sel===i?CYN:BRD}`,background:sel===i?`${CYN}15`:CARD,color:sel===i?CYN:DIM,transition:"all 0.2s"}},opt.label))),
+      sel!==null&&h('div',{style:{marginTop:10,animation:"fadeIn 0.2s ease"}},options[sel].content)),
+    h('div',{style:{display:"flex",justifyContent:"center",padding:"2px 0"}},h('div',{style:{width:2,height:16,background:`${BRD}60`}})));
+}
+
+function Entity({name,icon,color,children}){
+  const [o,setO]=useState(false);
+  return h('div',{style:{marginBottom:4}},
+    h('div',{onClick:children?()=>setO(!o):undefined,style:{display:"inline-flex",alignItems:"center",gap:6,padding:"4px 10px",borderRadius:6,background:`${color||BLU}12`,border:`1px solid ${color||BLU}20`,cursor:children?"pointer":"default",fontSize:12}},
+      h('span',{style:{fontSize:14}},icon),h('span',{style:{color:color||BLU,fontWeight:500}},name),children&&h('span',{style:{color:DIM,fontSize:9,marginLeft:4}},o?"▼":"▶")),
+    o&&children&&h('div',{style:{padding:"6px 12px 6px 20px",animation:"fadeIn 0.15s ease"}},children));
+}
+
+// ---- Big Picture node ----
+function BigNode({icon,title,desc,color,children,last}){
+  const [o,setO]=useState(false);const has=!!children;
+  return h('div',null,
+    h('div',{onClick:has?()=>setO(!o):undefined,style:{
+      display:"flex",alignItems:"center",gap:14,padding:"16px 20px",borderRadius:14,cursor:has?"pointer":"default",
+      background:o?`${color}12`:CARD,border:`2px solid ${o?color:BRD}`,transition:"all 0.25s",transform:o?"scale(1.01)":"scale(1)"}},
+      h('span',{style:{fontSize:36,flexShrink:0}},icon),
+      h('div',{style:{flex:1}},
+        h('div',{style:{fontSize:18,fontWeight:700,color:TXT}},title),
+        h('div',{style:{fontSize:13,color:DIM,lineHeight:1.5,marginTop:2}},desc)),
+      has&&h('span',{style:{color:DIM,fontSize:11}},o?"▼":"▶")),
+    o&&has&&h('div',{style:{padding:"12px 16px 8px 54px",animation:"fadeIn 0.25s ease"}},children),
+    !last&&h('div',{style:{display:"flex",flexDirection:"column",alignItems:"center",padding:"4px 0"}},
+      h('div',{style:{width:3,height:24,background:`linear-gradient(${color}60, ${color}20)`,borderRadius:2}}),
+      h('div',{style:{fontSize:16,color:`${color}80`,marginTop:-2}},"↓")));
+}
+
+// ---- Entity Card (v2 style, human-readable) ----
+function EntityCard({icon,label,oneLiner,color,status,children}){
+  const [o,setO]=useState(false);
+  const stIcon=status==="ok"?"✅":status==="warn"?"⚠️":"❌";
+  return h('div',{style:{marginBottom:10}},
+    h('div',{onClick:()=>setO(!o),style:{
+      background:o?`${color}15`:CARD,border:`2px solid ${o?color:BRD}`,borderRadius:14,padding:"16px 18px",cursor:"pointer",transition:"all 0.25s"}},
+      h('div',{style:{display:"flex",alignItems:"center",gap:10}},
+        h('span',{style:{fontSize:28}},icon),
+        h('div',{style:{flex:1}},
+          h('div',{style:{fontSize:17,fontWeight:700,color:TXT}},label),
+          h('div',{style:{fontSize:12,color:DIM}},oneLiner)),
+        h('span',{style:{fontSize:16}},stIcon)),
+      !o&&h('div',{style:{fontSize:11,color:`${color}aa`,marginTop:6}},"Нажми чтобы раскрыть →")),
+    o&&h('div',{style:{background:`${color}08`,border:`1px solid ${color}30`,borderRadius:14,padding:20,marginTop:6,animation:"fadeIn 0.3s ease"}},children));
+}
+
+// ---- Styled section for entity details ----
+function What({children}){return h('div',{style:{marginBottom:16}},h('div',{style:{fontSize:11,color:DIM,textTransform:"uppercase",letterSpacing:1,marginBottom:6,fontWeight:600}},"Что это"),h('div',{style:{fontSize:14,color:TXT,lineHeight:1.6}},children));}
+function Benefit({children}){return h('div',{style:{marginBottom:16,background:`${GRN}10`,borderRadius:10,padding:"12px 14px",borderLeft:`3px solid ${GRN}`}},h('div',{style:{fontSize:11,color:GRN,fontWeight:600,marginBottom:4}},"💰 ЧТО ТЕБЕ С ЭТОГО"),h('div',{style:{fontSize:13,color:TXT,lineHeight:1.5}},children));}
+function HowTo({items}){return h('div',{style:{marginBottom:16}},h('div',{style:{fontSize:11,color:DIM,textTransform:"uppercase",letterSpacing:1,marginBottom:6,fontWeight:600}},"Как пользоваться"),items.map((t,i)=>h('div',{key:i,style:{fontSize:13,color:TXT,padding:"6px 10px",borderRadius:6,background:`${BLU}10`,border:`1px solid ${BLU}15`,lineHeight:1.4,marginBottom:3}},h('span',{style:{color:BLU,marginRight:6}},i+1,"."),t)));}
+function Inside({children}){return h('div',{style:{marginBottom:16}},h('div',{style:{fontSize:11,color:DIM,textTransform:"uppercase",letterSpacing:1,marginBottom:6,fontWeight:600}},"Что внутри"),children);}
+
+const sevColor=s=>s==="high"?RED:s==="medium"?YEL:DIM;
+const sevLabel=s=>s==="high"?"Важно":s==="medium"?"Средне":"Мелочь";
+
+// ====== APP ======
+function App(){
+  const [tab,setTab]=useState("big");
+  const [flow,setFlow]=useState(null);
+
+  const flows=[
+    {id:"init",icon:"🏗️",title:"Первый запуск",desc:"Новый проект → полная структура памяти",badge:"1 раз"},
+    {id:"session",icon:"🚀",title:"Начало сессии",desc:"Открыл Claude Code → контекст загружен",badge:"авто"},
+    {id:"feature",icon:"💡",title:"Новая фича",desc:"Идея → обсуждение → план → код → merge",badge:"основной"},
+    {id:"bug",icon:"🔍",title:"Починка бага",desc:"Расследование → гипотеза → фикс → тест",badge:"по ситуации"},
+    {id:"sync",icon:"📦",title:"Завершение",desc:"Обновить память, записать решения, merge",badge:"каждый раз"},
+  ];
+
+  return h('div',{style:{background:BG,color:TXT,minHeight:"100vh",fontFamily:"'DM Sans',-apple-system,sans-serif",padding:"20px 16px"}},
+    h('div',{style:{maxWidth:700,margin:"0 auto"}},
+
+      h('div',{style:{marginBottom:20}},
+        h('div',{style:{fontSize:12,color:DIM,textTransform:"uppercase",letterSpacing:2}},"Навигатор проекта"),
+        h('div',{style:{fontSize:26,fontWeight:800}},"Forge Plugin ",h('span',{style:{fontSize:14,fontWeight:400,color:DIM}},"v5.6.0")),
+        h('div',{style:{fontSize:14,color:CYN,marginTop:6,padding:"10px 14px",background:`${CYN}10`,borderRadius:8,borderLeft:`3px solid ${CYN}`,lineHeight:1.5}},
+          "🎯 Claude следует процессам, помнит контекст, объясняет куда двигаться")),
+
+      h('div',{style:{display:"flex",gap:3,marginBottom:20,background:CARD,borderRadius:10,padding:3}},
+        [{id:"big",label:"🔗 Картина"},{id:"flows",label:"⚙️ Потоки"},{id:"entities",label:"🧩 Детали"},{id:"gaps",label:"🚨 Дыры"}].map(t=>
+          h('button',{key:t.id,onClick:()=>{setTab(t.id);setFlow(null)},style:{flex:1,padding:"10px 0",border:"none",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer",background:tab===t.id?CYN:"transparent",color:tab===t.id?BG:DIM,transition:"all 0.2s"}},t.label))),
+
+// ============ BIG PICTURE ============
+tab==="big"&&h('div',null,
+  h('div',{style:{fontSize:13,color:DIM,marginBottom:16}},"Как работает весь механизм — от твоего сообщения до результата. Нажми на блок чтобы заглянуть внутрь."),
+
+  h(BigNode,{icon:"💬",title:"Ты пишешь сообщение",desc:"Любой запрос в Claude Code — 'добавь оплату', 'почини баг', 'что делать дальше'",color:CYN},
+    h(Sub,{text:"Claude Code отправляет твоё сообщение + автоматически добавляет контекст проекта"}),
+    h(Sub,{text:"Ты не видишь добавленный контекст — но Claude его видит"})),
+
+  h(BigNode,{icon:"🪝",title:"Автоматика",desc:"Хуки срабатывают незаметно — добавляют контекст и подсказывают инструмент",color:GRN},
+    h(Sub,{text:"При каждом сообщении: хук читает .forge/index.yml и добавляет к промпту"}),
+    h(Sub,{text:"Смотрит на твои слова: 'баг' → подсказывает отладку, 'фича' → обсуждение"}),
+    h(Sub,{text:"Добавляет git ветку, последние коммиты, ссылку на граф кода"}),
+    h(Sub,{text:"Не работает на 100% — неточные слова не активируют подсказку",warn:true}),
+    h(Sub,{text:"🔍 Что хук добавляет к твоему сообщению",pink:true},
+      h(Code,null,`project: my-shop\ngoal: "Интернет-магазин"\nstage: active-dev\nnow: "Добавить оплату"\nbranch: feature/payments\n\nSKILL HINT: forge:brainstorming\nGraph: 128 nodes`))),
+
+  h(BigNode,{icon:"📚",title:"Память проекта",desc:"Claude вспоминает всё что нужно — цель, решения, ошибки, структуру. Не грузит лишнего.",color:BLU},
+    h(Sub,{text:"Краткая сводка (~5 строк) — загружена ВСЕГДА. Цель, стадия, текущая задача."}),
+    h(Sub,{text:"Подробности — загружаются ТОЛЬКО если нужны по теме",children:
+      h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.8}},
+        "Спросил 'почему PostgreSQL?' → загрузит решения",h('br'),
+        "Спросил 'что сломано?' → загрузит статус",h('br'),
+        "Спросил 'что пробовали?' → загрузит книгу ошибок",h('br'),
+        "Не спросил → не загружает. Экономия ~90% контекста.")}),
+    h(Sub,{text:"Графовая карта кода — связи между модулями (если есть graphify)"})),
+
+  h(BigNode,{icon:"⚡",title:"Инструкция (скилл)",desc:"Claude загружает нужный скилл — пошаговые правила 'делай так, а не иначе'",color:PUR},
+    h(Sub,{text:"Без скилла Claude импровизирует. Со скиллом — следует проверенному процессу."}),
+    h(Sub,{text:"Строгие скиллы: 'нельзя код без теста', 'нельзя фикс без расследования'"}),
+    h(Sub,{text:"Гибкие скиллы: 'вот принципы дизайна, адаптируй под проект'"}),
+    h(Sub,{text:"23 скилла на все случаи — от обсуждения идеи до деплоя",children:
+      h('div',{style:{display:"flex",flexWrap:"wrap",gap:4}},
+        ["brainstorming","writing-plans","executing-plans","test-driven-development","systematic-debugging","code-cleanup","requesting-code-review","finishing-a-development-branch","ui-ux-design","api-design","security-review","deployment","database-migrations","subagent-driven-development","using-git-worktrees","project-unblocker"].map((s,i)=>
+          h('code',{key:i,style:{fontSize:10,color:PUR,background:`${PUR}12`,padding:"2px 6px",borderRadius:4}},s)))}),
+    h(Sub,{text:"🔍 Пример: что Claude получает в скилле отладки",pink:true},
+      h(Code,null,`Role: "Инженер-диагностик (12 лет)"\n\nЖелезное правило:\n  "НЕЛЬЗЯ ЧИНИТЬ БЕЗ РАССЛЕДОВАНИЯ"\n\nPhase 1: Воспроизвести, собрать факты\nPhase 2: Гипотеза (минимум 2)\nPhase 3: Доказать экспериментом\nPhase 4: Минимальный фикс + тест`))),
+
+  h(BigNode,{icon:"📋",title:"План",desc:"Работа разбивается на маленькие шаги по 2-5 минут. Каждый: файлы + тест + код + проверка.",color:ORG},
+    h(Sub,{text:"Создаётся ТОЛЬКО после обсуждения — нельзя сразу кодить"}),
+    h(Sub,{text:"Каждый шаг рассчитан на инженера с нулевым контекстом"}),
+    h(Sub,{text:"Пример шага из плана",children:
+      h(Code,null,`Task 1: Модель платежа\n  Создать: src/models/payment.ts\n  Тест: tests/models/payment.test.ts\n\n  1. Написать тест → 2. Он ПАДАЕТ →\n  3. Минимальный код → 4. Тест ПРОХОДИТ →\n  5. Коммит`)})),
+
+  h(BigNode,{icon:"🤖",title:"Помощники",desc:"Свежие Claude на каждую задачу. Один пишет, другие проверяют, четвёртый пишет документацию.",color:ORG},
+    h(Sub,{text:"Кодер — пишет код по TDD. Чистая голова, не путается в чужих задачах."}),
+    h(Sub,{text:"Проверщик спецификации — 'код делает то что просили?' Нет → переделка."}),
+    h(Sub,{text:"Проверщик качества — 'код хороший?' Нет → переделка."}),
+    h(Sub,{text:"Документатор — обновляет память проекта после изменений."}),
+    h(Sub,{text:"🔍 Что кодер получает в brief",pink:true},
+      h(Code,null,`"Ты — разработчик. Задача:\n  JWT middleware\n  Файлы: src/middleware/auth.ts\n  Стек: TypeScript, Express\n\n  ОБЯЗАТЕЛЬНО:\n  1. Сначала ПАДАЮЩИЙ тест\n  2. Потом минимальный код\n  3. Self-review\n  4. Коммит\n\n  Ты НЕ знаешь про другие задачи."`))),
+
+  h(BigNode,{icon:"🚧",title:"Проверки",desc:"Контрольные точки которые Claude не может обойти. Есть таблица 'отмазок' — ловит хитрости.",color:RED},
+    h(Sub,{text:"Дизайн одобрен — нельзя кодить без обсуждения"}),
+    h(Sub,{text:"Тесты зелёные — нельзя сказать 'готово'"}),
+    h(Sub,{text:"Spec review — код = задача"}),
+    h(Sub,{text:"Quality review — код качественный"}),
+    h(Sub,{text:"Security — FAIL блокирует merge"}),
+    h(Sub,{text:"🔍 Как Claude пытается обойти и как ловим",pink:true},
+      h(Code,null,`Claude думает:       Реальность:\n"Слишком просто"   → Проверь всё равно\n"Наверное пройдёт"  → Запусти и покажи\n"Я уже знаю"       → Прочитай текущую версию\n"Сделаю потом"      → Нет. Сейчас.\n"Это не считается"  → Действие = задача`))),
+
+  h(BigNode,{icon:"📚",title:"Память обновлена",desc:"Решения, ошибки, выводы записаны. Следующая сессия начнётся с контекстом.",color:BLU,last:true},
+    h(Sub,{text:"Решения — 'выбрали Stripe потому что PayPal требует бизнес-аккаунт'"}),
+    h(Sub,{text:"Ошибки — 'пробовали Redis для сессий, eviction удалял активные'"}),
+    h(Sub,{text:"Выводы — 'pytest fixtures лучше setUp/tearDown для нашего стека'"}),
+    h(Sub,{text:"История — 'вчера добавили оплату, сегодня делаем уведомления'"}),
+    h(Sub,{text:"Claude прочитает это в следующей сессии и сразу в курсе"})),
+),
+
+// ============ FLOWS TAB ============
+tab==="flows"&&!flow&&h('div',null,
+  h('div',{style:{fontSize:13,color:DIM,marginBottom:14}},"Выбери поток — увидишь механизм шаг за шагом с развилками."),
+  flows.map(f=>h('div',{key:f.id,onClick:()=>setFlow(f.id),style:{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",borderRadius:12,cursor:"pointer",background:CARD,border:`1px solid ${BRD}`,marginBottom:8,transition:"all 0.2s"}},
+    h('span',{style:{fontSize:28}},f.icon),
+    h('div',{style:{flex:1}},h('div',{style:{fontSize:16,fontWeight:600,color:TXT}},f.title),h('div',{style:{fontSize:12,color:DIM}},f.desc)),
+    h(Badge,{text:f.badge,color:CYN}),h('span',{style:{color:DIM,fontSize:12}},"→")))),
+
+// ---- FLOW: INIT ----
+tab==="flows"&&flow==="init"&&h('div',null,
+  h('div',{onClick:()=>setFlow(null),style:{fontSize:12,color:CYN,cursor:"pointer",marginBottom:12}},"← Все потоки"),
+  h('div',{style:{fontSize:18,fontWeight:700,marginBottom:16}},"🏗️ Первый запуск проекта"),
+  h(FlowStep,{icon:"📝",title:"/forge:init",desc:"Одна команда запускает всё"}),
+  h(FlowStep,{icon:"🤖",title:"5 агентов сканируют параллельно",desc:"Структура, история, инфраструктура, код, граф"},
+    h(Sub,{text:"Агент 1: файлы, язык, фреймворк, зависимости"}),
+    h(Sub,{text:"Агент 2: git log, контрибьюторы, TODO"}),
+    h(Sub,{text:"Агент 3: Docker, БД, серверы, API"}),
+    h(Sub,{text:"Агент 4: читает код (<50 файлов)"}),
+    h(Sub,{text:"Агент 5: графовая карта (если graphify)"})),
+  h(FlowStep,{icon:"❓",title:"Claude спрашивает тебя",desc:"Red zones, цель проекта"}),
+  h(FlowStep,{icon:"📚",title:"Генерация .forge/ — полная память",desc:"~10 файлов за секунды"}),
+  h(FlowStep,{icon:"🪝",title:"Настройка хуков + CLAUDE.md"}),
+  h(FlowStep,{icon:"✅",title:"Готово — проект инициализирован",fork:true})),
+
+// ---- FLOW: SESSION ----
+tab==="flows"&&flow==="session"&&h('div',null,
+  h('div',{onClick:()=>setFlow(null),style:{fontSize:12,color:CYN,cursor:"pointer",marginBottom:12}},"← Все потоки"),
+  h('div',{style:{fontSize:18,fontWeight:700,marginBottom:16}},"🚀 Начало сессии"),
+  h(FlowStep,{icon:"💻",title:"Ты открываешь Claude Code"}),
+  h(FlowStep,{icon:"🪝",title:"Хуки срабатывают автоматически",desc:"using-forge + L0 контекст + skill hint"},
+    h(Sub,{text:"🔍 Что Claude получает",pink:true},
+      h(Code,null,`"Если 1% шанс что скилл подходит — ОБЯЗАН загрузить"\n\n+ L0: project, goal, stage, now, catalog\n+ Branch + 3 коммита\n+ Graph hint (если есть)\n+ SKILL HINT по ключевым словам`))),
+  h(FlowStep,{icon:"💬",title:"Ты пишешь первое сообщение"}),
+  h(FlowStep,{icon:"⚡",title:"Claude загружает скилл и работает",fork:true})),
+
+// ---- FLOW: FEATURE ----
+tab==="flows"&&flow==="feature"&&h('div',null,
+  h('div',{onClick:()=>setFlow(null),style:{fontSize:12,color:CYN,cursor:"pointer",marginBottom:12}},"← Все потоки"),
+  h('div',{style:{fontSize:18,fontWeight:700,marginBottom:16}},"💡 Новая фича"),
+  h(FlowStep,{icon:"💬",title:"Ты описываешь идею"}),
+  h(FlowStep,{icon:"⚡",title:"Brainstorm — 3 агента исследуют",desc:"Аналитик + технолог + критик параллельно"},
+    h(Sub,{text:"Аналитик: аналоги, конкуренты, что есть в проекте (graphify query)"}),
+    h(Sub,{text:"Технолог: как сделать, библиотеки (Context7 MCP)"}),
+    h(Sub,{text:"Критик: риски, что сломается (graphify path)"}),
+    h(Sub,{text:"Claude загружает dead-ends — чтобы не повторять ошибки"})),
+  h(FlowStep,{icon:"📋",title:"Требования: must-have vs nice-to-have"}),
+  h(Fork,{question:"Ты одобряешь дизайн?",options:[
+    {label:"✅ Да",content:h('div',{style:{fontSize:12,color:GRN}},"→ Создание плана")},
+    {label:"❌ Переделать",content:h('div',{style:{fontSize:12,color:RED}},"→ Claude дорабатывает дизайн")},
+  ]}),
+  h(FlowStep,{icon:"📝",title:"План — шаги по 2-5 минут",desc:"Каждый: файлы + тест + код + проверка"}),
+  h(Fork,{question:"Как выполнять?",options:[
+    {label:"🤖 Субагенты",content:h('div',{style:{fontSize:12,color:"#9ca3af"}},"Claude вызывает помощников автоматически")},
+    {label:"📋 Батчами",content:h('div',{style:{fontSize:12,color:"#9ca3af"}},"По 3 задачи → фидбек → следующие 3")},
+    {label:"🚀 Автономно",content:h('div',{style:{fontSize:12,color:"#9ca3af"}},"Claude всё сам, ты проверяешь в конце")},
+  ]}),
+  h(FlowStep,{icon:"🔄",title:"Цикл: кодер → spec review → quality review → docs",desc:"На каждую задачу — двойная проверка"}),
+  h(FlowStep,{icon:"🔍",title:"Финальный code review"}),
+  h(Fork,{question:"Что дальше?",options:[
+    {label:"🔀 Merge",content:h('div',{style:{fontSize:12,color:GRN}},"→ В main")},
+    {label:"📬 PR",content:h('div',{style:{fontSize:12,color:BLU}},"→ На GitHub")},
+  ]}),
+  h(FlowStep,{icon:"📦",title:"/forge:sync — обновить память",fork:true})),
+
+// ---- FLOW: BUG ----
+tab==="flows"&&flow==="bug"&&h('div',null,
+  h('div',{onClick:()=>setFlow(null),style:{fontSize:12,color:CYN,cursor:"pointer",marginBottom:12}},"← Все потоки"),
+  h('div',{style:{fontSize:18,fontWeight:700,marginBottom:16}},"🔍 Починка бага"),
+  h(FlowStep,{icon:"🐛",title:"'Баг в оплате' → хук подсказывает debugging"}),
+  h(FlowStep,{icon:"🔬",title:"Phase 1: Расследование",desc:"Воспроизвести, собрать факты. ОБЯЗАТЕЛЬНО."},
+    h(Sub,{text:"Если есть граф → трассировка зависимостей через graphify path"}),
+    h(Sub,{text:"Загрузка dead-ends — может уже пробовали"})),
+  h(FlowStep,{icon:"💭",title:"Phase 2: Гипотеза",desc:"Минимум 2 варианта причины"}),
+  h(FlowStep,{icon:"🧪",title:"Phase 3: Доказать экспериментом"}),
+  h(Fork,{question:"Подтвердилась?",options:[
+    {label:"✅ Да",content:h('div',{style:{fontSize:12,color:GRN}},"→ Phase 4: фикс + тест")},
+    {label:"❌ Нет",content:h('div',{style:{fontSize:12,color:RED}},"→ Записать в dead-ends → новая гипотеза")},
+  ]}),
+  h(FlowStep,{icon:"🔧",title:"Phase 4: Минимальный фикс + тест"}),
+  h(FlowStep,{icon:"✅",title:"Коммит + sync",fork:true})),
+
+// ---- FLOW: SYNC ----
+tab==="flows"&&flow==="sync"&&h('div',null,
+  h('div',{onClick:()=>setFlow(null),style:{fontSize:12,color:CYN,cursor:"pointer",marginBottom:12}},"← Все потоки"),
+  h('div',{style:{fontSize:18,fontWeight:700,marginBottom:16}},"📦 Завершение работы"),
+  h(FlowStep,{icon:"📝",title:"/forge:sync"}),
+  h(FlowStep,{icon:"📊",title:"Git diff — что изменилось"}),
+  h(FlowStep,{icon:"🗺",title:"Обновление графа (если есть)"}),
+  h(FlowStep,{icon:"🤖",title:"Субагент обновляет документацию"}),
+  h(FlowStep,{icon:"❓",title:"Claude спрашивает",desc:"Решения? Провалы? Уроки?"},
+    h(Sub,{text:"'Были ли технические решения?' → decisions.yml"}),
+    h(Sub,{text:"'Подходы которые не сработали?' → dead-ends.yml"}),
+    h(Sub,{text:"'Уроки из сессии?' → learnings.yml"})),
+  h(FlowStep,{icon:"📖",title:"Запись в journal"}),
+  h(FlowStep,{icon:"✅",title:"Память обновлена",fork:true})),
+
+// ============ ENTITIES TAB (v2 style, human-readable) ============
+tab==="entities"&&h('div',null,
+  h('div',{style:{fontSize:13,color:DIM,marginBottom:14}},"Из чего состоит плагин. Нажми → что это, зачем тебе, как пользоваться."),
+
+  h(EntityCard,{icon:"⚡",label:"Скиллы",oneLiner:"Инструкции которые не дают Claude срезать углы",color:BLU,status:"ok"},
+    h(What,null,"Когда ты просишь Claude починить баг — он обычно сразу лезет чинить. Со скиллом он сначала разберётся в причине, потом починит, потом проверит. Скилл — это правила 'делай так, а не иначе'."),
+    h(Benefit,null,"Claude не забудет написать тесты, не пропустит проверку, не начнёт кодить без плана. Стабильный результат вместо лотереи."),
+    h(HowTo,{items:["Claude сам подбирает по словам: 'баг'→отладка, 'фича'→обсуждение","Не угадал? Вызови вручную: /forge:brainstorm, /forge:cleanup и т.д.","23 скилла на все случаи — от обсуждения до деплоя"]}),
+    h(Inside,null,
+      h(Sub,{text:"Как работает автоподбор — таблица ключевых слов",children:h('div',{style:{display:"flex",flexDirection:"column",gap:2}},
+        [["баг / ошибка","→ отладка (systematic-debugging)"],["фича / придумай","→ обсуждение (brainstorming)"],["тест / tdd","→ TDD (test-driven-development)"],["план","→ планирование (writing-plans)"],["рефактор","→ очистка (code-cleanup)"],["застрял","→ разблокировка (project-unblocker)"]].map((r,i)=>h('div',{key:i,style:{fontSize:12,color:"#9ca3af"}},h('code',{style:{color:CYN,background:`${CYN}12`,padding:"1px 6px",borderRadius:4,fontSize:11}},r[0])," ",r[1])))}),
+      h(Sub,{text:"Не 100% — неточные слова не сработают",warn:true}),
+      h(Sub,{text:"Строгие (TDD, отладка) — шаг влево нельзя"}),
+      h(Sub,{text:"Гибкие (дизайн, API) — адаптируй под проект"}))),
+
+  h(EntityCard,{icon:"📚",label:"Память проекта",oneLiner:"Claude помнит всё между сессиями — цель, решения, ошибки",color:CYN,status:"ok"},
+    h(What,null,"Файлы в папке .forge/ хранят всё важное о проекте. Claude читает их автоматически. Не грузит всё сразу — только то что нужно по теме."),
+    h(Benefit,null,"Не надо каждый раз объяснять 'мы используем PostgreSQL потому что...'. Claude сам помнит. Даже через месяц."),
+    h(HowTo,{items:["Создаётся один раз: /forge:init","Обновляется после работы: /forge:sync","Claude сам решает что загрузить — ты просто работаешь"]}),
+    h(Inside,null,
+      h(Sub,{text:"🔍 Вот что Claude видит при КАЖДОМ сообщении",pink:true},
+        h(Code,null,`project: my-shop\ngoal: "Интернет-магазин"\nstage: active-dev\nprogress: 60%\nnow: "Добавить оплату"\nbranch: feature/payments\ncatalog: [решения, ошибки, структура...]\nSKILL HINT: forge:brainstorming`)),
+      h(Sub,{text:"Подробности загружаются по теме",children:h('div',{style:{fontSize:12,color:"#9ca3af",lineHeight:1.8}},
+        "'Почему PostgreSQL?' → загрузит решения",h('br'),
+        "'Что сломано?' → загрузит статус",h('br'),
+        "'Что пробовали?' → загрузит книгу ошибок",h('br'),
+        "Не спросил → не грузит. Экономия ~90%.")}),
+      h(Sub,{text:"Полные спецификации файлов — загружаются редко, при глубоком анализе"}))),
+
+  h(EntityCard,{icon:"🤖",label:"Помощники Claude",oneLiner:"Отдельные Claude выполняют задачи и проверяют друг друга",color:ORG,status:"ok"},
+    h(What,null,"Когда задач много — главный Claude вызывает помощников. Каждый работает с чистой головой — не путается в чужих задачах. Один пишет, двое проверяют, один документирует."),
+    h(Benefit,null,"Код проходит двойную проверку до того как ты его увидишь. Ошибки ловятся рано. Документация обновляется сама."),
+    h(HowTo,{items:["Автоматически при /forge:execute-plan","Или попроси: 'выполни через субагентов'"]}),
+    h(Inside,null,
+      h(Sub,{text:"Кодер — пишет по TDD, коммитит. Не знает про чужие задачи."}),
+      h(Sub,{text:"Проверщик спецификации — 'код = то что просили?' Нет → переделка."}),
+      h(Sub,{text:"Проверщик качества — 'код хороший?' Нет → переделка."}),
+      h(Sub,{text:"Документатор — обновляет память проекта (дешевле, на sonnet)."}))),
+
+  h(EntityCard,{icon:"🚧",label:"Контрольные точки",oneLiner:"Барьеры которые Claude не может обойти — даже если очень хочет",color:RED,status:"ok"},
+    h(What,null,"Места где Claude обязан остановиться и доказать результат. Пропустить нельзя. Есть таблица 'отмазок' — ловит когда Claude пытается обойти проверку."),
+    h(Benefit,null,"Не бывает 'забыл тесты' или 'наверное работает'. Каждый этап подтверждён фактом."),
+    h(HowTo,{items:["Ничего не нужно — встроены в скиллы","Claude сам остановится и покажет доказательство"]}),
+    h(Inside,null,
+      h(Sub,{text:"Дизайн одобрен → нельзя кодить без brainstorm"}),
+      h(Sub,{text:"Тесты зелёные → нельзя 'готово' без доказательства"}),
+      h(Sub,{text:"Spec review → код = задача"}),
+      h(Sub,{text:"Quality review → код качественный"}),
+      h(Sub,{text:"Security → FAIL блокирует merge"}))),
+
+  h(EntityCard,{icon:"🚫",label:"Книга ошибок",oneLiner:"Что пробовали и не сработало — чтобы не наступать на грабли",color:RED,status:"ok"},
+    h(What,null,"Когда подход провалился — записывается что и почему. Claude прочитает при следующем brainstorm и не предложит то же самое."),
+    h(Benefit,null,"Не тратишь время на повторение ошибок. Через полгода не забудешь почему отказались от Redis."),
+    h(HowTo,{items:["Автоматически при отладке","Или через /forge:sync — Claude спросит"]}),
+    h(Inside,null,
+      h(Sub,{text:"Пример: 'Redis для сессий — eviction удалял активные. Перешли на JWT.'"}),
+      h(Sub,{text:"Claude автоматически загружает при brainstorm — не предложит Redis снова"}))),
+
+  h(EntityCard,{icon:"⚖️",label:"Журнал решений",oneLiner:"Почему выбрали это, а не другое — с обоснованием",color:PUR,status:"ok"},
+    h(What,null,"Записи 'выбрали PostgreSQL потому что транзакции. Рассматривали MongoDB — нет транзакций.' Через полгода все помнят логику."),
+    h(Benefit,null,"Никто не спросит 'а зачем это?' — ответ записан. Новый человек сразу поймёт."),
+    h(HowTo,{items:["При brainstorm — автоматически","При /forge:sync — Claude спросит"]})),
+
+  h(EntityCard,{icon:"🗺",label:"Графовая карта кода",oneLiner:"Связи между модулями — Claude ищет по графу вместо grep",color:PNK,status:"ok"},
+    h(What,null,"Показывает какие модули, функции и классы связаны. Claude спрашивает граф и за секунды находит что с чем связано — не читая сотни файлов."),
+    h(Benefit,null,"При brainstorm: показывает аналоги и конфликты. При debugging: трассировка от ошибки к входу. При планировании: какие модули затронутся."),
+    h(HowTo,{items:["/forge:graph — построить","--query 'вопрос' — найти связанное","--path 'A' 'B' — путь между модулями","--explain 'Node' — что это и с чем связано"]}),
+    h(Inside,null,
+      h(Sub,{text:"tree-sitter парсит код без LLM — быстро и бесплатно"}),
+      h(Sub,{text:"Строится при /forge:init, обновляется при /forge:sync"}),
+      h(Sub,{text:"Нужна установка: pipx install graphifyy",warn:true}))),
+
+  h(EntityCard,{icon:"🏪",label:"Магазин скиллов",oneLiner:"Поиск новых инструментов — пока работает частично",color:DIM,status:"warn"},
+    h(What,null,"Каталог плагинов и скиллов. Пока ищет только среди уже скачанных — в интернет за новыми не ходит."),
+    h(Benefit,null,"Когда заработает — одной командой найти и установить скилл для любой задачи."),
+    h(HowTo,{items:["/forge:discover 'тестирование' — поиск среди скачанных"]}),
+    h(Inside,null,
+      h(Sub,{text:"Локальный поиск — работает"}),
+      h(Sub,{text:"Удалённый поиск — НЕ работает",warn:true}),
+      h(Sub,{text:"Автоустановка — НЕ работает",warn:true}))),
+),
+
+// ============ GAPS TAB ============
+tab==="gaps"&&h('div',null,
+  h('div',{style:{fontSize:13,color:DIM,marginBottom:14}},"Что не работает или работает не полностью."),
+  [{l:"Автоцепочка команд",d:"brainstorm→plan→execute вручную на каждую фичу. Нужна одна кнопка.",s:"high"},
+   {l:"Удалённый магазин",d:"Поиск скиллов только среди скачанных. Нет установки из GitHub.",s:"medium"},
+   {l:"Автоизвлечение выводов",d:"Уроки записываются только вручную. Claude мог бы сам замечать паттерны.",s:"medium"},
+   {l:"Умный подбор скиллов",d:"Только ключевые слова. 'Что-то не так' — скилл не подключится.",s:"medium"},
+   {l:"Обмен между проектами",d:"Каждый .forge/ изолирован. Выводы не переносятся.",s:"low"},
+  ].map((g,i)=>h('div',{key:i,style:{background:`${sevColor(g.s)}10`,border:`1px solid ${sevColor(g.s)}30`,borderRadius:10,padding:"14px 16px",marginBottom:8}},
+    h('div',{style:{display:"flex",alignItems:"center",gap:8,marginBottom:4}},
+      h('span',{style:{fontSize:14,fontWeight:700,color:sevColor(g.s)}},g.l),
+      h('span',{style:{fontSize:10,padding:"2px 8px",borderRadius:8,background:`${sevColor(g.s)}20`,color:sevColor(g.s),fontWeight:600}},sevLabel(g.s))),
+    h('div',{style:{fontSize:13,color:"#9ca3af",lineHeight:1.5}},g.d))),
+  h('div',{style:{marginTop:20,padding:14,borderRadius:10,background:`${RED}10`,border:`1px solid ${RED}30`}},
+    h('div',{style:{fontSize:13,fontWeight:600,color:RED,marginBottom:4}},"⚡ Главное"),
+    h('div',{style:{fontSize:13,color:TXT,lineHeight:1.5}},h('b',null,"Автоцепочка")," — 3 команды вручную на каждую фичу. Одна кнопка сэкономит больше всего."))
+),
+
+      h('div',{style:{marginTop:24,padding:14,borderRadius:10,background:CARD,border:`1px solid ${BRD}`,textAlign:"center"}},
+        h('div',{style:{fontSize:11,color:DIM}},"Forge Plugin v5.6.0 — Navigator v7",h('br'),"🔗 Большая картина + ⚙️ Потоки + 🧩 Детали + 🚨 Дыры"))
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(h(App));
+</script>
+</body>
+</html>

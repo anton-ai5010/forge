@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge — Navigator v9</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+const BG="#0d1117",CARD="#161b22",BRD="#30363d",DIM="#7d8590",TXT="#e6edf3",
+  GRN="#3fb950",YEL="#d29922",RED="#f85149",BLU="#58a6ff",PUR="#bc8cff",
+  ORG="#f0883e",CYN="#4dd0e1",PNK="#f778ba";
+
+/* ---- Primitives ---- */
+function Sub({text,children,warn,pink}) {
+  const [o,setO]=useState(false); const has=!!children;
+  return <div style={{marginBottom:4}}>
+    <div onClick={has?()=>setO(!o):undefined} style={{fontSize:13,color:warn?YEL:pink?PNK:"#b0b8c8",lineHeight:1.6,padding:"5px 10px",borderRadius:6,cursor:has?"pointer":"default",background:o?(pink?`${PNK}08`:`${BLU}06`):"transparent",borderLeft:`2px solid ${o?(pink?PNK:CYN):`${BRD}50`}`,transition:"all 0.15s"}}>
+      {has&&<span style={{color:DIM,fontSize:9,marginRight:6}}>{o?"▼":"▶"}</span>}
+      {warn&&"⚠️ "}{pink&&"🔍 "}{text}
+    </div>
+    {o&&has&&<div style={{padding:"6px 8px 6px 22px",animation:"fadeIn 0.15s ease"}}>{children}</div>}
+  </div>;
+}
+
+function Badge({text,color}) {
+  return <span style={{fontSize:10,padding:"2px 8px",borderRadius:8,fontWeight:600,background:`${(color||GRN)}18`,color:color||GRN,marginLeft:6}}>{text}</span>;
+}
+
+function InfoLine({icon,label,value,sub}) {
+  const [o,setO]=useState(false);
+  return <div style={{marginBottom:3}}>
+    <div onClick={sub?()=>setO(!o):undefined} style={{display:"flex",gap:8,fontSize:13,padding:"5px 10px",borderRadius:6,background:`${CYN}06`,border:`1px solid ${CYN}12`,cursor:sub?"pointer":"default",alignItems:"baseline",flexWrap:"wrap"}}>
+      <span style={{fontSize:14,flexShrink:0}}>{icon}</span>
+      <span style={{color:DIM,minWidth:90}}>{label}</span>
+      <span style={{color:TXT,flex:1}}>{value}</span>
+      {sub&&<span style={{color:DIM,fontSize:9}}>{o?"▼":"▶"}</span>}
+    </div>
+    {o&&sub&&<div style={{padding:"4px 10px 4px 36px",fontSize:12,color:"#9ca3af",lineHeight:1.5,animation:"fadeIn 0.15s ease"}}>{sub}</div>}
+  </div>;
+}
+
+function InfoBlock({title,children}) {
+  return <div style={{background:`${CYN}05`,border:`1px solid ${CYN}15`,borderRadius:10,padding:"12px 14px",marginBottom:8}}>
+    {title&&<div style={{fontSize:11,color:CYN,fontWeight:600,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>{title}</div>}
+    {children}
+  </div>;
+}
+
+function FlowStep({icon,title,desc,children,fork}) {
+  const [o,setO]=useState(false); const has=!!children;
+  return <div style={{marginBottom:2}}>
+    <div onClick={has?()=>setO(!o):undefined} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",borderRadius:10,cursor:has?"pointer":"default",background:o?`${CYN}06`:CARD,border:`1px solid ${o?CYN+"30":BRD}`,transition:"all 0.2s"}}>
+      <span style={{fontSize:22,flexShrink:0}}>{icon}</span>
+      <div style={{flex:1}}>
+        <div style={{fontSize:14,fontWeight:600,color:TXT}}>{title}</div>
+        {desc&&<div style={{fontSize:12,color:DIM,lineHeight:1.4,marginTop:2}}>{desc}</div>}
+      </div>
+      {has&&<span style={{color:DIM,fontSize:10,transition:"transform 0.2s",transform:o?"rotate(90deg)":"rotate(0deg)"}}>▶</span>}
+    </div>
+    {o&&has&&<div style={{padding:"8px 4px 4px 32px",animation:"fadeIn 0.2s ease"}}>{children}</div>}
+    {!fork&&<div style={{display:"flex",justifyContent:"center",padding:"2px 0"}}><div style={{width:2,height:16,background:`${BRD}60`}}/></div>}
+  </div>;
+}
+
+function Fork({question,options}) {
+  const [sel,setSel]=useState(null);
+  return <div style={{margin:"4px 0"}}>
+    <div style={{background:`${YEL}10`,border:`1px solid ${YEL}30`,borderRadius:10,padding:"10px 14px"}}>
+      <div style={{fontSize:13,fontWeight:600,color:YEL,marginBottom:8}}>🔀 {question}</div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+        {options.map((opt,i)=><button key={i} onClick={()=>setSel(sel===i?null:i)} style={{padding:"6px 14px",borderRadius:8,fontSize:12,fontWeight:500,cursor:"pointer",border:`1px solid ${sel===i?CYN:BRD}`,background:sel===i?`${CYN}15`:CARD,color:sel===i?CYN:DIM,transition:"all 0.2s"}}>{opt.label}</button>)}
+      </div>
+      {sel!==null&&<div style={{marginTop:10,animation:"fadeIn 0.2s ease"}}>{options[sel].content}</div>}
+    </div>
+    <div style={{display:"flex",justifyContent:"center",padding:"2px 0"}}><div style={{width:2,height:16,background:`${BRD}60`}}/></div>
+  </div>;
+}
+
+function BigNode({icon,title,desc,color,children,last}) {
+  const [o,setO]=useState(false); const has=!!children;
+  return <div>
+    <div onClick={has?()=>setO(!o):undefined} style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px",borderRadius:14,cursor:has?"pointer":"default",background:o?`${color}12`:CARD,border:`2px solid ${o?color:BRD}`,transition:"all 0.25s",transform:o?"scale(1.01)":"scale(1)"}}>
+      <span style={{fontSize:36,flexShrink:0}}>{icon}</span>
+      <div style={{flex:1}}>
+        <div style={{fontSize:18,fontWeight:700,color:TXT}}>{title}</div>
+        <div style={{fontSize:13,color:DIM,lineHeight:1.5,marginTop:2}}>{desc}</div>
+      </div>
+      {has&&<span style={{color:DIM,fontSize:11}}>{o?"▼":"▶"}</span>}
+    </div>
+    {o&&has&&<div style={{padding:"12px 16px 8px 54px",animation:"fadeIn 0.25s ease"}}>{children}</div>}
+    {!last&&<div style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"4px 0"}}>
+      <div style={{width:3,height:24,background:`linear-gradient(${color}60, ${color}20)`,borderRadius:2}}/>
+      <div style={{fontSize:16,color:`${color}80`,marginTop:-2}}>↓</div>
+    </div>}
+  </div>;
+}
+
+function EntityCard({icon,label,oneLiner,color,status,children}) {
+  const [o,setO]=useState(false);
+  const stIcon=status==="ok"?"✅":status==="warn"?"⚠️":"❌";
+  return <div style={{marginBottom:10}}>
+    <div onClick={()=>setO(!o)} style={{background:o?`${color}15`:CARD,border:`2px solid ${o?color:BRD}`,borderRadius:14,padding:"16px 18px",cursor:"pointer",transition:"all 0.25s"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <span style={{fontSize:28}}>{icon}</span>
+        <div style={{flex:1}}>
+          <div style={{fontSize:17,fontWeight:700,color:TXT}}>{label}</div>
+          <div style={{fontSize:12,color:DIM}}>{oneLiner}</div>
+        </div>
+        <span style={{fontSize:16}}>{stIcon}</span>
+      </div>
+      {!o&&<div style={{fontSize:11,color:`${color}aa`,marginTop:6}}>Нажми чтобы раскрыть →</div>}
+    </div>
+    {o&&<div style={{background:`${color}08`,border:`1px solid ${color}30`,borderRadius:14,padding:20,marginTop:6,animation:"fadeIn 0.3s ease"}}>{children}</div>}
+  </div>;
+}
+
+function What({children}) { return <div style={{marginBottom:16}}><div style={{fontSize:11,color:DIM,textTransform:"uppercase",letterSpacing:1,marginBottom:6,fontWeight:600}}>Что это</div><div style={{fontSize:14,color:TXT,lineHeight:1.6}}>{children}</div></div>; }
+function Benefit({children}) { return <div style={{marginBottom:16,background:`${GRN}10`,borderRadius:10,padding:"12px 14px",borderLeft:`3px solid ${GRN}`}}><div style={{fontSize:11,color:GRN,fontWeight:600,marginBottom:4}}>💰 ЧТО ТЕБЕ С ЭТОГО</div><div style={{fontSize:13,color:TXT,lineHeight:1.5}}>{children}</div></div>; }
+function HowTo({items}) { return <div style={{marginBottom:16}}><div style={{fontSize:11,color:DIM,textTransform:"uppercase",letterSpacing:1,marginBottom:6,fontWeight:600}}>Как пользоваться</div>{items.map((t,i)=><div key={i} style={{fontSize:13,color:TXT,padding:"6px 10px",borderRadius:6,background:`${BLU}10`,border:`1px solid ${BLU}15`,lineHeight:1.4,marginBottom:3}}><span style={{color:BLU,marginRight:6}}>{i+1}.</span>{t}</div>)}</div>; }
+function Inside({children}) { return <div style={{marginBottom:16}}><div style={{fontSize:11,color:DIM,textTransform:"uppercase",letterSpacing:1,marginBottom:6,fontWeight:600}}>Что внутри</div>{children}</div>; }
+
+const sevColor=s=>s==="high"?RED:s==="medium"?YEL:DIM;
+const sevLabel=s=>s==="high"?"Важно":s==="medium"?"Средне":"Мелочь";
+
+/* ====== APP ====== */
+function App() {
+  const [tab,setTab]=useState("big");
+  const [flow,setFlow]=useState(null);
+
+  const flows=[
+    {id:"init",icon:"🏗️",title:"Первый запуск",desc:"Новый проект → полная структура памяти",badge:"1 раз"},
+    {id:"session",icon:"🚀",title:"Начало сессии",desc:"Открыл Claude Code → контекст загружен",badge:"авто"},
+    {id:"feature",icon:"💡",title:"Новая фича",desc:"Идея → обсуждение → план → код → merge",badge:"основной"},
+    {id:"bug",icon:"🔍",title:"Починка бага",desc:"Расследование → гипотеза → фикс → тест",badge:"по ситуации"},
+    {id:"sync",icon:"📦",title:"Завершение",desc:"Обновить память, записать решения, merge",badge:"каждый раз"},
+  ];
+
+  return <div style={{background:BG,color:TXT,minHeight:"100vh",fontFamily:"'DM Sans',-apple-system,sans-serif",padding:"20px 16px"}}>
+    <div style={{maxWidth:700,margin:"0 auto"}}>
+
+      {/* Header */}
+      <div style={{marginBottom:20}}>
+        <div style={{fontSize:12,color:DIM,textTransform:"uppercase",letterSpacing:2}}>Навигатор проекта</div>
+        <div style={{fontSize:26,fontWeight:800}}>Forge Plugin <span style={{fontSize:14,fontWeight:400,color:DIM}}>v5.6.0</span></div>
+        <div style={{fontSize:14,color:CYN,marginTop:6,padding:"10px 14px",background:`${CYN}10`,borderRadius:8,borderLeft:`3px solid ${CYN}`,lineHeight:1.5}}>
+          🎯 Claude следует процессам, помнит контекст, объясняет куда двигаться
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div style={{display:"flex",gap:3,marginBottom:20,background:CARD,borderRadius:10,padding:3}}>
+        {[{id:"big",label:"🔗 Картина"},{id:"flows",label:"⚙️ Потоки"},{id:"entities",label:"🧩 Детали"},{id:"gaps",label:"🚨 Дыры"}].map(t=>
+          <button key={t.id} onClick={()=>{setTab(t.id);setFlow(null)}} style={{flex:1,padding:"10px 0",border:"none",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer",background:tab===t.id?CYN:"transparent",color:tab===t.id?BG:DIM,transition:"all 0.2s"}}>{t.label}</button>
+        )}
+      </div>
+
+{/* ============ BIG PICTURE ============ */}
+{tab==="big"&&<div>
+  <div style={{fontSize:13,color:DIM,marginBottom:16}}>Весь механизм — от сообщения до результата. Нажми на блок чтобы заглянуть внутрь.</div>
+
+  <BigNode icon="💬" title="Ты пишешь сообщение" desc="Любой запрос — 'добавь оплату', 'почини баг', 'что делать дальше'" color={CYN}>
+    <Sub text="Claude Code отправляет сообщение + автоматически добавляет контекст проекта" />
+    <Sub text="Ты не видишь добавленное — но Claude видит" />
+  </BigNode>
+
+  <BigNode icon="🪝" title="Автоматика" desc="Хуки срабатывают незаметно — добавляют контекст и подсказывают инструмент" color={GRN}>
+    <Sub text="При каждом сообщении: читает сводку проекта и добавляет к промпту" />
+    <Sub text="Смотрит на слова: 'баг' → подсказывает отладку, 'фича' → обсуждение" />
+    <Sub text="Добавляет git ветку, последние коммиты, ссылку на карту кода" />
+    <Sub text="Не работает на 100% — неточные слова не активируют подсказку" warn />
+    <Sub text="🔍 Что добавляется к твоему сообщению" pink>
+      <InfoBlock title="Claude видит это перед твоим текстом">
+        <InfoLine icon="📦" label="Проект:" value="Мой магазин" />
+        <InfoLine icon="🎯" label="Цель:" value="Интернет-магазин с оплатой" />
+        <InfoLine icon="📊" label="Стадия:" value="Активная разработка" sub="Бывает: начало → активная разработка → MVP → стабильная версия" />
+        <InfoLine icon="🔧" label="Сейчас:" value="Добавить оплату" />
+        <InfoLine icon="🌿" label="Ветка:" value="feature/payments" />
+        <InfoLine icon="⚡" label="Подсказка:" value="Используй скилл обсуждения" sub="Хук увидел 'добавить' + новая функциональность → предложил brainstorming" />
+        <InfoLine icon="🗺" label="Карта кода:" value="128 модулей" sub="Claude может спросить граф о связях между модулями" />
+      </InfoBlock>
+    </Sub>
+  </BigNode>
+
+  <BigNode icon="📚" title="Память проекта" desc="Claude вспоминает что нужно — цель, решения, ошибки. Не грузит лишнего." color={BLU}>
+    <Sub text="Краткая сводка (~5 строк) — загружена ВСЕГДА" />
+    <Sub text="Подробности — загружаются ТОЛЬКО по теме">
+      <div style={{fontSize:12,color:"#9ca3af",lineHeight:1.8}}>
+        Спросил «почему PostgreSQL?» → загрузит решения<br/>
+        Спросил «что сломано?» → загрузит статус<br/>
+        Спросил «что пробовали?» → загрузит книгу ошибок<br/>
+        Не спросил → не загружает. Экономия ~90%.
+      </div>
+    </Sub>
+    <Sub text="Карта кода — связи между модулями (если есть graphify)" />
+  </BigNode>
+
+  <BigNode icon="⚡" title="Инструкция (скилл)" desc="Claude загружает правила 'делай так, а не иначе'" color={PUR}>
+    <Sub text="Без скилла Claude импровизирует. Со скиллом — следует проверенному процессу." />
+    <Sub text="Строгие: 'нельзя код без теста', 'нельзя фикс без расследования'" />
+    <Sub text="Гибкие: 'вот принципы дизайна, адаптируй под проект'" />
+    <Sub text="🔍 Пример: что Claude получает в скилле отладки" pink>
+      <InfoBlock title="Инструкция для Claude">
+        <InfoLine icon="👤" label="Роль:" value="Опытный инженер-диагностик (12 лет)" sub="Claude 'играет роль' — это помогает быть тщательнее и не торопиться" />
+        <InfoLine icon="🔒" label="Правило:" value="Нельзя чинить пока не разобрался в причине" />
+        <InfoLine icon="1️⃣" label="Фаза 1:" value="Воспроизвести баг, собрать факты" sub="Обязательна. Без неё фиксить запрещено" />
+        <InfoLine icon="2️⃣" label="Фаза 2:" value="Выдвинуть минимум 2 гипотезы" />
+        <InfoLine icon="3️⃣" label="Фаза 3:" value="Доказать гипотезу экспериментом" sub="Не 'наверное это' а 'вот доказательство'" />
+        <InfoLine icon="4️⃣" label="Фаза 4:" value="Минимальный фикс + тест" />
+      </InfoBlock>
+    </Sub>
+  </BigNode>
+
+  <BigNode icon="📋" title="План" desc="Работа разбивается на шаги по 2-5 минут. Каждый: файлы + тест + код." color={ORG}>
+    <Sub text="Создаётся ТОЛЬКО после обсуждения — нельзя сразу кодить" />
+    <Sub text="Каждый шаг рассчитан на инженера с нулевым контекстом" />
+    <Sub text="🔍 Пример шага из плана" pink>
+      <InfoBlock title="Задача 1: Модель платежа">
+        <InfoLine icon="📄" label="Создать:" value="src/models/payment.ts" />
+        <InfoLine icon="🧪" label="Тест:" value="tests/models/payment.test.ts" />
+        <InfoLine icon="🔴" label="Шаг 1:" value="Написать тест — он должен УПАСТЬ" sub="Тест описывает что мы хотим: 'при создании платежа вернуть id'" />
+        <InfoLine icon="🟢" label="Шаг 2:" value="Написать минимум кода чтобы тест ПРОШЁЛ" />
+        <InfoLine icon="✨" label="Шаг 3:" value="Почистить код (рефакторинг)" />
+        <InfoLine icon="💾" label="Шаг 4:" value="Закоммитить результат" />
+      </InfoBlock>
+    </Sub>
+  </BigNode>
+
+  <BigNode icon="🤖" title="Помощники" desc="Свежие Claude на каждую задачу. Один пишет, другие проверяют." color={ORG}>
+    <Sub text="Кодер — пишет код по TDD. Чистая голова." />
+    <Sub text="Проверщик спецификации — 'код делает то что просили?'" />
+    <Sub text="Проверщик качества — 'код хороший?'" />
+    <Sub text="Документатор — обновляет память проекта." />
+    <Sub text="🔍 Что кодер получает в задании" pink>
+      <InfoBlock title="Задание для помощника-кодера">
+        <InfoLine icon="📋" label="Задача:" value="JWT middleware — проверка авторизации" />
+        <InfoLine icon="📄" label="Файлы:" value="создать src/middleware/auth.ts" />
+        <InfoLine icon="🔧" label="Стек:" value="TypeScript, Express" />
+        <InfoLine icon="🔴" label="Шаг 1:" value="Сначала ПАДАЮЩИЙ тест" />
+        <InfoLine icon="🟢" label="Шаг 2:" value="Потом минимальный код" />
+        <InfoLine icon="👀" label="Шаг 3:" value="Самопроверка перед отчётом" />
+        <InfoLine icon="💾" label="Шаг 4:" value="Закоммитить" />
+        <InfoLine icon="🧠" label="Важно:" value="НЕ знает про другие задачи" sub="Чистая голова — не путает контекст задачи 1 с задачей 5" />
+      </InfoBlock>
+    </Sub>
+  </BigNode>
+
+  <BigNode icon="🚧" title="Проверки" desc="Контрольные точки которые Claude не может обойти" color={RED}>
+    <Sub text="Дизайн одобрен — нельзя кодить без обсуждения" />
+    <Sub text="Тесты зелёные — нельзя сказать 'готово'" />
+    <Sub text="Spec review — код = задача" />
+    <Sub text="Quality review — код качественный" />
+    <Sub text="Security — FAIL блокирует merge" />
+    <Sub text="🔍 Как Claude пытается обойти и как ловим" pink>
+      <InfoBlock title="Таблица отмазок — встроена в скиллы">
+        <InfoLine icon="🤔" label="Думает:" value="'Это слишком просто'" sub="Ответ: 'Простые задачи — где больше всего ошибок. Используй.'" />
+        <InfoLine icon="🤔" label="Думает:" value="'Тест наверное пройдёт'" sub="Ответ: 'Наверное ≠ факт. Запусти и покажи результат.'" />
+        <InfoLine icon="🤔" label="Думает:" value="'Я уже знаю этот скилл'" sub="Ответ: 'Скиллы обновляются. Прочитай текущую версию.'" />
+        <InfoLine icon="🤔" label="Думает:" value="'Сделаю потом'" sub="Ответ: 'Нет. Сейчас. Потом = никогда.'" />
+        <InfoLine icon="🤔" label="Думает:" value="'Это не считается'" sub="Ответ: 'Любое действие = задача. Проверь скиллы.'" />
+      </InfoBlock>
+    </Sub>
+  </BigNode>
+
+  <BigNode icon="📚" title="Память обновлена" desc="Решения, ошибки, выводы записаны. Следующая сессия — с контекстом." color={BLU} last>
+    <Sub text="Решения — 'выбрали Stripe потому что PayPal требует бизнес-аккаунт'" />
+    <Sub text="Ошибки — 'пробовали Redis для сессий, eviction удалял активные'" />
+    <Sub text="Выводы — 'pytest fixtures лучше setUp/tearDown'" />
+    <Sub text="История — 'вчера добавили оплату, сегодня уведомления'" />
+  </BigNode>
+</div>}
+
+{/* ============ FLOWS ============ */}
+{tab==="flows"&&!flow&&<div>
+  <div style={{fontSize:13,color:DIM,marginBottom:14}}>Выбери поток — увидишь механизм шаг за шагом.</div>
+  {flows.map(f=><div key={f.id} onClick={()=>setFlow(f.id)} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",borderRadius:12,cursor:"pointer",background:CARD,border:`1px solid ${BRD}`,marginBottom:8,transition:"all 0.2s"}}>
+    <span style={{fontSize:28}}>{f.icon}</span>
+    <div style={{flex:1}}><div style={{fontSize:16,fontWeight:600,color:TXT}}>{f.title}</div><div style={{fontSize:12,color:DIM}}>{f.desc}</div></div>
+    <Badge text={f.badge} color={CYN} />
+    <span style={{color:DIM,fontSize:12}}>→</span>
+  </div>)}
+</div>}
+
+{/* FLOW: FEATURE */}
+{tab==="flows"&&flow==="feature"&&<div>
+  <div onClick={()=>setFlow(null)} style={{fontSize:12,color:CYN,cursor:"pointer",marginBottom:12}}>← Все потоки</div>
+  <div style={{fontSize:18,fontWeight:700,marginBottom:16}}>💡 Новая фича</div>
+  <FlowStep icon="💬" title="Ты описываешь идею" />
+  <FlowStep icon="⚡" title="Brainstorm — 3 агента исследуют" desc="Аналитик + технолог + критик параллельно">
+    <Sub text="Аналитик: аналоги, что уже есть (graphify query)" />
+    <Sub text="Технолог: как сделать, библиотеки (Context7)" />
+    <Sub text="Критик: риски, что сломается (graphify path)" />
+    <Sub text="Claude загружает книгу ошибок — не повторять" />
+    <Sub text="🔍 Что Claude получает в скилле обсуждения" pink>
+      <InfoBlock title="Инструкция brainstorming">
+        <InfoLine icon="👤" label="Роль:" value="Главный архитектор (15 лет, ex-Stripe/Notion)" sub="Позвали потому что предыдущие дизайны пропустили ограничения" />
+        <InfoLine icon="🔒" label="Барьер:" value="НЕ писать код пока дизайн не одобрен" sub="Касается КАЖДОГО проекта, даже 'простого'" />
+        <InfoLine icon="1️⃣" label="Шаг 1:" value="Загрузить контекст + книгу ошибок" />
+        <InfoLine icon="2️⃣" label="Шаг 2:" value="Переспросить цель — правильно ли понял?" />
+        <InfoLine icon="3️⃣" label="Шаг 3:" value="Запустить 3 агента параллельно" />
+        <InfoLine icon="4️⃣" label="Шаг 4:" value="Сформировать требования" />
+        <InfoLine icon="5️⃣" label="Шаг 5:" value="Предложить дизайн" />
+        <InfoLine icon="🛑" label="Шаг 6:" value="СТОП — ждать одобрения" />
+      </InfoBlock>
+    </Sub>
+  </FlowStep>
+  <FlowStep icon="📋" title="Требования" desc="must-have vs nice-to-have" />
+  <Fork question="Ты одобряешь дизайн?" options={[
+    {label:"✅ Да",content:<div style={{fontSize:12,color:GRN}}>→ Создание плана</div>},
+    {label:"❌ Переделать",content:<div style={{fontSize:12,color:RED}}>→ Claude дорабатывает дизайн</div>},
+  ]} />
+  <FlowStep icon="📝" title="План — шаги по 2-5 минут" desc="Каждый: файлы + тест + код + проверка" />
+  <Fork question="Как выполнять?" options={[
+    {label:"🤖 Субагенты",content:<div style={{fontSize:12,color:"#9ca3af"}}>Claude вызывает помощников автоматически</div>},
+    {label:"📋 Батчами",content:<div style={{fontSize:12,color:"#9ca3af"}}>По 3 задачи → фидбек → следующие 3</div>},
+    {label:"🚀 Автономно",content:<div style={{fontSize:12,color:"#9ca3af"}}>Claude всё сам, ты проверяешь в конце</div>},
+  ]} />
+  <FlowStep icon="🔄" title="Цикл: кодер → проверка → проверка → docs" desc="На каждую задачу — двойная проверка" />
+  <FlowStep icon="🔍" title="Финальный code review" />
+  <Fork question="Что дальше?" options={[
+    {label:"🔀 Merge",content:<div style={{fontSize:12,color:GRN}}>→ В main</div>},
+    {label:"📬 PR",content:<div style={{fontSize:12,color:BLU}}>→ На GitHub</div>},
+  ]} />
+  <FlowStep icon="📦" title="/forge:sync — обновить память" fork />
+</div>}
+
+{/* FLOW: BUG */}
+{tab==="flows"&&flow==="bug"&&<div>
+  <div onClick={()=>setFlow(null)} style={{fontSize:12,color:CYN,cursor:"pointer",marginBottom:12}}>← Все потоки</div>
+  <div style={{fontSize:18,fontWeight:700,marginBottom:16}}>🔍 Починка бага</div>
+  <FlowStep icon="🐛" title="'Баг в оплате'" desc="Хук подсказывает скилл отладки" />
+  <FlowStep icon="🔬" title="Фаза 1: Расследование" desc="Воспроизвести, собрать факты. ОБЯЗАТЕЛЬНО.">
+    <Sub text="Если есть граф → трассировка через graphify path" />
+    <Sub text="Загрузка книги ошибок — может уже пробовали" />
+  </FlowStep>
+  <FlowStep icon="💭" title="Фаза 2: Гипотеза" desc="Минимум 2 варианта причины" />
+  <FlowStep icon="🧪" title="Фаза 3: Доказать экспериментом" />
+  <Fork question="Подтвердилась?" options={[
+    {label:"✅ Да",content:<div style={{fontSize:12,color:GRN}}>→ Фаза 4: фикс + тест</div>},
+    {label:"❌ Нет",content:<div style={{fontSize:12,color:RED}}>→ Записать в книгу ошибок → новая гипотеза</div>},
+  ]} />
+  <FlowStep icon="🔧" title="Фаза 4: Минимальный фикс + тест" />
+  <FlowStep icon="✅" title="Коммит + sync" fork />
+</div>}
+
+{/* FLOW: INIT */}
+{tab==="flows"&&flow==="init"&&<div>
+  <div onClick={()=>setFlow(null)} style={{fontSize:12,color:CYN,cursor:"pointer",marginBottom:12}}>← Все потоки</div>
+  <div style={{fontSize:18,fontWeight:700,marginBottom:16}}>🏗️ Первый запуск</div>
+  <FlowStep icon="📝" title="/forge:init" desc="Одна команда запускает всё" />
+  <FlowStep icon="🤖" title="5 агентов сканируют параллельно">
+    <Sub text="Агент 1: файлы, язык, фреймворк" />
+    <Sub text="Агент 2: git log, контрибьюторы, TODO" />
+    <Sub text="Агент 3: Docker, БД, серверы" />
+    <Sub text="Агент 4: читает код (<50 файлов)" />
+    <Sub text="Агент 5: графовая карта (если graphify)" />
+  </FlowStep>
+  <FlowStep icon="❓" title="Claude спрашивает" desc="Red zones, цель проекта" />
+  <FlowStep icon="📚" title="Генерация .forge/" desc="~10 файлов за секунды" />
+  <FlowStep icon="🪝" title="Настройка хуков + CLAUDE.md" />
+  <FlowStep icon="✅" title="Готово" fork />
+</div>}
+
+{/* FLOW: SESSION */}
+{tab==="flows"&&flow==="session"&&<div>
+  <div onClick={()=>setFlow(null)} style={{fontSize:12,color:CYN,cursor:"pointer",marginBottom:12}}>← Все потоки</div>
+  <div style={{fontSize:18,fontWeight:700,marginBottom:16}}>🚀 Начало сессии</div>
+  <FlowStep icon="💻" title="Ты открываешь Claude Code" />
+  <FlowStep icon="🪝" title="Хуки срабатывают автоматически">
+    <Sub text="🔍 Что Claude получает при запуске" pink>
+      <InfoBlock title="Главное правило + контекст">
+        <InfoLine icon="⚠️" label="Правило:" value="Если 1% шанс что скилл подходит — ОБЯЗАН загрузить" sub="Не обсуждается. Claude не может отговорить себя." />
+        <InfoLine icon="📦" label="Проект:" value="название, цель, стадия, задача" />
+        <InfoLine icon="🌿" label="Git:" value="ветка + 3 последних коммита" />
+        <InfoLine icon="🗺" label="Граф:" value="ссылка на карту кода (если есть)" />
+        <InfoLine icon="⚡" label="Подсказка:" value="скилл по ключевым словам" />
+      </InfoBlock>
+    </Sub>
+  </FlowStep>
+  <FlowStep icon="💬" title="Ты пишешь сообщение" />
+  <FlowStep icon="⚡" title="Claude загружает скилл и работает" fork />
+</div>}
+
+{/* FLOW: SYNC */}
+{tab==="flows"&&flow==="sync"&&<div>
+  <div onClick={()=>setFlow(null)} style={{fontSize:12,color:CYN,cursor:"pointer",marginBottom:12}}>← Все потоки</div>
+  <div style={{fontSize:18,fontWeight:700,marginBottom:16}}>📦 Завершение работы</div>
+  <FlowStep icon="📝" title="/forge:sync" />
+  <FlowStep icon="📊" title="Git diff — что изменилось" />
+  <FlowStep icon="🗺" title="Обновление карты кода (если есть)" />
+  <FlowStep icon="🤖" title="Субагент обновляет документацию" />
+  <FlowStep icon="❓" title="Claude спрашивает">
+    <Sub text="'Были ли технические решения?' → записывает" />
+    <Sub text="'Подходы которые не сработали?' → записывает" />
+    <Sub text="'Уроки из сессии?' → записывает" />
+  </FlowStep>
+  <FlowStep icon="📖" title="Запись в историю сессий" />
+  <FlowStep icon="✅" title="Память обновлена" fork />
+</div>}
+
+{/* ============ ENTITIES ============ */}
+{tab==="entities"&&<div>
+  <div style={{fontSize:13,color:DIM,marginBottom:14}}>Из чего состоит плагин. Нажми → что это, зачем, как пользоваться.</div>
+
+  <EntityCard icon="⚡" label="Скиллы" oneLiner="Инструкции которые не дают Claude срезать углы" color={BLU} status="ok">
+    <What>Когда просишь Claude починить баг — он обычно сразу лезет чинить. Со скиллом сначала разберётся, потом починит, потом проверит.</What>
+    <Benefit>Claude не забудет тесты, не пропустит проверку, не начнёт кодить без плана. Стабильный результат.</Benefit>
+    <HowTo items={["Claude сам подбирает по словам: 'баг'→отладка, 'фича'→обсуждение","Не угадал? Вызови вручную: /forge:brainstorm и т.д.","23 скилла — от обсуждения до деплоя"]} />
+    <Inside>
+      <Sub text="Таблица автоподбора по словам">
+        <div style={{display:"flex",flexDirection:"column",gap:2}}>
+          {[["баг / ошибка","→ отладка"],["фича / придумай","→ обсуждение"],["тест / tdd","→ TDD"],["план","→ планирование"],["рефактор","→ очистка"],["застрял","→ разблокировка"]].map((r,i)=><div key={i} style={{fontSize:12,color:"#9ca3af"}}><code style={{color:CYN,background:`${CYN}12`,padding:"1px 6px",borderRadius:4,fontSize:11}}>{r[0]}</code> {r[1]}</div>)}
+        </div>
+      </Sub>
+      <Sub text="Не 100% — неточные слова не сработают" warn />
+      <Sub text="Строгие (TDD, отладка) — шаг влево нельзя" />
+      <Sub text="Гибкие (дизайн, API) — адаптируй" />
+    </Inside>
+  </EntityCard>
+
+  <EntityCard icon="📚" label="Память проекта" oneLiner="Claude помнит всё между сессиями" color={CYN} status="ok">
+    <What>Файлы в .forge/ хранят всё важное. Claude читает автоматически. Не грузит лишнего — только по теме.</What>
+    <Benefit>Не надо объяснять контекст. Claude сам помнит — даже через месяц.</Benefit>
+    <HowTo items={["Создаётся один раз: /forge:init","Обновляется: /forge:sync","Claude сам решает что загрузить"]} />
+    <Inside>
+      <Sub text="🔍 Что Claude видит при КАЖДОМ сообщении" pink>
+        <InfoBlock title="Автоматически добавляется">
+          <InfoLine icon="📦" label="Проект:" value="Мой магазин" />
+          <InfoLine icon="🎯" label="Цель:" value="Интернет-магазин" />
+          <InfoLine icon="📊" label="Стадия:" value="Активная разработка (60%)" />
+          <InfoLine icon="🔧" label="Сейчас:" value="Добавить оплату" />
+          <InfoLine icon="📂" label="Каталог:" value="решения, ошибки, структура..." sub="Claude видит список и сам решает что загрузить" />
+        </InfoBlock>
+      </Sub>
+      <Sub text="Подробности загружаются по теме">
+        <div style={{fontSize:12,color:"#9ca3af",lineHeight:1.8}}>
+          «Почему PostgreSQL?» → решения<br/>«Что сломано?» → статус<br/>«Что пробовали?» → книга ошибок<br/>Не спросил → не грузит.
+        </div>
+      </Sub>
+    </Inside>
+  </EntityCard>
+
+  <EntityCard icon="🤖" label="Помощники Claude" oneLiner="4 роли, двойная проверка каждой задачи" color={ORG} status="ok">
+    <What>Главный Claude вызывает помощников. Каждый с чистой головой — не путается.</What>
+    <Benefit>Код проходит двойную проверку. Документация обновляется сама.</Benefit>
+    <HowTo items={["Автоматически при /forge:execute-plan","Или попроси: 'выполни через субагентов'"]} />
+    <Inside>
+      <Sub text="Кодер — пишет по TDD, коммитит" />
+      <Sub text="Проверщик спецификации — 'код = задача?'" />
+      <Sub text="Проверщик качества — 'код хороший?'" />
+      <Sub text="Документатор — обновляет память (дешевле)" />
+    </Inside>
+  </EntityCard>
+
+  <EntityCard icon="🚧" label="Контрольные точки" oneLiner="Барьеры которые Claude не может обойти" color={RED} status="ok">
+    <What>Места где Claude обязан остановиться и доказать. Есть таблица отмазок — ловит обход.</What>
+    <Benefit>Не бывает 'забыл тесты'. Каждый этап подтверждён.</Benefit>
+    <HowTo items={["Встроены в скиллы — ничего не нужно","Claude сам остановится и покажет доказательство"]} />
+    <Inside>
+      <Sub text="Дизайн одобрен → нельзя кодить" />
+      <Sub text="Тесты зелёные → нельзя 'готово'" />
+      <Sub text="Spec review → код = задача" />
+      <Sub text="Quality review → код качественный" />
+      <Sub text="Security → FAIL блокирует merge" />
+    </Inside>
+  </EntityCard>
+
+  <EntityCard icon="🚫" label="Книга ошибок" oneLiner="Что пробовали и не сработало" color={RED} status="ok">
+    <What>Провальные подходы записываются. Claude прочитает и не предложит то же.</What>
+    <Benefit>Не наступаешь на грабли. Через полгода не забудешь.</Benefit>
+    <HowTo items={["Автоматически при отладке","Или через /forge:sync"]} />
+  </EntityCard>
+
+  <EntityCard icon="⚖️" label="Журнал решений" oneLiner="Почему выбрали это, а не другое" color={PUR} status="ok">
+    <What>Записи 'выбрали PostgreSQL потому что транзакции'. Через полгода все помнят.</What>
+    <Benefit>Никто не спросит 'а зачем?' — ответ записан.</Benefit>
+    <HowTo items={["При brainstorm — автоматически","При /forge:sync — Claude спросит"]} />
+  </EntityCard>
+
+  <EntityCard icon="🗺" label="Карта кода" oneLiner="Связи между модулями — для навигации и анализа" color={PNK} status="ok">
+    <What>Граф показывает что с чем связано. Claude ищет по графу вместо чтения сотен файлов.</What>
+    <Benefit>При brainstorm: аналоги и конфликты. При debugging: трассировка. При планировании: что затронется.</Benefit>
+    <HowTo items={["/forge:graph — построить","--query 'вопрос' — найти связанное","--path 'A' 'B' — путь между модулями"]} />
+    <Inside>
+      <Sub text="tree-sitter парсит без LLM — быстро и бесплатно" />
+      <Sub text="Строится при init, обновляется при sync" />
+      <Sub text="Нужна установка: pipx install graphifyy" warn />
+    </Inside>
+  </EntityCard>
+
+  <EntityCard icon="🏪" label="Магазин скиллов" oneLiner="Поиск новых инструментов — частично" color={DIM} status="warn">
+    <What>Каталог скиллов. Пока ищет только среди скачанных.</What>
+    <Benefit>Когда заработает — одной командой найти и установить что угодно.</Benefit>
+    <HowTo items={["/forge:discover 'тестирование'"]} />
+    <Inside>
+      <Sub text="Локальный поиск — работает" />
+      <Sub text="Удалённый — НЕ работает" warn />
+      <Sub text="Автоустановка — НЕ работает" warn />
+    </Inside>
+  </EntityCard>
+</div>}
+
+{/* ============ GAPS ============ */}
+{tab==="gaps"&&<div>
+  <div style={{fontSize:13,color:DIM,marginBottom:14}}>Что не работает или работает не полностью.</div>
+  {[{l:"Автоцепочка команд",d:"brainstorm→plan→execute вручную. Нужна одна кнопка.",s:"high"},
+    {l:"Удалённый магазин",d:"Поиск только среди скачанных.",s:"medium"},
+    {l:"Автоизвлечение выводов",d:"Уроки только вручную.",s:"medium"},
+    {l:"Умный подбор скиллов",d:"Keyword matching. 'Что-то не так' — не сработает.",s:"medium"},
+    {l:"Обмен между проектами",d:"Каждый .forge/ изолирован.",s:"low"},
+  ].map((g,i)=><div key={i} style={{background:`${sevColor(g.s)}10`,border:`1px solid ${sevColor(g.s)}30`,borderRadius:10,padding:"14px 16px",marginBottom:8}}>
+    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+      <span style={{fontSize:14,fontWeight:700,color:sevColor(g.s)}}>{g.l}</span>
+      <span style={{fontSize:10,padding:"2px 8px",borderRadius:8,background:`${sevColor(g.s)}20`,color:sevColor(g.s),fontWeight:600}}>{sevLabel(g.s)}</span>
+    </div>
+    <div style={{fontSize:13,color:"#9ca3af",lineHeight:1.5}}>{g.d}</div>
+  </div>)}
+  <div style={{marginTop:20,padding:14,borderRadius:10,background:`${RED}10`,border:`1px solid ${RED}30`}}>
+    <div style={{fontSize:13,fontWeight:600,color:RED,marginBottom:4}}>⚡ Главное</div>
+    <div style={{fontSize:13,color:TXT,lineHeight:1.5}}><b>Автоцепочка</b> — 3 команды вручную на фичу. Одна кнопка сэкономит больше всего.</div>
+  </div>
+</div>}
+
+      {/* Footer */}
+      <div style={{marginTop:24,padding:14,borderRadius:10,background:CARD,border:`1px solid ${BRD}`,textAlign:"center"}}>
+        <div style={{fontSize:11,color:DIM}}>Forge Plugin v5.6.0 — Navigator v9<br/>🔗 Картина + ⚙️ Потоки + 🧩 Детали + 🚨 Дыры</div>
+      </div>
+    </div>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

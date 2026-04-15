@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge — Full Story Map (Tabs)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f1117; color: #c8ccd8; font-family: 'Inter', sans-serif; min-height: 100vh; }
+
+  /* Header */
+  .header { padding: 24px 32px 0; }
+  h1 { font-size: 24px; font-weight: 700; color: #fff; }
+  .subtitle { color: #6b7280; font-size: 13px; margin-bottom: 20px; }
+
+  /* Tabs */
+  .tabs {
+    display: flex; gap: 4px; padding: 0 32px; overflow-x: auto;
+    border-bottom: 1px solid #1f2230;
+  }
+  .tab {
+    padding: 10px 18px; font-size: 13px; font-weight: 500; color: #6b7280;
+    cursor: pointer; border-bottom: 2px solid transparent;
+    white-space: nowrap; transition: all 0.2s; background: none; border-top: none;
+    border-left: none; border-right: none; font-family: inherit;
+  }
+  .tab:hover { color: #9ca3af; }
+  .tab.active { color: #fff; border-bottom-color: #60a5fa; }
+  .tab .tab-count {
+    font-size: 10px; background: #1f2230; padding: 1px 6px; border-radius: 8px;
+    margin-left: 6px; color: #6b7280;
+  }
+  .tab.active .tab-count { background: rgba(96,165,250,0.15); color: #60a5fa; }
+
+  /* Content */
+  .content { padding: 28px 32px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Process row */
+  .process-row { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 16px; margin-bottom: 32px; }
+  .process-col { min-width: 240px; max-width: 280px; flex-shrink: 0; }
+  .process-header {
+    background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 10px; position: relative;
+  }
+  .process-header h3 { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+  .process-header .trigger { font-size: 11px; color: #6b7280; }
+  .process-header .arrow {
+    position: absolute; right: -15px; top: 50%; transform: translateY(-50%);
+    color: #2a2d3a; font-size: 18px;
+  }
+
+  .step-card {
+    padding: 8px 12px; border-radius: 6px; margin-bottom: 5px;
+    font-size: 12px; line-height: 1.5; display: flex; align-items: flex-start; gap: 8px;
+  }
+  .step-done { background: rgba(34,197,94,0.07); border-left: 3px solid #22c55e; }
+  .step-missing { background: rgba(239,68,68,0.07); border-left: 3px solid #ef4444; }
+  .step-icon { flex-shrink: 0; font-size: 12px; margin-top: 1px; }
+  .step-done .step-icon { color: #22c55e; }
+  .step-missing .step-icon { color: #ef4444; }
+
+  /* Entity grid */
+  .entity-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px; margin-bottom: 32px;
+  }
+  .entity-card {
+    background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 10px;
+    padding: 16px; transition: border-color 0.2s;
+  }
+  .entity-card:hover { border-color: #3a3d4a; }
+  .entity-card h3 { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+  .entity-card .desc { font-size: 12px; color: #6b7280; margin-bottom: 12px; line-height: 1.5; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 600; margin-bottom: 10px; }
+  .badge-ok { background: rgba(34,197,94,0.12); color: #22c55e; }
+  .badge-stub { background: rgba(251,146,60,0.12); color: #fb923c; }
+
+  .attr-list { list-style: none; margin-bottom: 10px; }
+  .attr-list li { font-size: 11px; padding: 4px 0; border-bottom: 1px solid #1f2230; display: flex; gap: 6px; }
+  .attr-list li:last-child { border-bottom: none; }
+  .attr-name { color: #818cf8; font-weight: 500; min-width: 80px; flex-shrink: 0; }
+  .attr-val { color: #9ca3af; }
+
+  .section-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #4b5563; margin-bottom: 4px; }
+
+  .rel-list { list-style: none; }
+  .rel-list li { font-size: 11px; padding: 3px 0; color: #6b7280; }
+  .rel-list li::before { content: "→ "; color: #4a9eff; }
+
+  /* Gaps */
+  .gap-card {
+    background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.15);
+    border-radius: 8px; padding: 12px 16px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .gap-icon { color: #ef4444; font-size: 16px; flex-shrink: 0; }
+  .gap-card h4 { font-size: 13px; font-weight: 600; color: #fca5a5; }
+  .gap-card p { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+
+  .swimlane-title {
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px;
+    color: #6b7280; margin-bottom: 14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Forge Plugin — Full Story Map</h1>
+  <p class="subtitle">Все процессы, сущности и дыры. Переключай табы.</p>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="main">Основной поток<span class="tab-count">6</span></button>
+  <button class="tab" data-tab="init">Инициализация<span class="tab-count">4</span></button>
+  <button class="tab" data-tab="specialized">Специализированные<span class="tab-count">5</span></button>
+  <button class="tab" data-tab="entities">Сущности<span class="tab-count">11</span></button>
+  <button class="tab" data-tab="gaps">Дыры<span class="tab-count">5</span></button>
+</div>
+
+<div class="content">
+
+<!-- ========== ОСНОВНОЙ ПОТОК ========== -->
+<div class="panel active" id="panel-main">
+  <div class="swimlane-title">Главный процесс: от идеи до мержа</div>
+  <div class="process-row">
+    <div class="process-col">
+      <div class="process-header"><h3>Session Start</h3><div class="trigger">Открытие Claude Code</div><span class="arrow">→</span></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Hook загружает using-forge</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Инжект L0 (~200 токенов)</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Keyword → skill hint</div>
+      <div class="step-card step-missing"><span class="step-icon">✗</span> Автозагрузка L1 по контексту</div>
+    </div>
+    <div class="process-col">
+      <div class="process-header"><h3>Brainstorm</h3><div class="trigger">Новая фича</div><span class="arrow">→</span></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> 3 агента: аналитик, технолог, критик</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Требования + acceptance criteria</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> GATE: дизайн одобрен</div>
+    </div>
+    <div class="process-col">
+      <div class="process-header"><h3>Plan</h3><div class="trigger">После дизайна</div><span class="arrow">→</span></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Декомпозиция на задачи 2-5 мин</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Каждая: файлы + тест + код + проверка</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> План в .forge/plans/*.md</div>
+    </div>
+    <div class="process-col">
+      <div class="process-header"><h3>Execute</h3><div class="trigger">Субагенты работают</div><span class="arrow">→</span></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Свежий субагент на задачу</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> TDD: RED → GREEN → REFACTOR</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Spec review + Quality review</div>
+      <div class="step-card step-missing"><span class="step-icon">✗</span> Auto skill chaining</div>
+    </div>
+    <div class="process-col">
+      <div class="process-header"><h3>Debug</h3><div class="trigger">Баг / ошибка</div><span class="arrow">→</span></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Phase 1: Расследование</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Phase 2-3: Гипотеза + верификация</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Phase 4: Фикс</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Запись Dead End при провале</div>
+    </div>
+    <div class="process-col">
+      <div class="process-header"><h3>Sync & Finish</h3><div class="trigger">Завершение</div></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Git diff → обновление docs</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Запись decisions, dead-ends</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Code review → merge/PR</div>
+      <div class="step-card step-missing"><span class="step-icon">✗</span> Автоизвлечение learnings</div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== ИНИЦИАЛИЗАЦИЯ ========== -->
+<div class="panel" id="panel-init">
+  <div class="swimlane-title">Инициализация проекта и контекст</div>
+  <div class="process-row">
+    <div class="process-col">
+      <div class="process-header"><h3>/forge:init</h3><div class="trigger">Новый проект</div><span class="arrow">→</span></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Проверка существующих docs (v1/v2/v3)</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> 4 параллельных агента сканируют</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Агент 1: директории, зависимости, стек</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Агент 2: git history, TODO'шки</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Агент 3: Docker, серверы, БД</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Агент 4: чтение кода (если <50 файлов)</div>
+    </div>
+    <div class="process-col">
+      <div class="process-header"><h3>Генерация .forge/</h3><div class="trigger">После скана</div><span class="arrow">→</span></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Определить red zones (ввод пользователя)</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Определить naming conventions</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Сгенерировать map.yml</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Сгенерировать conventions.yml</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Спросить цель проекта (1 предложение)</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Сгенерировать index.yml (L0)</div>
+    </div>
+    <div class="process-col">
+      <div class="process-header"><h3>Документация</h3><div class="trigger">Параллельно</div><span class="arrow">→</span></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> status.yml (working/broken/blocked)</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> decisions.yml (пустой)</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> dead-ends.yml (пустой)</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> journal.yml (первая запись)</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> library/*/spec.yml (параллельно)</div>
+    </div>
+    <div class="process-col">
+      <div class="process-header"><h3>Настройка хуков</h3><div class="trigger">Финал</div></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Сгенерировать CLAUDE.md</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Настроить .claude/settings.json</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Создать .claude/rules/</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Обновить .gitignore</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Проверить что хук работает</div>
+      <div class="step-card step-missing"><span class="step-icon">✗</span> Авто-детекция red zones</div>
+    </div>
+  </div>
+
+  <div class="swimlane-title" style="margin-top:16px">Context — как Claude получает знания о проекте</div>
+  <div class="process-row">
+    <div class="process-col">
+      <div class="process-header"><h3>L0 — Всегда</h3><div class="trigger">~200 токенов, каждый промпт</div></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Название проекта, цель</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Стадия: init → active-dev → mvp → stable</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Прогресс: 0-100%</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Текущая задача + ветка</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Каталог L1/L2 ресурсов с тегами</div>
+    </div>
+    <div class="process-col">
+      <div class="process-header"><h3>L1 — По тегам</h3><div class="trigger">~500-2000 токенов</div></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> map.yml → structure, files</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> conventions.yml → naming, format</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> status.yml → working, broken</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> decisions.yml → why, architecture</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> dead-ends.yml → failed, avoid</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> journal.yml → history, resume</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> learnings.yml → insight, lesson</div>
+    </div>
+    <div class="process-col">
+      <div class="process-header"><h3>L2 — Редко</h3><div class="trigger">Без лимита токенов</div></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> library/*/spec.yml — полные спецификации</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> plans/*.md — полные планы</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> dead-ends/*.md — детали провалов</div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== СПЕЦИАЛИЗИРОВАННЫЕ ========== -->
+<div class="panel" id="panel-specialized">
+  <div class="swimlane-title">UI/UX Дизайн</div>
+  <div class="process-row">
+    <div class="process-col">
+      <div class="process-header"><h3>/forge:design</h3><div class="trigger">Нужен UI</div><span class="arrow">→</span></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Анализ целевой аудитории</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> BM25 поиск по паттернам дизайна</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Цветовая палитра + типографика</div>
+    </div>
+    <div class="process-col">
+      <div class="process-header"><h3>Design System</h3><div class="trigger">Генерация</div></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Spacing, компоненты, accessibility</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Вывод: .forge/plans/design-system-*.yml</div>
+    </div>
+  </div>
+
+  <div class="swimlane-title">API Дизайн</div>
+  <div class="process-row">
+    <div class="process-col">
+      <div class="process-header"><h3>/forge:api-design</h3><div class="trigger">Нужен API</div><span class="arrow">→</span></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Определить ресурсы (REST)</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Эндпоинты + методы</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Пагинация, фильтрация</div>
+    </div>
+    <div class="process-col">
+      <div class="process-header"><h3>API Contract</h3><div class="trigger">Документ</div></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Error handling, версионирование</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Вывод: .forge/plans/api-*.yml</div>
+    </div>
+  </div>
+
+  <div class="swimlane-title">Миграции БД</div>
+  <div class="process-row">
+    <div class="process-col">
+      <div class="process-header"><h3>/forge:migrate</h3><div class="trigger">Изменение схемы</div><span class="arrow">→</span></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Expand-contract паттерн</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Zero-downtime стратегия</div>
+    </div>
+    <div class="process-col">
+      <div class="process-header"><h3>Скрипты</h3><div class="trigger">Генерация</div></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Forward + rollback миграции</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Вывод: .forge/plans/migration-*.yml</div>
+    </div>
+  </div>
+
+  <div class="swimlane-title">Security Review</div>
+  <div class="process-row">
+    <div class="process-col">
+      <div class="process-header"><h3>/forge:security-review</h3><div class="trigger">Перед деплоем</div><span class="arrow">→</span></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Secrets — утечки ключей</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Input validation — XSS, SQLi</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Auth — JWT, сессии</div>
+    </div>
+    <div class="process-col">
+      <div class="process-header"><h3>OWASP Checklist</h3><div class="trigger">PASS/FAIL</div></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> API security, dependencies</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Data privacy</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> GATE: FAIL блокирует merge</div>
+    </div>
+  </div>
+
+  <div class="swimlane-title">Деплой</div>
+  <div class="process-row">
+    <div class="process-col">
+      <div class="process-header"><h3>/forge:deploy</h3><div class="trigger">Готов к продакшену</div><span class="arrow">→</span></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Docker multi-stage build</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> CI/CD pipeline</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Health checks</div>
+    </div>
+    <div class="process-col">
+      <div class="process-header"><h3>Production</h3><div class="trigger">Запуск</div></div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Environment variables, secrets</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Rollback стратегия</div>
+      <div class="step-card step-done"><span class="step-icon">✓</span> Вывод: .forge/plans/deploy-*.yml</div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== СУЩНОСТИ ========== -->
+<div class="panel" id="panel-entities">
+  <div class="swimlane-title">Все сущности проекта</div>
+  <div class="entity-grid">
+    <div class="entity-card">
+      <h3>Skill</h3><div class="desc">Воркфлоу-паттерн для Claude. 23 штуки.</div><span class="badge badge-ok">implemented</span>
+      <div class="section-label">Атрибуты</div>
+      <ul class="attr-list">
+        <li><span class="attr-name">name</span><span class="attr-val">kebab-case: test-driven-development, systematic-debugging...</span></li>
+        <li><span class="attr-name">trigger</span><span class="attr-val">bug→debugging, test→TDD, plan→writing-plans</span></li>
+        <li><span class="attr-name">type</span><span class="attr-val">rigid (нельзя отступить) | flexible (адаптируй)</span></li>
+        <li><span class="attr-name">stage</span><span class="attr-val">pre-implementation | execution | verification</span></li>
+      </ul>
+      <div class="section-label">Связи</div>
+      <ul class="rel-list"><li>вызывается из Session</li><li>управляется Review Gate</li><li>содержится в Catalog</li></ul>
+    </div>
+    <div class="entity-card">
+      <h3>Session</h3><div class="desc">Рабочая сессия от открытия до закрытия.</div><span class="badge badge-ok">implemented</span>
+      <div class="section-label">Атрибуты</div>
+      <ul class="attr-list">
+        <li><span class="attr-name">goal</span><span class="attr-val">Что хотим сделать</span></li>
+        <li><span class="attr-name">done</span><span class="attr-val">Выполненные шаги</span></li>
+        <li><span class="attr-name">now</span><span class="attr-val">Текущая задача</span></li>
+        <li><span class="attr-name">next</span><span class="attr-val">Следующий шаг</span></li>
+        <li><span class="attr-name">errors</span><span class="attr-val">Проблемы за сессию</span></li>
+      </ul>
+      <div class="section-label">Связи</div>
+      <ul class="rel-list"><li>загружает Context Layer</li><li>активирует Skill</li><li>записывает в Journal</li></ul>
+    </div>
+    <div class="entity-card">
+      <h3>Context Layer</h3><div class="desc">Три уровня. L0 всегда, L1 по тегам, L2 редко.</div><span class="badge badge-ok">implemented</span>
+      <div class="section-label">Атрибуты</div>
+      <ul class="attr-list">
+        <li><span class="attr-name">L0</span><span class="attr-val">~200 tok, ВСЕГДА. Цель, каталог</span></li>
+        <li><span class="attr-name">L1</span><span class="attr-val">500-2000 по тегам. map, status, decisions</span></li>
+        <li><span class="attr-name">L2</span><span class="attr-val">Без лимита, редко. Specs, планы</span></li>
+      </ul>
+      <div class="section-label">Связи</div>
+      <ul class="rel-list"><li>инжектируется Hook'ом</li><li>хранит Dead Ends, Decisions</li></ul>
+    </div>
+    <div class="entity-card">
+      <h3>Plan</h3><div class="desc">План фичи. После brainstorm. Задачи по 2-5 мин.</div><span class="badge badge-ok">implemented</span>
+      <div class="section-label">Атрибуты</div>
+      <ul class="attr-list">
+        <li><span class="attr-name">goal</span><span class="attr-val">Что реализуем</span></li>
+        <li><span class="attr-name">architecture</span><span class="attr-val">Компоненты, потоки</span></li>
+        <li><span class="attr-name">tasks</span><span class="attr-val">Шаги: файлы + тест + код</span></li>
+        <li><span class="attr-name">file</span><span class="attr-val">.forge/plans/*.md</span></li>
+      </ul>
+      <div class="section-label">Связи</div>
+      <ul class="rel-list"><li>создаётся после Brainstorm (gate!)</li><li>содержит Tasks</li><li>выполняется Subagent'ами</li></ul>
+    </div>
+    <div class="entity-card">
+      <h3>Task</h3><div class="desc">Атомарная работа. 2-5 мин = 1 коммит.</div><span class="badge badge-ok">implemented</span>
+      <div class="section-label">Атрибуты</div>
+      <ul class="attr-list">
+        <li><span class="attr-name">files</span><span class="attr-val">Что создать/изменить</span></li>
+        <li><span class="attr-name">test</span><span class="attr-val">Failing test ПЕРВЫМ (RED)</span></li>
+        <li><span class="attr-name">code</span><span class="attr-val">Минимум для GREEN</span></li>
+        <li><span class="attr-name">verify</span><span class="attr-val">Как проверить</span></li>
+      </ul>
+      <div class="section-label">Связи</div>
+      <ul class="rel-list"><li>принадлежит Plan</li><li>выполняется Subagent</li><li>проходит Review Gate</li></ul>
+    </div>
+    <div class="entity-card">
+      <h3>Subagent</h3><div class="desc">Свежая сессия Claude. Чистый контекст на задачу.</div><span class="badge badge-ok">implemented</span>
+      <div class="section-label">Атрибуты</div>
+      <ul class="attr-list">
+        <li><span class="attr-name">role</span><span class="attr-val">implementer | spec-reviewer | quality-reviewer | documenter</span></li>
+        <li><span class="attr-name">brief</span><span class="attr-val">Полный контекст — не видит историю</span></li>
+        <li><span class="attr-name">stack</span><span class="attr-val">python.md, react.md, go.md...</span></li>
+        <li><span class="attr-name">model</span><span class="attr-val">inherit | sonnet (documenter дешевле)</span></li>
+      </ul>
+      <div class="section-label">Связи</div>
+      <ul class="rel-list"><li>выполняет Task</li><li>проверяется Review Gate</li><li>оркестрируется Controller</li></ul>
+    </div>
+    <div class="entity-card">
+      <h3>Review Gate</h3><div class="desc">Обязательная проверка. Пропуск НЕВОЗМОЖЕН.</div><span class="badge badge-ok">implemented</span>
+      <div class="section-label">Атрибуты</div>
+      <ul class="attr-list">
+        <li><span class="attr-name">type</span><span class="attr-val">design-approved | test-passing | spec | quality</span></li>
+        <li><span class="attr-name">blocking</span><span class="attr-val">ВСЕГДА true</span></li>
+        <li><span class="attr-name">enforcement</span><span class="attr-val">Red flags таблица ловит обход</span></li>
+      </ul>
+      <div class="section-label">Связи</div>
+      <ul class="rel-list"><li>блокирует Task, merge, Plan</li><li>выполняется Subagent или авто</li></ul>
+    </div>
+    <div class="entity-card">
+      <h3>Dead End</h3><div class="desc">Провальный подход. Записать СРАЗУ.</div><span class="badge badge-ok">implemented</span>
+      <div class="section-label">Атрибуты</div>
+      <ul class="attr-list">
+        <li><span class="attr-name">summary</span><span class="attr-val">Что пробовали</span></li>
+        <li><span class="attr-name">why_failed</span><span class="attr-val">Конкретная причина провала</span></li>
+        <li><span class="attr-name">tags</span><span class="attr-val">auth, performance, migration...</span></li>
+      </ul>
+      <div class="section-label">Связи</div>
+      <ul class="rel-list"><li>предотвращает повтор в Session</li><li>записывается при Debug</li></ul>
+    </div>
+    <div class="entity-card">
+      <h3>Decision</h3><div class="desc">Архитектурное решение. «Почему X а не Y».</div><span class="badge badge-ok">implemented</span>
+      <div class="section-label">Атрибуты</div>
+      <ul class="attr-list">
+        <li><span class="attr-name">decision</span><span class="attr-val">Что решили</span></li>
+        <li><span class="attr-name">why</span><span class="attr-val">Обоснование</span></li>
+        <li><span class="attr-name">alternatives</span><span class="attr-val">Отвергнутые варианты</span></li>
+      </ul>
+      <div class="section-label">Связи</div>
+      <ul class="rel-list"><li>влияет на Plan, Convention</li><li>записывается при Brainstorm</li></ul>
+    </div>
+    <div class="entity-card">
+      <h3>Hook</h3><div class="desc">Авто-скрипт на событие Claude Code. Инжект + звуки.</div><span class="badge badge-ok">implemented</span>
+      <div class="section-label">Атрибуты</div>
+      <ul class="attr-list">
+        <li><span class="attr-name">SessionStart</span><span class="attr-val">Загрузка using-forge</span></li>
+        <li><span class="attr-name">UserPrompt</span><span class="attr-val">Инжект L0 + keyword→hint</span></li>
+        <li><span class="attr-name">Stop</span><span class="attr-val">Звук завершения (MP3)</span></li>
+        <li><span class="attr-name">Permission</span><span class="attr-val">Звук «разрешение?»</span></li>
+      </ul>
+      <div class="section-label">Связи</div>
+      <ul class="rel-list"><li>инжектирует Context Layer</li><li>подсказывает Skill</li></ul>
+    </div>
+    <div class="entity-card">
+      <h3>Marketplace</h3><div class="desc">Каталог плагинов. Локально — ОК, удалённо — нет.</div><span class="badge badge-stub">stub</span>
+      <div class="section-label">Атрибуты</div>
+      <ul class="attr-list">
+        <li><span class="attr-name">name</span><span class="attr-val">forge, claude-plugins-official</span></li>
+        <li><span class="attr-name">source</span><span class="attr-val">GitHub repo</span></li>
+        <li><span class="attr-name">remote</span><span class="attr-val">НЕ РАБОТАЕТ</span></li>
+      </ul>
+      <div class="section-label">Связи</div>
+      <ul class="rel-list"><li>содержит Plugin</li><li>ищется через /forge:discover</li></ul>
+    </div>
+  </div>
+</div>
+
+<!-- ========== ДЫРЫ ========== -->
+<div class="panel" id="panel-gaps">
+  <div class="swimlane-title">Что не реализовано</div>
+  <div class="gap-card"><span class="gap-icon">!</span><div><h4>Marketplace API</h4><p>/forge:discover ищет только по локальным маркетплейсам. Удалённый поиск и автоустановка — нет.</p></div></div>
+  <div class="gap-card"><span class="gap-icon">!</span><div><h4>Skill Chaining</h4><p>Нет автоматической цепочки brainstorm → plan → execute. Пользователь вручную вызывает каждый следующий скилл.</p></div></div>
+  <div class="gap-card"><span class="gap-icon">!</span><div><h4>Learning Extraction</h4><p>Не извлекает инсайты из ошибок, коммитов и паттернов автоматически. Только ручная запись через /forge:sync.</p></div></div>
+  <div class="gap-card"><span class="gap-icon">!</span><div><h4>Cross-Project Patterns</h4><p>Каждый .forge/ изолирован. Нет переноса learnings и dead-ends между проектами.</p></div></div>
+  <div class="gap-card"><span class="gap-icon">!</span><div><h4>Skill Auto-Detection</h4><p>Только keyword matching в context-inject.sh. Нет семантического понимания когда какой скилл нужен.</p></div></div>
+  <div class="gap-card"><span class="gap-icon">!</span><div><h4>Авто-загрузка L1</h4><p>L1 контекст не загружается автоматически по задаче. Claude должен сам запросить нужный файл.</p></div></div>
+  <div class="gap-card"><span class="gap-icon">!</span><div><h4>Auto Red Zone Detection</h4><p>Red zones определяются вручную при /forge:init. Нет автоматического анализа критичности файлов.</p></div></div>
+</div>
+
+</div>
+
+<script>
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  };
+});
+</script>
+</body>
+</html>

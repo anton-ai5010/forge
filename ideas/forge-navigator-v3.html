@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge — Navigator v3</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 2000px; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+const C = {
+  bg: "#0d1117", card: "#161b22", border: "#30363d", dim: "#7d8590",
+  text: "#e6edf3", green: "#3fb950", yellow: "#d29922", red: "#f85149",
+  blue: "#58a6ff", purple: "#bc8cff", orange: "#f0883e", cyan: "#4dd0e1", pink: "#f778ba",
+};
+
+// ====== EXPANDABLE ITEM — the core UI pattern ======
+function Expand({ title, badge, badgeColor, children, level = 1, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const paddings = { 1: "14px 16px", 2: "10px 14px", 3: "8px 12px" };
+  const fontSizes = { 1: 15, 2: 13, 3: 12 };
+  const bgs = { 1: C.card, 2: `${C.card}`, 3: "transparent" };
+  const borders = { 1: `1px solid ${C.border}`, 2: `1px solid ${C.border}50`, 3: `1px solid ${C.border}30` };
+  const radius = { 1: 12, 2: 8, 3: 6 };
+
+  return (
+    <div style={{ marginBottom: level === 1 ? 8 : level === 2 ? 4 : 2 }}>
+      <div onClick={() => setOpen(!open)} style={{
+        padding: paddings[level], borderRadius: radius[level],
+        background: open ? (level === 1 ? `${C.cyan}08` : level === 2 ? `${C.blue}06` : "transparent") : bgs[level],
+        border: open ? `1px solid ${C.cyan}30` : borders[level],
+        cursor: "pointer", transition: "all 0.2s",
+        display: "flex", alignItems: "center", gap: 8,
+      }}>
+        <span style={{ color: C.dim, fontSize: 10, transition: "transform 0.2s", transform: open ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
+        <span style={{ fontSize: fontSizes[level], fontWeight: level === 1 ? 600 : 500, color: C.text, flex: 1 }}>{title}</span>
+        {badge && <span style={{
+          fontSize: 10, padding: "2px 8px", borderRadius: 8, fontWeight: 600,
+          background: `${badgeColor || C.green}18`, color: badgeColor || C.green,
+        }}>{badge}</span>}
+      </div>
+      {open && (
+        <div style={{ padding: level === 3 ? "6px 0 6px 20px" : "8px 0 4px 20px", animation: "fadeIn 0.2s ease" }}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ====== DETAIL LINE — clickable sub-item with popup details ======
+function Detail({ text, sub, warn, color }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ marginBottom: 3 }}>
+      <div onClick={sub ? () => setOpen(!open) : undefined} style={{
+        fontSize: 13, color: warn ? C.yellow : (color || "#9ca3af"), lineHeight: 1.5,
+        padding: "4px 8px", borderRadius: 6, cursor: sub ? "pointer" : "default",
+        background: open ? `${C.blue}08` : "transparent",
+        borderLeft: sub ? `2px solid ${open ? C.cyan : C.border}40` : "2px solid transparent",
+        transition: "all 0.15s",
+      }}>
+        {sub && <span style={{ color: C.dim, fontSize: 9, marginRight: 6 }}>{open ? "▼" : "▶"}</span>}
+        {warn && <span style={{ marginRight: 4 }}>⚠️</span>}
+        {text}
+      </div>
+      {open && sub && (
+        <div style={{ padding: "6px 12px 6px 22px", fontSize: 12, color: "#9ca3af", lineHeight: 1.6, animation: "fadeIn 0.15s ease" }}>
+          {typeof sub === "string" ? sub : sub}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ====== TAG / KEYWORD TABLE ======
+function KeywordTable({ items }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 4 }}>
+      {items.map((item, i) => (
+        <div key={i} style={{ display: "flex", gap: 8, fontSize: 12, padding: "3px 0" }}>
+          <code style={{ color: C.cyan, background: `${C.cyan}12`, padding: "1px 6px", borderRadius: 4, fontFamily: "monospace", fontSize: 11 }}>{item.trigger}</code>
+          <span style={{ color: C.dim }}>→</span>
+          <span style={{ color: C.blue }}>{item.skill}</span>
+          <span style={{ color: "#666", flex: 1 }}>{item.desc}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ====== COMMAND LIST ======
+function CommandList({ commands }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 4 }}>
+      {commands.map((cmd, i) => (
+        <div key={i} style={{ display: "flex", gap: 8, fontSize: 12, padding: "4px 8px", borderRadius: 4, background: `${C.card}` }}>
+          <code style={{ color: C.orange, fontFamily: "monospace", fontSize: 11, minWidth: 180 }}>{cmd.cmd}</code>
+          <span style={{ color: "#9ca3af" }}>{cmd.desc}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ====== STATUS BADGE ======
+function Status({ status, text }) {
+  const color = status === "ok" ? C.green : status === "warn" ? C.yellow : C.red;
+  const icon = status === "ok" ? "✅" : status === "warn" ? "⚠️" : "❌";
+  const label = status === "ok" ? "Работает" : status === "warn" ? "Частично" : "Не работает";
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 6, background: `${color}12`, border: `1px solid ${color}25`, marginTop: 6, marginBottom: 6 }}>
+      <span style={{ fontSize: 14 }}>{icon}</span>
+      <span style={{ fontSize: 11, color, fontWeight: 600 }}>{label}</span>
+      <span style={{ fontSize: 11, color: C.dim }}>{text}</span>
+    </div>
+  );
+}
+
+// ====== MAIN APP ======
+function App() {
+  const [tab, setTab] = useState("entities");
+
+  return (
+    <div style={{ background: C.bg, color: C.text, minHeight: "100vh", fontFamily: "'DM Sans', -apple-system, sans-serif", padding: "20px 16px" }}>
+      <div style={{ maxWidth: 700, margin: "0 auto" }}>
+
+        {/* Header */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 12, color: C.dim, textTransform: "uppercase", letterSpacing: 2 }}>Навигатор проекта</div>
+          <div style={{ fontSize: 26, fontWeight: 800 }}>Forge Plugin <span style={{ fontSize: 14, fontWeight: 400, color: C.dim }}>v5.6.0</span></div>
+          <div style={{ fontSize: 14, color: C.cyan, marginTop: 6, padding: "10px 14px", background: `${C.cyan}10`, borderRadius: 8, borderLeft: `3px solid ${C.cyan}`, lineHeight: 1.5 }}>
+            🎯 Claude сам следует правильным процессам, не забывает что было раньше, и объясняет тебе что делать дальше
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 4, marginBottom: 20, background: C.card, borderRadius: 10, padding: 3 }}>
+          {[
+            { id: "entities", label: "🗺 Из чего состоит" },
+            { id: "process", label: "⚡ Что происходит" },
+            { id: "gaps", label: "🚨 Что не готово" },
+          ].map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)} style={{
+              flex: 1, padding: "10px 0", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600,
+              cursor: "pointer", background: tab === t.id ? C.cyan : "transparent",
+              color: tab === t.id ? C.bg : C.dim, transition: "all 0.2s",
+            }}>{t.label}</button>
+          ))}
+        </div>
+
+        {/* ============ ENTITIES TAB ============ */}
+        {tab === "entities" && (
+          <div>
+            <div style={{ fontSize: 13, color: C.dim, marginBottom: 14 }}>Нажми на блок → увидишь краткое описание. Нажми на пункт внутри → раскроются подробности.</div>
+
+            {/* СКИЛЛЫ */}
+            <Expand title="⚡ Скиллы — инструкции для Claude" badge="23 шт" badgeColor={C.blue}>
+              <Detail text="Набор правил 'делай так, а не иначе'. Без скилла Claude сразу лезет чинить. Со скиллом — сначала разбирается, потом чинит, потом проверяет." />
+
+              <Expand title="Как Claude выбирает скилл" level={2} badge="авто" badgeColor={C.green}>
+                <Detail text="Claude смотрит на твои слова и подбирает скилл автоматически" sub={
+                  <KeywordTable items={[
+                    { trigger: "баг / ошибка / fix", skill: "systematic-debugging", desc: "4 фазы расследования" },
+                    { trigger: "новая фича / придумай", skill: "brainstorming", desc: "3 агента исследуют" },
+                    { trigger: "тест / tdd", skill: "test-driven-development", desc: "RED→GREEN→REFACTOR" },
+                    { trigger: "план / архитектура", skill: "writing-plans", desc: "декомпозиция на шаги" },
+                    { trigger: "рефактор / почистить", skill: "code-cleanup", desc: "анализ качества" },
+                    { trigger: "ревью / проверь код", skill: "requesting-code-review", desc: "spec + quality check" },
+                    { trigger: "застрял / не знаю", skill: "project-unblocker", desc: "разблокировка" },
+                    { trigger: "merge / PR / ветка готова", skill: "finishing-a-development-branch", desc: "merge/PR решение" },
+                  ]} />
+                } />
+                <Detail text="Не работает на 100% — если написать неточно, Claude может не подобрать скилл" warn={true} sub="Пример: 'что-то не работает' — слишком расплывчато, скилл не подключится. Лучше: 'баг в авторизации' — слово 'баг' активирует скилл отладки. Если сомневаешься — вызови вручную." />
+              </Expand>
+
+              <Expand title="Можно вызвать вручную — список всех команд" level={2} badge="15 команд" badgeColor={C.orange}>
+                <CommandList commands={[
+                  { cmd: "/forge:start", desc: "Загрузить контекст в начале сессии" },
+                  { cmd: "/forge:brainstorm", desc: "Обсудить идею перед реализацией" },
+                  { cmd: "/forge:write-plan", desc: "Создать пошаговый план" },
+                  { cmd: "/forge:execute-plan", desc: "Выполнить план через субагентов" },
+                  { cmd: "/forge:graph", desc: "Построить графовую карту кода" },
+                  { cmd: "/forge:sync", desc: "Обновить документацию после работы" },
+                  { cmd: "/forge:validate", desc: "Проверить что план выполнен" },
+                  { cmd: "/forge:cleanup", desc: "Анализ качества кода" },
+                  { cmd: "/forge:design", desc: "UI/UX дизайн-система" },
+                  { cmd: "/forge:api-design", desc: "Проектирование REST API" },
+                  { cmd: "/forge:migrate", desc: "Миграция базы данных" },
+                  { cmd: "/forge:deploy", desc: "Docker + CI/CD + rollback" },
+                  { cmd: "/forge:security-review", desc: "OWASP проверка безопасности" },
+                  { cmd: "/forge:discover", desc: "Поиск скиллов в маркетплейсе" },
+                  { cmd: "/forge:unblocker", desc: "Помощь когда застрял" },
+                  { cmd: "/forge:init", desc: "Инициализация нового проекта" },
+                ]} />
+              </Expand>
+
+              <Expand title="Типы скиллов" level={2}>
+                <Detail text="Строгие — TDD, отладка, security. Шаг влево нельзя. Claude обязан следовать каждому пункту." sub="Примеры: test-driven-development (нельзя писать код без теста), systematic-debugging (нельзя чинить без расследования), security-review (FAIL блокирует merge)" />
+                <Detail text="Гибкие — дизайн, API, деплой. Общие принципы, но Claude адаптирует под проект." sub="Примеры: ui-ux-design (палитра и типографика зависят от аудитории), api-design (REST-структура зависит от данных)" />
+              </Expand>
+
+              <Status status="ok" text="Все 23 скилла работают. Автоподбор по ключевым словам." />
+            </Expand>
+
+            {/* ПАМЯТЬ ПРОЕКТА */}
+            <Expand title="📚 Память проекта — Claude помнит между сессиями" badge="3 уровня" badgeColor={C.cyan}>
+              <Detail text="Файлы в .forge/ хранят всё важное: цель, решения, ошибки, структуру. Claude читает их автоматически и сразу в курсе — даже через месяц." />
+
+              <Expand title="Уровень L0 — загружается ВСЕГДА (~5 строк)" level={2} badge="авто" badgeColor={C.green}>
+                <Detail text="Название, цель, стадия, текущая задача, ветка" sub="Файл: .forge/index.yml. Инжектируется в каждый промпт автоматически через хук. ~200 токенов — не заметишь." />
+                <Detail text="Каталог — список всех остальных файлов с тегами" sub="Claude смотрит на каталог и решает что загрузить дополнительно. Например, если ты спрашиваешь про архитектуру — он загрузит decisions.yml (тег: architecture)." />
+              </Expand>
+
+              <Expand title="Уровень L1 — загружается по теме задачи" level={2} badge="по тегам">
+                <Detail text="map.yml — структура проекта, red zones" sub="Теги: structure, files, navigate. Загружается когда спрашиваешь 'где лежит...', 'какая структура...'" />
+                <Detail text="conventions.yml — именование, стиль кода" sub="Теги: naming, format, rules. Загружается при code review или создании нового кода." />
+                <Detail text="status.yml — что работает / сломано / заблокировано" sub="Теги: working, broken, health. Загружается когда спрашиваешь 'что сломано?', 'что работает?'" />
+                <Detail text="decisions.yml — почему выбрали это, а не другое" sub="Теги: why, architecture, choice. Загружается при brainstorm чтобы не предлагать то что уже отвергли." />
+                <Detail text="dead-ends.yml — что пробовали и не сработало" sub="Теги: failed, tried, avoid. Загружается при отладке чтобы не наступать на грабли." />
+                <Detail text="journal.yml — история сессий" sub="Теги: history, last-session, resume. Загружается в начале сессии чтобы продолжить с того места." />
+                <Detail text="learnings.yml — уроки и инсайты" sub="Теги: lesson, learning, insight. Загружается при планировании для informed decisions." />
+                <Detail text="infrastructure.yml — Docker, серверы, БД" sub="Теги: docker, server, database, infra. Загружается при деплое или настройке." />
+                <Detail text="graph.json — графовая карта кода" sub="Теги: graph, dependencies, architecture. Используется для навигации по коду вместо grep. Нужен graphify." />
+              </Expand>
+
+              <Expand title="Уровень L2 — загружается редко (полные детали)" level={2} badge="по запросу">
+                <Detail text="library/*/spec.yml — полные спецификации каждого файла" sub="Загружается когда Claude нужно понять конкретный модуль в деталях: функции, входы, выходы, зависимости." />
+                <Detail text="plans/*.md — полные планы реализации" sub="Загружается при выполнении плана или его ревью." />
+                <Detail text="dead-ends/*.md — подробный анализ провалов" sub="Загружается только если краткая запись в L1 недостаточна для понимания проблемы." />
+              </Expand>
+
+              <Status status="ok" text="Автоинжект L0 работает. L1/L2 по тегам. Экономит ~90% контекста." />
+            </Expand>
+
+            {/* СЕССИЯ */}
+            <Expand title="💬 Рабочая сессия — автозагрузка + звуки" badge="авто" badgeColor={C.green}>
+              <Detail text="Открываешь Claude Code → он автоматически загружает контекст, предлагает скилл, показывает ветку и коммиты. Закрываешь → записывает что произошло." />
+
+              <Expand title="Что происходит при открытии" level={2}>
+                <Detail text="Хук session-start.sh загружает скилл using-forge" sub="using-forge — главный скилл. Он заставляет Claude проверять скиллы перед каждым действием. Без него Claude может игнорировать скиллы." />
+                <Detail text="Хук context-inject.sh инжектирует L0 контекст" sub="Читает .forge/index.yml (~200 токенов) и добавляет в каждый промпт. Плюс git branch, 3 последних коммита, hint на скилл по ключевым словам." />
+              </Expand>
+
+              <Expand title="Звуковые уведомления" level={2} badge="13 MP3">
+                <Detail text="Когда Claude закончил — звук из sounds/stop/ (6 вариантов голоса VASKO)" sub="Чтобы не смотреть на экран. Слышишь звук → Claude готов." />
+                <Detail text="Когда Claude просит разрешение — звук из sounds/permission/ (7 вариантов 'разрешение?')" sub="Claude хочет что-то опасное (удалить файл, запустить команду). Звук привлекает внимание." />
+              </Expand>
+
+              <Status status="ok" text="Хуки работают, звуки через paplay." />
+            </Expand>
+
+            {/* ПЛАН */}
+            <Expand title="📋 План работы — разбивка на шаги по 2-5 минут" badge="TDD" badgeColor={C.purple}>
+              <Detail text="Вместо 'сделай авторизацию' — 6 конкретных шагов. Каждый: какие файлы, какой тест написать, какой код, как проверить." />
+
+              <Expand title="Как создаётся план" level={2}>
+                <Detail text="1. Сначала brainstorm — 3 агента исследуют задачу" sub="Аналитик (конкуренты, аналоги), технолог (как сделать), критик (риски). Результат: дизайн-документ с требованиями." />
+                <Detail text="2. СТОП: ты одобряешь дизайн" sub="Контрольная точка. Без одобрения план не создаётся. Это предотвращает 'начали кодить, потом переделывали'." />
+                <Detail text="3. Декомпозиция на задачи" sub="Каждая задача: файлы + failing test (RED) + minimal code (GREEN) + verification + commit message." />
+              </Expand>
+
+              <Expand title="Формат задачи" level={2}>
+                <Detail text="files — конкретные пути: 'создать models/user.ts, изменить routes/index.ts'" />
+                <Detail text="failing_test — тест который ПАДАЕТ: 'User.create() должен вернуть id'" />
+                <Detail text="minimal_code — минимум для прохождения теста" />
+                <Detail text="verification — точная команда: 'npm test && все 12 тестов зелёные'" />
+              </Expand>
+
+              <Status status="ok" text="Генерация планов работает. Хранятся в .forge/plans/" />
+            </Expand>
+
+            {/* ПОМОЩНИКИ */}
+            <Expand title="🤖 Помощники Claude — 4 роли, двойная проверка" badge="субагенты" badgeColor={C.orange}>
+              <Detail text="Когда задач много — главный Claude вызывает помощников. Каждый работает с чистой головой — не путается в чужих задачах." />
+
+              <Expand title="4 роли помощников" level={2}>
+                <Detail text="Кодер (implementer) — пишет код по TDD, коммитит" sub="Получает полный brief: задача + файлы + стек + подсказки по языку (python.md, react.md, go.md). Обязан: тест первым, потом код, потом self-review." />
+                <Detail text="Проверщик спецификации (spec-reviewer) — код = то что просили?" sub="Сравнивает результат с задачей из плана. Если не совпадает → кодер переделывает." />
+                <Detail text="Проверщик качества (quality-reviewer) — код хороший?" sub="Смотрит на читаемость, ошибки, тесты, naming. Если плохо → кодер переделывает." />
+                <Detail text="Документатор (documenter) — обновляет .forge/" sub="Работает на модели sonnet (дешевле). Обновляет spec.yml, README.md, map.yml." />
+              </Expand>
+
+              <Expand title="Почему 'свежий' помощник" level={2}>
+                <Detail text="После 5 задач основной Claude 'замусорен' контекстом предыдущих задач" sub="Субагент не знает что было до него. Получает только brief текущей задачи. Это как 'чистая голова' — не путает контекст задачи 1 с задачей 5." />
+              </Expand>
+
+              <Status status="ok" text="4 роли работают. Оркестрация через Agent tool." />
+            </Expand>
+
+            {/* КОНТРОЛЬНЫЕ ТОЧКИ */}
+            <Expand title="🚧 Контрольные точки — Claude не может обойти" badge="5 типов" badgeColor={C.red}>
+              <Detail text="Барьеры где Claude обязан остановиться и проверить. Пропустить невозможно — есть таблица 'отмазок' которая ловит попытки обойти." />
+
+              <Expand title="Типы проверок" level={2}>
+                <Detail text="Дизайн одобрен — нельзя кодить без brainstorm" sub="Claude: 'Это простое, можно без обсуждения' → RED FLAG → 'Нет, дизайн обязателен'." />
+                <Detail text="Тесты проходят — нельзя сказать 'готово' без зелёных тестов" sub="Claude: 'Наверное пройдёт' → RED FLAG → 'Нет, ЗАПУСТИ тест и покажи результат'." />
+                <Detail text="Код = спецификация — spec-reviewer проверяет" sub="Claude: 'Я уверен' → RED FLAG → 'Нет, запусти проверщика'." />
+                <Detail text="Код качественный — quality-reviewer проверяет" />
+                <Detail text="Security пройден — FAIL блокирует merge" />
+              </Expand>
+
+              <Expand title="Таблица 'отмазок' Claude" level={2}>
+                <Detail text="'Это слишком просто для скилла' → Используй всё равно" />
+                <Detail text="'Мне нужно сначала посмотреть код' → Скилл говорит КАК смотреть" />
+                <Detail text="'Тест наверное пройдёт' → Запусти и покажи" />
+                <Detail text="'Я уже это знаю' → Скиллы обновляются. Прочитай текущую версию" />
+                <Detail text="'Сделаю потом' → Нет. Сейчас" />
+              </Expand>
+
+              <Status status="ok" text="5 типов gates. Red flags таблица ловит обход." />
+            </Expand>
+
+            {/* КНИГА ОШИБОК */}
+            <Expand title="🚫 Книга ошибок — что пробовали и не сработало" badge="dead-ends">
+              <Detail text="Когда подход провалился — записывается что, почему, и метки для поиска. В следующий раз Claude прочитает и не предложит то же самое." />
+
+              <Expand title="Пример записи" level={2}>
+                <Detail text="'SQLite для продакшена' → concurrent writes блокировали друг друга при >5 пользователях" />
+                <Detail text="'CSS-in-JS (styled-components)' → SSR гидрация ломала стили, перешли на Tailwind" />
+                <Detail text="'Redis для сессий' → eviction удалял активные сессии при нехватке памяти" />
+              </Expand>
+
+              <Detail text="Записывается автоматически при отладке или через /forge:sync" sub="При /forge:sync Claude спрашивает: 'Были ли подходы которые не сработали?' Если да — записывает в .forge/dead-ends.yml с тегами для поиска." />
+              <Status status="ok" text="Запись и поиск по тегам работают." />
+            </Expand>
+
+            {/* ЖУРНАЛ РЕШЕНИЙ */}
+            <Expand title="⚖️ Журнал решений — почему выбрали это" badge="decisions">
+              <Detail text="Записи 'выбрали PostgreSQL потому что транзакции, рассматривали MongoDB — нет транзакций'. Через полгода все помнят почему." />
+              <Detail text="Записывается при brainstorm или через /forge:sync" sub="Claude спрашивает: 'Были ли важные технические решения?' Записывает: что решили, почему, что отвергли." />
+              <Status status="ok" text="Запись работает." />
+            </Expand>
+
+            {/* ГРАФОВАЯ КАРТА */}
+            <Expand title="🗺 Графовая карта кода — зависимости между модулями" badge="graphify" badgeColor={C.purple}>
+              <Detail text="Граф показывает какие модули, функции и классы связаны друг с другом. Claude использует его для навигации вместо grep — быстрее и точнее." />
+
+              <Expand title="Что можно делать с графом" level={2}>
+                <Detail text="/forge:graph --query 'как работает авторизация?'" sub="BFS-обход графа. Находит все модули связанные с авторизацией за секунды." />
+                <Detail text="/forge:graph --path 'UserModel' 'PaymentService'" sub="Кратчайший путь между двумя узлами. Показывает через какие модули они связаны." />
+                <Detail text="/forge:graph --explain 'AuthMiddleware'" sub="Объяснение узла: что это, с чем связано, кто вызывает, кого вызывает." />
+              </Expand>
+
+              <Detail text="Строится автоматически при /forge:init, обновляется при /forge:sync" sub="Использует tree-sitter (парсинг кода без LLM — быстро и бесплатно). Хранится в .forge/graph.json." />
+              <Detail text="Требует установки: pipx install graphifyy (два y)" warn={true} sub="Если graphify не установлен — всё остальное работает без него. Граф опционален." />
+              <Status status="ok" text="Интегрирован в init, sync, хук, using-forge." />
+            </Expand>
+
+            {/* МАРКЕТПЛЕЙС */}
+            <Expand title="🏪 Магазин скиллов — поиск новых инструментов" badge="stub" badgeColor={C.yellow}>
+              <Detail text="Каталог плагинов и скиллов которые можно установить. Пока ищет только среди уже скачанных." />
+              <Detail text="Локальный поиск — работает. /forge:discover 'тестирование'" />
+              <Detail text="Удалённый поиск — НЕ работает. API не реализован." warn={true} />
+              <Detail text="Автоустановка — НЕ работает." warn={true} />
+              <Status status="warn" text="Только локальный поиск." />
+            </Expand>
+
+          </div>
+        )}
+
+        {/* ============ PROCESS TAB ============ */}
+        {tab === "process" && (
+          <div>
+            <div style={{ fontSize: 13, color: C.dim, marginBottom: 14 }}>Порядок работы. Нажми на процесс → шаги. Нажми на шаг → подробности.</div>
+
+            <Expand title="🚀 Начало работы" badge="авто" badgeColor={C.green}>
+              <Detail text="Открываешь Claude Code → он сам загружает контекст проекта" />
+              <Expand title="Что происходит автоматически" level={2}>
+                <Detail text="✅ Загрузка краткой сводки проекта (L0)" sub="Из .forge/index.yml: цель, стадия, текущая задача, ветка. ~200 токенов." />
+                <Detail text="✅ Подсказка скилла по твоим словам" sub="Keyword matching: 'баг' → debugging, 'фича' → brainstorming. Не идеально — может не угадать." />
+                <Detail text="✅ Git branch + последние 3 коммита" />
+                <Detail text="✅ Если есть граф — подсказка использовать graphify" />
+                <Detail text="❌ Автозагрузка L1 по теме задачи — пока нет" warn={true} />
+              </Expand>
+              <Detail text="Или набери /forge:start для полного дашборда" sub="Загружает всё: status, decisions, dead-ends, journal. Показывает что было в прошлый раз." />
+            </Expand>
+
+            <div style={{ textAlign: "center", color: C.dim, fontSize: 14, padding: "4px 0" }}>↓</div>
+
+            <Expand title="💡 Обсуждение идеи (brainstorm)" badge="/forge:brainstorm" badgeColor={C.orange}>
+              <Detail text="Прежде чем кодить — 3 помощника исследуют задачу. Находят проблемы ДО написания кода." />
+              <Expand title="3 агента работают параллельно" level={2}>
+                <Detail text="Аналитик — конкуренты, аналоги, что уже есть похожего" sub="Если есть граф — ищет похожие модули в проекте через graphify query." />
+                <Detail text="Технолог — как сделать технически, какие варианты" sub="Предлагает архитектуру. Если есть граф — показывает с чем будет конфликтовать и сочетаться." />
+                <Detail text="Критик — риски, слабые места, что может сломаться" sub="Если есть граф — graphify path показывает какие модули затронутся при изменении." />
+              </Expand>
+              <Detail text="СТОП: дизайн должен быть одобрен тобой" sub="Контрольная точка. Без одобрения нельзя переходить к плану. Предотвращает 'начали делать не то'." />
+            </Expand>
+
+            <div style={{ textAlign: "center", color: C.dim, fontSize: 14, padding: "4px 0" }}>↓</div>
+
+            <Expand title="📝 Создание плана" badge="/forge:write-plan" badgeColor={C.orange}>
+              <Detail text="Дизайн разбивается на шаги по 2-5 минут. Каждый: файлы + тест + код + проверка." />
+              <Detail text="План сохраняется в .forge/plans/*.md" sub="Можно перечитать в любой момент. Claude выполняет по нему задачу за задачей." />
+            </Expand>
+
+            <div style={{ textAlign: "center", color: C.dim, fontSize: 14, padding: "4px 0" }}>↓</div>
+
+            <Expand title="⚙️ Выполнение плана" badge="/forge:execute-plan" badgeColor={C.orange}>
+              <Detail text="Субагенты выполняют задачи с двойной проверкой. Ты контролируешь результат." />
+              <Expand title="Цикл на каждую задачу" level={2}>
+                <Detail text="✅ Свежий субагент с чистой головой" />
+                <Detail text="✅ Тест первым (RED), потом код (GREEN), потом рефакторинг" />
+                <Detail text="✅ Проверщик спецификации: код = задача?" />
+                <Detail text="✅ Проверщик качества: код хороший?" />
+                <Detail text="✅ Документатор обновляет .forge/" />
+                <Detail text="❌ Автоматический переход brainstorm→plan→execute без ручных команд" warn={true} sub="Сейчас ты вручную вызываешь каждую команду. В будущем — одна команда запустит всю цепочку." />
+              </Expand>
+            </Expand>
+
+            <div style={{ textAlign: "center", color: C.dim, fontSize: 14, padding: "4px 0" }}>↓</div>
+
+            <Expand title="🔍 Отладка (если баг)" badge="авто по слову 'баг'" badgeColor={C.green}>
+              <Detail text="4 фазы. Нельзя чинить без расследования — это контрольная точка." />
+              <Expand title="4 фазы расследования" level={2}>
+                <Detail text="Phase 1: Воспроизвести баг, собрать факты" sub="ОБЯЗАТЕЛЬНО. Claude не может перейти к фиксу без этой фазы. Если есть граф — трассировка зависимостей через graphify path." />
+                <Detail text="Phase 2: Предположить причину (гипотеза)" />
+                <Detail text="Phase 3: Доказать гипотезу экспериментом" />
+                <Detail text="Phase 4: Минимальный фикс + тест чтобы баг не вернулся" />
+              </Expand>
+              <Detail text="Если подход не сработал → записывается в книгу ошибок" />
+            </Expand>
+
+            <div style={{ textAlign: "center", color: C.dim, fontSize: 14, padding: "4px 0" }}>↓</div>
+
+            <Expand title="📦 Завершение работы" badge="/forge:sync" badgeColor={C.orange}>
+              <Detail text="Обновить документацию, записать решения и ошибки, проверить и отправить." />
+              <Expand title="Что происходит при sync" level={2}>
+                <Detail text="✅ Claude смотрит git diff — что изменилось" />
+                <Detail text="✅ Обновляет граф (если есть graphify)" />
+                <Detail text="✅ Субагент обновляет spec.yml, map.yml" />
+                <Detail text="✅ Спрашивает про решения и ошибки → записывает" />
+                <Detail text="✅ Записывает итог сессии в journal" />
+                <Detail text="✅ Code review → merge/PR" />
+                <Detail text="❌ Автоизвлечение выводов из ошибок" warn={true} />
+                <Detail text="❌ Автоизвлечение выводов из коммитов" warn={true} />
+              </Expand>
+            </Expand>
+
+          </div>
+        )}
+
+        {/* ============ GAPS TAB ============ */}
+        {tab === "gaps" && (
+          <div>
+            <div style={{ fontSize: 13, color: C.dim, marginBottom: 14 }}>Что не работает или работает не полностью. Нажми для подробностей.</div>
+
+            <Expand title="Автоцепочка команд" badge="Важно" badgeColor={C.red}>
+              <Detail text="Сейчас для каждой фичи ты вручную набираешь 3 команды: brainstorm → write-plan → execute-plan" />
+              <Detail text="Должно быть: одна команда запускает всю цепочку автоматически" />
+              <Detail text="Экономия: 3 ручных действия × каждая фича = много потерянного времени" />
+            </Expand>
+
+            <Expand title="Удалённый магазин скиллов" badge="Средне" badgeColor={C.yellow}>
+              <Detail text="/forge:discover ищет только среди уже скачанных маркетплейсов" />
+              <Detail text="Нельзя найти и установить новый скилл из GitHub одной командой" />
+            </Expand>
+
+            <Expand title="Автоизвлечение выводов" badge="Средне" badgeColor={C.yellow}>
+              <Detail text="Claude не анализирует ошибки и коммиты автоматически" />
+              <Detail text="Уроки записываются только вручную через /forge:sync" />
+              <Detail text="Должно быть: Claude сам замечает паттерны и предлагает выводы" />
+            </Expand>
+
+            <Expand title="Умный подбор скиллов" badge="Средне" badgeColor={C.yellow}>
+              <Detail text="Сейчас подбор по ключевым словам: 'баг' → отладка" />
+              <Detail text="'Что-то не работает' — скилл НЕ подключится (слишком расплывчато)" />
+              <Detail text="Нужно: семантическое понимание контекста, не только слов" />
+            </Expand>
+
+            <Expand title="Обмен опытом между проектами" badge="Мелочь" badgeColor={C.dim}>
+              <Detail text="Каждый .forge/ изолирован — выводы из одного проекта не переносятся в другой" />
+            </Expand>
+
+            <Expand title="Автозагрузка контекста по теме" badge="Мелочь" badgeColor={C.dim}>
+              <Detail text="Claude не всегда сам загружает нужные L1 файлы" />
+              <Detail text="Иногда приходится просить 'посмотри решения' вручную" />
+            </Expand>
+
+            <Expand title="Автоопределение опасных зон" badge="Мелочь" badgeColor={C.dim}>
+              <Detail text="При /forge:init ты сам указываешь red zone файлы" />
+              <Detail text="Claude мог бы определить их автоматически по сложности и связности" />
+            </Expand>
+
+            <div style={{ marginTop: 20, padding: 14, borderRadius: 10, background: `${C.red}10`, border: `1px solid ${C.red}30` }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: C.red, marginBottom: 4 }}>⚡ Главное узкое место</div>
+              <div style={{ fontSize: 13, color: C.text, lineHeight: 1.5 }}>
+                <b>Автоцепочка</b> — brainstorm→plan→execute вручную на каждую фичу. Одна команда сэкономила бы больше всего времени.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={{ marginTop: 24, padding: 14, borderRadius: 10, background: C.card, border: `1px solid ${C.border}`, textAlign: "center" }}>
+          <div style={{ fontSize: 11, color: C.dim }}>
+            Forge Plugin v5.6.0 — Project Navigator v3<br/>
+            Нажимай на любой блок чтобы раскрыть подробности
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
