@@ -76,6 +76,12 @@ Check for:
 4. **Duplication** — copy-pasted logic that should be extracted, near-identical functions
 5. **Structure** — files doing too much, misplaced files (wrong directory), missing separation of concerns
 6. **Convention violations** — deviations from project conventions (if known)
+7. **DDD violations** (if design doc has Domain Model):
+   - **Primitive obsession** — raw strings/numbers used for emails, money, IDs instead of domain primitives with validation
+   - **Anemic entities** — entities that are just data bags with no behavior (all logic in services)
+   - **Aggregate leaks** — external code reaching into aggregate internals instead of going through root
+   - **Missing lifecycle validation** — state transitions without checking if transition is allowed
+   - **Broken bounded contexts** — one context directly using another context's internal classes
 
 For each issue found, report:
 - File path and line number(s)

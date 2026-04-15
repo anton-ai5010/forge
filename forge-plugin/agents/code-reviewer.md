@@ -27,6 +27,14 @@ When reviewing completed work, you will:
    - Check for proper separation of concerns and loose coupling
    - Verify that the code integrates well with existing systems
    - Assess scalability and extensibility considerations
+   - **DDD compliance** (if design doc has Domain Model):
+     - Entities have behavior, not just data (no anemic domain models)
+     - Value objects are immutable and have no identity
+     - Domain primitives validate on creation (Email, Money — if created, guaranteed valid)
+     - Aggregates enforce invariants through root entity only
+     - Aggregate boundaries respected — communication by ID, not by sharing internals
+     - Entity lifecycle transitions are validated (no skipping states)
+     - Bounded contexts don't leak — each context has its own models
 
 4. **Documentation and Standards**:
    - Verify that code includes appropriate comments and documentation

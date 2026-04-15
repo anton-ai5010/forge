@@ -124,7 +124,17 @@ You MUST complete each phase before proceeding to the next.
 
    **Parallelize evidence gathering:** If system has 3+ components, dispatch one subagent per component boundary to gather evidence simultaneously. Don't check layers one by one — check all at once, then analyze where the break is.
 
-5. **Trace Data Flow**
+5. **Check Domain Model Boundaries**
+
+   **If design doc or .forge/ has a Domain Model (DDD):**
+   - Identify which **bounded context** the bug is in (auth? orders? payments?)
+   - Check if error crosses **aggregate boundaries** — data passed between aggregates by ID only, not by reference
+   - Check **lifecycle violations** — is the entity in an invalid state? (e.g., "shipped" order without payment)
+   - Check **domain primitive validation** — is an invalid value (bad email, negative price) bypassing validation?
+
+   These are the most common DDD-related bug sources: boundary violations, lifecycle skips, and unvalidated primitives.
+
+6. **Trace Data Flow**
 
    **WHEN error is deep in call stack:**
 
