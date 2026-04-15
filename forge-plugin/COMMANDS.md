@@ -1,4 +1,4 @@
-# FORGE Plugin Commands Reference v6.1.0
+# FORGE Plugin Commands Reference v6.2.0
 
 Полный справочник всех 20 команд forge-plugin с описанием назначения и использования.
 
