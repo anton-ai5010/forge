@@ -27,6 +27,11 @@ COMMANDS = [
     ("forge:security-review", "Секьюрити ревью"),
     ("forge:migrate", "Миграция"),
     ("forge:discover", "Поиск в маркетплейсе"),
+    # Визуализация и граф
+    ("forge:graph", "Графовая карта кода"),
+    ("forge:product-map", "Навигатор проекта (HTML)"),
+    ("forge:explain", "Визуальное объяснение 'как работает X?'"),
+    ("forge:session-insights", "Инсайты сессии"),
 ]
 
 SKILLS = [
@@ -60,6 +65,10 @@ SKILLS = [
     ("forge:database-migrations", "Миграции БД"),
     ("forge:security-review", "Секьюрити ревью"),
     ("forge:writing-skills", "Создание скиллов"),
+    # Визуализация
+    ("forge:product-mapping", "Навигатор проекта"),
+    ("forge:explaining", "Визуальное объяснение"),
+    ("forge:session-insights", "Инсайты сессии"),
 ]
 
 
@@ -76,7 +85,7 @@ def build_menu():
     menu = Gtk.Menu()
 
     # Заголовок
-    header = Gtk.MenuItem(label="⚒ Forge Plugin v5.5.0")
+    header = Gtk.MenuItem(label="⚒ Forge Plugin v6.0.0")
     header.set_sensitive(False)
     menu.append(header)
     menu.append(Gtk.SeparatorMenuItem())
