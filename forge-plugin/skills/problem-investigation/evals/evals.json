@@ -1,0 +1,26 @@
+{
+  "skill_name": "problem-investigation",
+  "evals": [
+    {
+      "id": 1,
+      "name": "eval-module-not-found",
+      "prompt": "у меня при запуске npm run dev выскакивает Error: Cannot find module '../lib/utils' но файл точно есть, я проверял",
+      "expected_output": "Should restate the problem, ask clarifying questions one at a time, investigate before proposing fixes, and present a structured diagnosis with options",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "eval-silent-form-failure",
+      "prompt": "форма регистрации отправляется но пользователь не создаётся в базе, ошибок нет нигде, в логах тоже чисто",
+      "expected_output": "Should NOT immediately propose fixes, should ask about expected vs actual behavior, gather context about when it started, and form a hypothesis based on evidence",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "eval-flaky-tests",
+      "prompt": "я вчера всё работало а сегодня открыл проект и половина тестов красная хотя я ничего не менял",
+      "expected_output": "Should investigate what changed (git, deps, env), not jump to fixing individual tests, separate symptom from cause",
+      "files": []
+    }
+  ]
+}
