@@ -149,6 +149,16 @@ Files in red zones (from `.forge/map.yml`) get special treatment:
 - But NEVER auto-fixed — always require explicit per-file approval
 - Flagged visually in the report
 
+## Surgical Changes Principle
+
+Touch only what you must. Clean up only your own mess:
+- **Don't improve adjacent code** that isn't part of the cleanup task
+- **Don't add docstrings** to functions you didn't change
+- **Don't fix unrelated issues** you happen to notice — flag them in the report instead
+- **Match existing style** — don't impose preferences
+- **Remove only what YOUR cleanup made unnecessary.** Pre-existing dead code: flag, don't delete (unless explicitly asked)
+- Every changed line should trace directly to the cleanup request
+
 ## What This Skill Does NOT Do
 
 - **Architecture redesign** — this is cleanup, not rewrite. If analysis reveals architectural problems, flag them in "Patterns Noticed" and suggest a separate discussion.

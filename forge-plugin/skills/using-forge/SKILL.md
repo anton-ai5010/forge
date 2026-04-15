@@ -159,6 +159,15 @@ If `.forge/graph.json` exists — the project has a code knowledge graph built b
 
 The skill itself tells you which.
 
+## Coding Discipline
+
+These apply to ALL code you write, in every skill:
+
+- **Don't assume — ask.** If something is unclear, stop and clarify. Don't guess and build on wrong assumptions.
+- **Minimum code.** No unrequested features, no single-use abstractions, no "just in case" error handling. Three identical lines > premature abstraction.
+- **Surgical changes.** Touch only what was asked. Don't improve adjacent code, don't add docstrings to unchanged functions, don't fix unrelated issues. Every changed line must trace to the request.
+- **Tests as goals.** Not "add validation" but "write test for invalid input, make it pass". Not "fix bug" but "write test reproducing it, fix it". Define success, loop until verified.
+
 ## Communication
 
 - **Все вопросы пользователю — на русском.** Код, коммиты, документация — на английском. Но диалог, уточнения, чеклисты, отчёты — по-русски.

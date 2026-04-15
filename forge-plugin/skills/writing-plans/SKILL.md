@@ -117,6 +117,8 @@ git commit -m "feat: add specific feature"
 - Exact commands with expected output
 - Reference relevant skills with @ syntax
 - DRY, YAGNI, TDD, frequent commits
+- **Simplicity:** no unrequested features in the plan. Three similar lines > premature abstraction.
+- **Goal-driven tasks:** each task is a testable objective, not a vague instruction. Not "add validation" but "write test for invalid email, make it pass".
 
 ## Execution Handoff
 

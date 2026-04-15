@@ -16,8 +16,8 @@ forge-plugin/              — корневая директория плаги�
   lib/                     — JS утилиты (skills-core.js)
   hooks/                   — хуки SessionStart + UserPromptSubmit
   agents/                  — промпт-шаблоны субагентов
-  commands/                — 15 команд (MD файлы)
-  skills/                  — 23 скилла (SKILL.md + поддержка)
+  commands/                — 20 команд (MD файлы)
+  skills/                  — 27 скиллов (SKILL.md + поддержка)
   docs/                    — спецификация, архитектура
   tests/                   — тестовые промпты
 ideas/                     — идеи и предложения
@@ -70,6 +70,16 @@ DO NOT read source code before checking .forge/library/spec.yml.
 - NO "done" claims without running tests
 - NO skipping brainstorming even for "simple" changes
 
+### Coding principles (Karpathy-style)
+
+**Think before coding:** Don't assume — ask. State assumptions explicitly. If unclear — stop and clarify, don't guess. Present multiple interpretations when ambiguous.
+
+**Simplicity first:** Minimum code that solves the problem. Nothing speculative. No unrequested features, no single-use abstractions, no unnecessary configurability, no error handling for impossible scenarios. Three identical lines are better than a premature abstraction.
+
+**Surgical changes:** Touch only what you must. Don't improve adjacent code, don't fix unrelated issues, don't add docstrings to code you didn't change. Match existing style. Every changed line should trace directly to the request.
+
+**Goal-driven execution:** Transform vague requests into testable objectives. Not "add validation" but "write tests for invalid inputs, then make them pass". Not "fix the bug" but "write a test reproducing it, then fix it". Define success criteria, loop until verified.
+
 ## Conventions
 
 - **Файлы/директории:** kebab-case
@@ -89,6 +99,11 @@ DO NOT read source code before checking .forge/library/spec.yml.
 | `/forge:validate` | Before merge |
 | `/forge:cleanup` | Code quality |
 | `/forge:discover` | Search marketplace |
+| `/forge:graph` | Code knowledge graph |
+| `/forge:product-map` | Project navigator (HTML) |
+| `/forge:explain` | Visual "how does X work?" (HTML) |
+| `/forge:investigate` | Problem diagnosis before fixing |
+| `/forge:session-insights` | Session patterns analysis |
 
 ## Communication
 

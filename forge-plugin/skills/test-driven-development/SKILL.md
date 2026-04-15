@@ -42,6 +42,16 @@ If the design doc has a Domain Model — prioritize these test categories:
 
 These tests catch the hardest bugs — the ones where data is technically valid but logically wrong.
 
+## Goal-Driven Testing
+
+Transform every request into a testable objective:
+- "Add validation" → write test for invalid input, make it pass
+- "Fix the bug" → write test reproducing it, then fix it
+- "Refactor X" → ensure tests pass before AND after
+- "Add feature Y" → write test describing desired behavior, make it pass
+
+Tests ARE the success criteria. If you can't write a test for it, you don't understand the requirement well enough — go back and clarify.
+
 ## The Iron Law
 
 ```
