@@ -28,7 +28,9 @@ user_prompt=$(printf '%s' "$hook_input" | sed -n 's/.*"input"[[:space:]]*:[[:spa
 skill_hint=""
 
 # R1: Keyword-based skill matching (first match wins)
-if printf '%s' "$user_prompt" | grep -qiE 'bug|fix|error|broken|fail|crash|баг|ошибк|сломал|не работа|debug'; then
+if printf '%s' "$user_prompt" | grep -qiE 'почему|разбер|пойм|что происходит|в чём проблем|что не так|странно|непонятно|weird|investigate|diagnose|что случил'; then
+    skill_hint="forge:problem-investigation"
+elif printf '%s' "$user_prompt" | grep -qiE 'fix|почини|исправ|debug|отладк|bug|баг|ошибк|сломал|не работа|broken|fail|crash'; then
     skill_hint="forge:systematic-debugging"
 elif printf '%s' "$user_prompt" | grep -qiE 'design|ui |ux |color|font|palette|палитр|дизайн|стиль|шрифт|макет|layout'; then
     skill_hint="forge:ui-ux-design"
@@ -48,6 +50,10 @@ elif printf '%s' "$user_prompt" | grep -qiE 'merge|pr |pull.?request|finish|bran
     skill_hint="forge:finishing-a-development-branch"
 elif printf '%s' "$user_prompt" | grep -qiE 'sync|синх|обнови.*док|документац'; then
     skill_hint="forge:sync"
+elif printf '%s' "$user_prompt" | grep -qiE 'как работает|как устроен|объясни.*как|покажи как|визуализируй|explain how|what happens'; then
+    skill_hint="forge:explaining"
+elif printf '%s' "$user_prompt" | grep -qiE 'карта проекта|обзор проекта|product.?map|из чего состоит|полная картина|навигатор'; then
+    skill_hint="forge:product-mapping"
 fi
 
 # R6: File-context hints (only if no keyword match)

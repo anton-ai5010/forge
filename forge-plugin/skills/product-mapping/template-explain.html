@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explain</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0d1117}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script id="forge-data" type="application/json">
+{
+  "question": "Демо вопрос",
+  "summary": "Замени данные на реальные",
+  "flow": [],
+  "forks": [],
+  "entities": [],
+  "relatedQuestions": []
+}
+</script>
+
+<script type="text/babel">
+const { useState } = React;
+const BG="#0d1117",CARD="#161b22",BRD="#30363d",DIM="#7d8590",TXT="#e6edf3",
+  GRN="#3fb950",YEL="#d29922",RED="#f85149",BLU="#58a6ff",PUR="#bc8cff",
+  ORG="#f0883e",CYN="#4dd0e1",PNK="#f778ba";
+const stIcon=s=>s==="ok"?"✅":s==="warn"?"⚠️":"❌";
+
+let DATA;
+try { DATA = JSON.parse(document.getElementById("forge-data").textContent); }
+catch(e) { DATA = { question:"Ошибка", summary:e.message, flow:[], forks:[], entities:[], relatedQuestions:[] }; }
+
+function Sub({text,children,warn,pink}) {
+  const [o,setO]=useState(false); const has=!!children;
+  return <div style={{marginBottom:4}}>
+    <div onClick={has?()=>setO(!o):undefined} style={{fontSize:13,color:warn?YEL:pink?PNK:"#b0b8c8",lineHeight:1.6,padding:"5px 10px",borderRadius:6,cursor:has?"pointer":"default",background:o?(pink?`${PNK}08`:`${BLU}06`):"transparent",borderLeft:`2px solid ${o?(pink?PNK:CYN):`${BRD}50`}`,transition:"all 0.15s"}}>
+      {has&&<span style={{color:DIM,fontSize:9,marginRight:6}}>{o?"▼":"▶"}</span>}
+      {warn&&"⚠️ "}{pink&&"🔍 "}{text}
+    </div>
+    {o&&has&&<div style={{padding:"6px 8px 6px 22px",animation:"fadeIn 0.15s ease"}}>{children}</div>}
+  </div>;
+}
+
+function InfoLine({icon,label,value,sub}) {
+  const [o,setO]=useState(false);
+  return <div style={{marginBottom:3}}>
+    <div onClick={sub?()=>setO(!o):undefined} style={{display:"flex",gap:8,fontSize:13,padding:"5px 10px",borderRadius:6,background:`${CYN}06`,border:`1px solid ${CYN}12`,cursor:sub?"pointer":"default",alignItems:"baseline",flexWrap:"wrap"}}>
+      <span style={{fontSize:14,flexShrink:0}}>{icon}</span>
+      <span style={{color:DIM,minWidth:90}}>{label}</span>
+      <span style={{color:TXT,flex:1}}>{value}</span>
+      {sub&&<span style={{color:DIM,fontSize:9}}>{o?"▼":"▶"}</span>}
+    </div>
+    {o&&sub&&<div style={{padding:"4px 10px 4px 36px",fontSize:12,color:"#9ca3af",lineHeight:1.5,animation:"fadeIn 0.15s ease"}}>{sub}</div>}
+  </div>;
+}
+
+function InfoBlock({title,lines}) {
+  return <div style={{background:`${CYN}05`,border:`1px solid ${CYN}15`,borderRadius:10,padding:"12px 14px",marginBottom:8}}>
+    {title&&<div style={{fontSize:11,color:CYN,fontWeight:600,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>{title}</div>}
+    {lines&&lines.map((l,i)=><InfoLine key={i} icon={l.icon} label={l.label} value={l.value} sub={l.sub}/>)}
+  </div>;
+}
+
+function FlowStep({data}) {
+  const [o,setO]=useState(false);const d=data;const has=d.details&&d.details.length>0;
+  return <div style={{marginBottom:2}}>
+    <div onClick={has?()=>setO(!o):undefined} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",borderRadius:10,cursor:has?"pointer":"default",background:o?`${CYN}06`:CARD,border:`1px solid ${o?CYN+"30":BRD}`,transition:"all 0.2s"}}>
+      <span style={{fontSize:22,flexShrink:0}}>{d.icon}</span>
+      <div style={{flex:1}}>
+        <div style={{fontSize:14,fontWeight:600,color:TXT}}>{d.title}</div>
+        {d.desc&&<div style={{fontSize:12,color:DIM,lineHeight:1.4,marginTop:2}}>{d.desc}</div>}
+      </div>
+      {has&&<span style={{color:DIM,fontSize:10,transition:"transform 0.2s",transform:o?"rotate(90deg)":"rotate(0deg)"}}>▶</span>}
+    </div>
+    {o&&has&&<div style={{padding:"8px 4px 4px 32px",animation:"fadeIn 0.2s ease"}}>
+      {d.details.map((item,i)=>
+        item.pink && item.infoBlock
+          ? <Sub key={i} text={item.text} pink><InfoBlock title={item.infoBlock.title} lines={item.infoBlock.lines}/></Sub>
+          : <Sub key={i} text={item.text} warn={item.warn} pink={item.pink}/>
+      )}
+    </div>}
+    {!d.fork&&<div style={{display:"flex",justifyContent:"center",padding:"2px 0"}}><div style={{width:2,height:16,background:`${BRD}60`}}/></div>}
+  </div>;
+}
+
+function ForkView({data}) {
+  const [sel,setSel]=useState(null);const d=data;
+  return <div style={{margin:"4px 0"}}>
+    <div style={{background:`${YEL}10`,border:`1px solid ${YEL}30`,borderRadius:10,padding:"10px 14px"}}>
+      <div style={{fontSize:13,fontWeight:600,color:YEL,marginBottom:8}}>🔀 {d.question}</div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+        {d.options.map((opt,i)=><button key={i} onClick={()=>setSel(sel===i?null:i)} style={{padding:"6px 14px",borderRadius:8,fontSize:12,fontWeight:500,cursor:"pointer",border:`1px solid ${sel===i?CYN:BRD}`,background:sel===i?`${CYN}15`:CARD,color:sel===i?CYN:DIM,transition:"all 0.2s"}}>{opt.label}</button>)}
+      </div>
+      {sel!==null&&<div style={{marginTop:10,fontSize:12,color:"#9ca3af",animation:"fadeIn 0.2s ease"}}>{d.options[sel].text}</div>}
+    </div>
+    <div style={{display:"flex",justifyContent:"center",padding:"2px 0"}}><div style={{width:2,height:16,background:`${BRD}60`}}/></div>
+  </div>;
+}
+
+function EntityCard({data}) {
+  const [o,setO]=useState(false);const d=data;
+  return <div style={{marginBottom:8}}>
+    <div onClick={()=>setO(!o)} style={{background:o?`${d.color||BLU}15`:CARD,border:`2px solid ${o?d.color||BLU:BRD}`,borderRadius:14,padding:"14px 16px",cursor:"pointer",transition:"all 0.25s"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <span style={{fontSize:24}}>{d.icon}</span>
+        <div style={{flex:1}}>
+          <div style={{fontSize:15,fontWeight:700,color:TXT}}>{d.label}</div>
+          <div style={{fontSize:12,color:DIM}}>{d.oneLiner}</div>
+        </div>
+        <span style={{fontSize:14}}>{stIcon(d.status||"ok")}</span>
+      </div>
+    </div>
+    {o&&<div style={{background:`${d.color||BLU}08`,border:`1px solid ${d.color||BLU}30`,borderRadius:12,padding:16,marginTop:4,animation:"fadeIn 0.3s ease"}}>
+      {d.what&&<div style={{fontSize:13,color:TXT,lineHeight:1.6,marginBottom:10}}>{d.what}</div>}
+      {d.inside&&d.inside.map((item,i)=>
+        typeof item==="string" ? <Sub key={i} text={item}/> :
+        item.pink && item.infoBlock ? <Sub key={i} text={item.text} pink><InfoBlock title={item.infoBlock.title} lines={item.infoBlock.lines}/></Sub> :
+        <Sub key={i} text={item.text} warn={item.warn}/>
+      )}
+    </div>}
+  </div>;
+}
+
+function App() {
+  const d = DATA;
+  const steps = d.flow || [];
+  const forks = d.forks || [];
+
+  return <div style={{background:BG,color:TXT,minHeight:"100vh",fontFamily:"'DM Sans',-apple-system,sans-serif",padding:"20px 16px"}}>
+    <div style={{maxWidth:700,margin:"0 auto"}}>
+
+      {/* Header */}
+      <div style={{marginBottom:24}}>
+        <div style={{fontSize:12,color:DIM,textTransform:"uppercase",letterSpacing:2,marginBottom:4}}>Объяснение</div>
+        <div style={{fontSize:22,fontWeight:800,color:TXT,marginBottom:8}}>{d.question}</div>
+        <div style={{fontSize:14,color:CYN,padding:"10px 14px",background:`${CYN}10`,borderRadius:8,borderLeft:`3px solid ${CYN}`,lineHeight:1.5}}>
+          💡 {d.summary}
+        </div>
+      </div>
+
+      {/* Flow */}
+      <div style={{fontSize:11,color:DIM,fontWeight:600,textTransform:"uppercase",letterSpacing:1.5,marginBottom:10}}>Как это работает — шаг за шагом</div>
+      {steps.map((step,i)=>{
+        const fork = forks.find(f=>f.after===i);
+        return <div key={i}>
+          <FlowStep data={{...step, fork: i===steps.length-1}} />
+          {fork&&<ForkView data={fork}/>}
+        </div>;
+      })}
+      {steps.length===0&&<div style={{color:DIM,textAlign:"center",padding:40}}>Нет данных</div>}
+
+      {/* Entities */}
+      {d.entities&&d.entities.length>0&&<div style={{marginTop:24}}>
+        <div style={{fontSize:11,color:DIM,fontWeight:600,textTransform:"uppercase",letterSpacing:1.5,marginBottom:10}}>Связанные сущности</div>
+        {d.entities.map((e,i)=><EntityCard key={i} data={e}/>)}
+      </div>}
+
+      {/* Related Questions */}
+      {d.relatedQuestions&&d.relatedQuestions.length>0&&<div style={{marginTop:24}}>
+        <div style={{fontSize:11,color:DIM,fontWeight:600,textTransform:"uppercase",letterSpacing:1.5,marginBottom:10}}>Похожие вопросы</div>
+        {d.relatedQuestions.map((q,i)=><div key={i} style={{padding:"8px 14px",borderRadius:8,background:CARD,border:`1px solid ${BRD}`,marginBottom:4,fontSize:13,color:BLU,cursor:"default"}}>
+          ❓ {q}
+        </div>)}
+      </div>}
+
+      {/* Footer */}
+      <div style={{marginTop:24,padding:14,borderRadius:10,background:CARD,border:`1px solid ${BRD}`,textAlign:"center"}}>
+        <div style={{fontSize:11,color:DIM}}>Сгенерировано /forge:explain</div>
+      </div>
+    </div>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Navigator</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0d1117}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- DATA: Claude replaces this block with project JSON -->
+<script id="forge-data" type="application/json">
+{
+  "project": "Demo Project",
+  "version": "0.0.1",
+  "goal": "Это демо — замени данные на реальные",
+  "bigPicture": [],
+  "flows": [],
+  "entities": [],
+  "gaps": []
+}
+</script>
+
+<script type="text/babel">
+const { useState } = React;
+const BG="#0d1117",CARD="#161b22",BRD="#30363d",DIM="#7d8590",TXT="#e6edf3",
+  GRN="#3fb950",YEL="#d29922",RED="#f85149",BLU="#58a6ff",PUR="#bc8cff",
+  ORG="#f0883e",CYN="#4dd0e1",PNK="#f778ba";
+const sevColor=s=>s==="high"?RED:s==="medium"?YEL:DIM;
+const sevLabel=s=>s==="high"?"Важно":s==="medium"?"Средне":"Мелочь";
+const stIcon=s=>s==="ok"?"✅":s==="warn"?"⚠️":"❌";
+
+// Load data
+let DATA;
+try { DATA = JSON.parse(document.getElementById("forge-data").textContent); }
+catch(e) { DATA = { project:"Ошибка загрузки данных", goal:e.message, bigPicture:[], flows:[], entities:[], gaps:[] }; }
+
+/* --- UI Components --- */
+
+function Sub({text,children,warn,pink}) {
+  const [o,setO]=useState(false); const has=!!children;
+  return <div style={{marginBottom:4}}>
+    <div onClick={has?()=>setO(!o):undefined} style={{fontSize:13,color:warn?YEL:pink?PNK:"#b0b8c8",lineHeight:1.6,padding:"5px 10px",borderRadius:6,cursor:has?"pointer":"default",background:o?(pink?`${PNK}08`:`${BLU}06`):"transparent",borderLeft:`2px solid ${o?(pink?PNK:CYN):`${BRD}50`}`,transition:"all 0.15s"}}>
+      {has&&<span style={{color:DIM,fontSize:9,marginRight:6}}>{o?"▼":"▶"}</span>}
+      {warn&&"⚠️ "}{pink&&"🔍 "}{text}
+    </div>
+    {o&&has&&<div style={{padding:"6px 8px 6px 22px",animation:"fadeIn 0.15s ease"}}>{children}</div>}
+  </div>;
+}
+
+function InfoLine({icon,label,value,sub}) {
+  const [o,setO]=useState(false);
+  return <div style={{marginBottom:3}}>
+    <div onClick={sub?()=>setO(!o):undefined} style={{display:"flex",gap:8,fontSize:13,padding:"5px 10px",borderRadius:6,background:`${CYN}06`,border:`1px solid ${CYN}12`,cursor:sub?"pointer":"default",alignItems:"baseline",flexWrap:"wrap"}}>
+      <span style={{fontSize:14,flexShrink:0}}>{icon}</span>
+      <span style={{color:DIM,minWidth:90}}>{label}</span>
+      <span style={{color:TXT,flex:1}}>{value}</span>
+      {sub&&<span style={{color:DIM,fontSize:9}}>{o?"▼":"▶"}</span>}
+    </div>
+    {o&&sub&&<div style={{padding:"4px 10px 4px 36px",fontSize:12,color:"#9ca3af",lineHeight:1.5,animation:"fadeIn 0.15s ease"}}>{sub}</div>}
+  </div>;
+}
+
+function InfoBlock({title,lines}) {
+  return <div style={{background:`${CYN}05`,border:`1px solid ${CYN}15`,borderRadius:10,padding:"12px 14px",marginBottom:8}}>
+    {title&&<div style={{fontSize:11,color:CYN,fontWeight:600,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>{title}</div>}
+    {lines&&lines.map((l,i)=><InfoLine key={i} icon={l.icon} label={l.label} value={l.value} sub={l.sub}/>)}
+  </div>;
+}
+
+function Badge({text,color}) {
+  return <span style={{fontSize:10,padding:"2px 8px",borderRadius:8,fontWeight:600,background:`${(color||GRN)}18`,color:color||GRN,marginLeft:6}}>{text}</span>;
+}
+
+function BigNode({data,last}) {
+  const [o,setO]=useState(false);const d=data;const has=d.details&&d.details.length>0;
+  const color=d.color||CYN;
+  return <div>
+    <div onClick={has?()=>setO(!o):undefined} style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px",borderRadius:14,cursor:has?"pointer":"default",background:o?`${color}12`:CARD,border:`2px solid ${o?color:BRD}`,transition:"all 0.25s",transform:o?"scale(1.01)":"scale(1)"}}>
+      <span style={{fontSize:36,flexShrink:0}}>{d.icon}</span>
+      <div style={{flex:1}}>
+        <div style={{fontSize:18,fontWeight:700,color:TXT}}>{d.title}</div>
+        <div style={{fontSize:13,color:DIM,lineHeight:1.5,marginTop:2}}>{d.desc}</div>
+      </div>
+      {has&&<span style={{color:DIM,fontSize:11}}>{o?"▼":"▶"}</span>}
+    </div>
+    {o&&has&&<div style={{padding:"12px 16px 8px 54px",animation:"fadeIn 0.25s ease"}}>
+      {d.details.map((item,i)=>
+        item.pink && item.infoBlock
+          ? <Sub key={i} text={item.text} pink><InfoBlock title={item.infoBlock.title} lines={item.infoBlock.lines}/></Sub>
+          : <Sub key={i} text={item.text} warn={item.warn} pink={item.pink}>{item.children&&<div style={{fontSize:12,color:"#9ca3af",lineHeight:1.6}}>{item.children}</div>}</Sub>
+      )}
+    </div>}
+    {!last&&!d.last&&<div style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"4px 0"}}>
+      <div style={{width:3,height:24,background:`linear-gradient(${color}60, ${color}20)`,borderRadius:2}}/>
+      <div style={{fontSize:16,color:`${color}80`,marginTop:-2}}>↓</div>
+    </div>}
+  </div>;
+}
+
+function FlowStep({data,children}) {
+  const [o,setO]=useState(false);const d=data;const has=(d.details&&d.details.length>0)||!!children;
+  return <div style={{marginBottom:2}}>
+    <div onClick={has?()=>setO(!o):undefined} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",borderRadius:10,cursor:has?"pointer":"default",background:o?`${CYN}06`:CARD,border:`1px solid ${o?CYN+"30":BRD}`,transition:"all 0.2s"}}>
+      <span style={{fontSize:22,flexShrink:0}}>{d.icon}</span>
+      <div style={{flex:1}}>
+        <div style={{fontSize:14,fontWeight:600,color:TXT}}>{d.title}</div>
+        {d.desc&&<div style={{fontSize:12,color:DIM,lineHeight:1.4,marginTop:2}}>{d.desc}</div>}
+      </div>
+      {has&&<span style={{color:DIM,fontSize:10,transition:"transform 0.2s",transform:o?"rotate(90deg)":"rotate(0deg)"}}>▶</span>}
+    </div>
+    {o&&has&&<div style={{padding:"8px 4px 4px 32px",animation:"fadeIn 0.2s ease"}}>
+      {d.details&&d.details.map((item,i)=>
+        item.pink && item.infoBlock
+          ? <Sub key={i} text={item.text} pink><InfoBlock title={item.infoBlock.title} lines={item.infoBlock.lines}/></Sub>
+          : <Sub key={i} text={item.text} warn={item.warn} pink={item.pink}>{item.children&&<div style={{fontSize:12,color:"#9ca3af",lineHeight:1.6}}>{item.children}</div>}</Sub>
+      )}
+      {children}
+    </div>}
+    {!d.fork&&<div style={{display:"flex",justifyContent:"center",padding:"2px 0"}}><div style={{width:2,height:16,background:`${BRD}60`}}/></div>}
+  </div>;
+}
+
+function ForkView({data}) {
+  const [sel,setSel]=useState(null);const d=data;
+  return <div style={{margin:"4px 0"}}>
+    <div style={{background:`${YEL}10`,border:`1px solid ${YEL}30`,borderRadius:10,padding:"10px 14px"}}>
+      <div style={{fontSize:13,fontWeight:600,color:YEL,marginBottom:8}}>🔀 {d.question}</div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+        {d.options.map((opt,i)=><button key={i} onClick={()=>setSel(sel===i?null:i)} style={{padding:"6px 14px",borderRadius:8,fontSize:12,fontWeight:500,cursor:"pointer",border:`1px solid ${sel===i?CYN:BRD}`,background:sel===i?`${CYN}15`:CARD,color:sel===i?CYN:DIM,transition:"all 0.2s"}}>{opt.label}</button>)}
+      </div>
+      {sel!==null&&<div style={{marginTop:10,fontSize:12,color:"#9ca3af",animation:"fadeIn 0.2s ease"}}>{DATA.flows[0]&&DATA.flows[0].steps?DATA.flows[0].steps[0]:"":""}{d.options[sel].text}</div>}
+    </div>
+    <div style={{display:"flex",justifyContent:"center",padding:"2px 0"}}><div style={{width:2,height:16,background:`${BRD}60`}}/></div>
+  </div>;
+}
+
+function EntityCard({data}) {
+  const [o,setO]=useState(false);const d=data;
+  return <div style={{marginBottom:10}}>
+    <div onClick={()=>setO(!o)} style={{background:o?`${d.color||BLU}15`:CARD,border:`2px solid ${o?d.color||BLU:BRD}`,borderRadius:14,padding:"16px 18px",cursor:"pointer",transition:"all 0.25s"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <span style={{fontSize:28}}>{d.icon}</span>
+        <div style={{flex:1}}>
+          <div style={{fontSize:17,fontWeight:700,color:TXT}}>{d.label}</div>
+          <div style={{fontSize:12,color:DIM}}>{d.oneLiner}</div>
+        </div>
+        <span style={{fontSize:16}}>{stIcon(d.status||"ok")}</span>
+      </div>
+      {!o&&<div style={{fontSize:11,color:`${d.color||BLU}aa`,marginTop:6}}>Нажми чтобы раскрыть →</div>}
+    </div>
+    {o&&<div style={{background:`${d.color||BLU}08`,border:`1px solid ${d.color||BLU}30`,borderRadius:14,padding:20,marginTop:6,animation:"fadeIn 0.3s ease"}}>
+      {d.what&&<div style={{marginBottom:16}}><div style={{fontSize:11,color:DIM,textTransform:"uppercase",letterSpacing:1,marginBottom:6,fontWeight:600}}>Что это</div><div style={{fontSize:14,color:TXT,lineHeight:1.6}}>{d.what}</div></div>}
+      {d.benefit&&<div style={{marginBottom:16,background:`${GRN}10`,borderRadius:10,padding:"12px 14px",borderLeft:`3px solid ${GRN}`}}><div style={{fontSize:11,color:GRN,fontWeight:600,marginBottom:4}}>💰 ЧТО ТЕБЕ С ЭТОГО</div><div style={{fontSize:13,color:TXT,lineHeight:1.5}}>{d.benefit}</div></div>}
+      {d.howTo&&<div style={{marginBottom:16}}><div style={{fontSize:11,color:DIM,textTransform:"uppercase",letterSpacing:1,marginBottom:6,fontWeight:600}}>Как пользоваться</div>{d.howTo.map((t,i)=><div key={i} style={{fontSize:13,color:TXT,padding:"6px 10px",borderRadius:6,background:`${BLU}10`,border:`1px solid ${BLU}15`,lineHeight:1.4,marginBottom:3}}><span style={{color:BLU,marginRight:6}}>{i+1}.</span>{t}</div>)}</div>}
+      {d.inside&&d.inside.length>0&&<div style={{marginBottom:16}}><div style={{fontSize:11,color:DIM,textTransform:"uppercase",letterSpacing:1,marginBottom:6,fontWeight:600}}>Что внутри</div>
+        {d.inside.map((item,i)=>
+          typeof item==="string" ? <Sub key={i} text={item}/> :
+          item.pink && item.infoBlock ? <Sub key={i} text={item.text} pink><InfoBlock title={item.infoBlock.title} lines={item.infoBlock.lines}/></Sub> :
+          <Sub key={i} text={item.text} warn={item.warn} pink={item.pink}>{item.children&&<div style={{fontSize:12,color:"#9ca3af",lineHeight:1.6}}>{item.children}</div>}</Sub>
+        )}
+      </div>}
+    </div>}
+  </div>;
+}
+
+/* --- Flow Renderer --- */
+function FlowView({flow}) {
+  const [expanded,setExpanded]=useState(false);
+  // Build steps with forks inserted
+  const steps = flow.steps || [];
+  const forks = flow.forks || [];
+
+  return <div>
+    <div onClick={()=>setExpanded(!expanded)} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",borderRadius:12,cursor:"pointer",background:expanded?`${CYN}08`:CARD,border:`1px solid ${expanded?CYN+"40":BRD}`,marginBottom:8,transition:"all 0.2s"}}>
+      <span style={{fontSize:28}}>{flow.icon}</span>
+      <div style={{flex:1}}>
+        <div style={{fontSize:16,fontWeight:600,color:TXT}}>{flow.title}</div>
+        <div style={{fontSize:12,color:DIM}}>{flow.desc}</div>
+      </div>
+      {flow.badge&&<Badge text={flow.badge} color={CYN}/>}
+      <span style={{color:DIM,fontSize:12}}>{expanded?"▼":"→"}</span>
+    </div>
+    {expanded&&<div style={{padding:"4px 0 12px 0",animation:"fadeIn 0.2s ease"}}>
+      {steps.map((step,i)=>{
+        const fork = forks.find(f=>f.after===i);
+        return <div key={i}>
+          <FlowStep data={{...step, fork: i===steps.length-1}} />
+          {fork&&<ForkView data={fork}/>}
+        </div>;
+      })}
+    </div>}
+  </div>;
+}
+
+/* --- Main App --- */
+function App() {
+  const [tab,setTab]=useState("big");
+  const d = DATA;
+
+  return <div style={{background:BG,color:TXT,minHeight:"100vh",fontFamily:"'DM Sans',-apple-system,sans-serif",padding:"20px 16px"}}>
+    <div style={{maxWidth:700,margin:"0 auto"}}>
+
+      <div style={{marginBottom:20}}>
+        <div style={{fontSize:12,color:DIM,textTransform:"uppercase",letterSpacing:2}}>Навигатор проекта</div>
+        <div style={{fontSize:26,fontWeight:800}}>{d.project} {d.version&&<span style={{fontSize:14,fontWeight:400,color:DIM}}>{d.version}</span>}</div>
+        <div style={{fontSize:14,color:CYN,marginTop:6,padding:"10px 14px",background:`${CYN}10`,borderRadius:8,borderLeft:`3px solid ${CYN}`,lineHeight:1.5}}>
+          🎯 {d.goal}
+        </div>
+      </div>
+
+      <div style={{display:"flex",gap:3,marginBottom:20,background:CARD,borderRadius:10,padding:3}}>
+        {[{id:"big",label:"🔗 Картина"},{id:"flows",label:"⚙️ Потоки"},{id:"entities",label:"🧩 Детали"},{id:"gaps",label:"🚨 Дыры"}].map(t=>
+          <button key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:"10px 0",border:"none",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer",background:tab===t.id?CYN:"transparent",color:tab===t.id?BG:DIM,transition:"all 0.2s"}}>{t.label}</button>
+        )}
+      </div>
+
+      {/* Big Picture */}
+      {tab==="big"&&<div>
+        <div style={{fontSize:13,color:DIM,marginBottom:16}}>Весь механизм — от входа до результата. Нажми на блок чтобы заглянуть внутрь.</div>
+        {d.bigPicture.map((node,i)=><BigNode key={i} data={node} last={i===d.bigPicture.length-1}/>)}
+        {d.bigPicture.length===0&&<div style={{color:DIM,textAlign:"center",padding:40}}>Нет данных для большой картины</div>}
+      </div>}
+
+      {/* Flows */}
+      {tab==="flows"&&<div>
+        <div style={{fontSize:13,color:DIM,marginBottom:14}}>Выбери поток — увидишь механизм шаг за шагом.</div>
+        {d.flows.map((flow,i)=><FlowView key={i} flow={flow}/>)}
+        {d.flows.length===0&&<div style={{color:DIM,textAlign:"center",padding:40}}>Нет потоков</div>}
+      </div>}
+
+      {/* Entities */}
+      {tab==="entities"&&<div>
+        <div style={{fontSize:13,color:DIM,marginBottom:14}}>Из чего состоит проект. Нажми → что это, зачем, как пользоваться.</div>
+        {d.entities.map((e,i)=><EntityCard key={i} data={e}/>)}
+        {d.entities.length===0&&<div style={{color:DIM,textAlign:"center",padding:40}}>Нет сущностей</div>}
+      </div>}
+
+      {/* Gaps */}
+      {tab==="gaps"&&<div>
+        <div style={{fontSize:13,color:DIM,marginBottom:14}}>Что не работает или не реализовано.</div>
+        {d.gaps.map((g,i)=><div key={i} style={{background:`${sevColor(g.severity)}10`,border:`1px solid ${sevColor(g.severity)}30`,borderRadius:10,padding:"14px 16px",marginBottom:8}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+            <span style={{fontSize:14,fontWeight:700,color:sevColor(g.severity)}}>{g.label}</span>
+            <span style={{fontSize:10,padding:"2px 8px",borderRadius:8,background:`${sevColor(g.severity)}20`,color:sevColor(g.severity),fontWeight:600}}>{sevLabel(g.severity)}</span>
+          </div>
+          <div style={{fontSize:13,color:"#9ca3af",lineHeight:1.5}}>{g.desc}</div>
+        </div>)}
+        {d.gaps.length===0&&<div style={{color:DIM,textAlign:"center",padding:40}}>Дыр не найдено 🎉</div>}
+        {d.gaps.filter(g=>g.severity==="high").length>0&&<div style={{marginTop:20,padding:14,borderRadius:10,background:`${RED}10`,border:`1px solid ${RED}30`}}>
+          <div style={{fontSize:13,fontWeight:600,color:RED,marginBottom:4}}>⚡ Главное</div>
+          <div style={{fontSize:13,color:TXT,lineHeight:1.5}}><b>{d.gaps.find(g=>g.severity==="high").label}</b> — {d.gaps.find(g=>g.severity==="high").desc}</div>
+        </div>}
+      </div>}
+
+      <div style={{marginTop:24,padding:14,borderRadius:10,background:CARD,border:`1px solid ${BRD}`,textAlign:"center"}}>
+        <div style={{fontSize:11,color:DIM}}>
+          {d.project} — Product Navigator<br/>
+          Сгенерировано /forge:product-map
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
