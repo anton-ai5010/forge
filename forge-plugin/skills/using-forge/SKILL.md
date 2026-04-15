@@ -146,6 +146,8 @@ If `.forge/graph.json` exists — the project has a code knowledge graph built b
 | forge:project-unblocker | Unblock stuck sessions |
 | forge:forge-context | L0/L1/L2 context loading at session start |
 | forge:writing-skills | Create and test new skills using TDD methodology |
+| forge:problem-investigation | Collaborative problem diagnosis — understand before fixing |
+| forge:session-insights | Analyze session patterns and extract actionable insights |
 | forge:product-mapping | Full project visualization — flows, entities, gaps → interactive HTML |
 | forge:explaining | Per-question visualization — "how does X work?" → interactive HTML |
 

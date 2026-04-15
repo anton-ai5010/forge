@@ -179,9 +179,14 @@ xdg-open product-map.html 2>/dev/null || open product-map.html 2>/dev/null
 Данные сохранены в .forge/product-map.json
 ```
 
-Also save the raw JSON separately for future updates:
+Also extract and save the raw JSON from the HTML for future updates:
 ```bash
-cp product-map-data.json .forge/product-map.json
+python3 -c "
+import re, sys
+html = open('product-map.html').read()
+m = re.search(r'<script id=\"forge-data\"[^>]*>(.*?)</script>', html, re.DOTALL)
+if m: open('.forge/product-map.json','w').write(m.group(1).strip())
+"
 ```
 
 ## Language Rules
