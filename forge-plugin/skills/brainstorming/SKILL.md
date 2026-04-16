@@ -8,10 +8,10 @@ description: "You MUST use this before any creative work - creating features, bu
 ## Автозагруженный контекст
 
 ### Провальные подходы (не повторять):
-!`for f in .forge/dead-ends/*.md; do [ -f "$f" ] && echo "=== $(basename $f) ===" && cat "$f"; done 2>/dev/null || echo "нет dead-ends"`
+!`cat .forge/dead-ends.yml 2>/dev/null || cat .forge/dead-ends/*.md 2>/dev/null || echo "нет dead-ends"`
 
 ### Ключевые решения:
-!`cat .forge/decisions.md 2>/dev/null || echo "нет decisions.md"`
+!`cat .forge/decisions.yml 2>/dev/null || cat .forge/decisions.md 2>/dev/null || echo "нет decisions"`
 
 ---
 

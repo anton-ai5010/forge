@@ -24,7 +24,7 @@ description: >
 L0 (index.yml) уже в промпте через хук. Дополнительно загрузи L1 по тегам:
 
 !`cat .forge/status.yml 2>/dev/null || cat .forge/status.md 2>/dev/null || echo "нет status"`
-!`cat .forge/dead-ends.yml 2>/dev/null || for f in .forge/dead-ends/*.md; do [ -f "$f" ] && echo "=== $(basename $f) ===" && cat "$f"; done 2>/dev/null || echo "нет dead-ends"`
+!`cat .forge/dead-ends.yml 2>/dev/null || cat .forge/dead-ends/*.md 2>/dev/null || echo "нет dead-ends"`
 !`cat .forge/decisions.yml 2>/dev/null || cat .forge/decisions.md 2>/dev/null || echo "нет decisions"`
 !`cat .forge/journal.yml 2>/dev/null || head -30 .forge/journal.md 2>/dev/null || echo "нет journal"`
 
