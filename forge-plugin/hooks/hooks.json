@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "paplay \"$(ls ${CLAUDE_PLUGIN_ROOT}/sounds/stop/*.mp3 | shuf -n1)\" 2>/dev/null || true",
+            "command": "f=$(ls ${CLAUDE_PLUGIN_ROOT}/sounds/stop/*.mp3 2>/dev/null | sort -R | head -1) && { afplay \"$f\" 2>/dev/null || paplay \"$f\" 2>/dev/null || true; }",
             "timeout": 5,
             "async": true
           }
@@ -42,7 +42,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "paplay \"$(ls ${CLAUDE_PLUGIN_ROOT}/sounds/permission/*.mp3 | shuf -n1)\" 2>/dev/null || true",
+            "command": "f=$(ls ${CLAUDE_PLUGIN_ROOT}/sounds/permission/*.mp3 2>/dev/null | sort -R | head -1) && { afplay \"$f\" 2>/dev/null || paplay \"$f\" 2>/dev/null || true; }",
             "timeout": 5,
             "async": true
           }
