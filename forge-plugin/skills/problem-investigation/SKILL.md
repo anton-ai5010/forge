@@ -95,7 +95,7 @@ Give a recommendation — don't just list options and ask "what do you think?" T
 
 Once the user picks an approach:
 - Clear fix needed → transition to `forge:systematic-debugging`
-- Design change needed → transition to `forge:brainstorming`
+- Design change needed → transition to `forge:new-task`
 - Quick one-liner → just do it
 
 For non-trivial problems, save the investigation to `.forge/plans/YYYY-MM-DD-investigate-<topic>.md` — it's useful context if the fix gets complicated later.
@@ -124,5 +124,5 @@ This skill doesn't exist in isolation. Here's when to use what:
 |-----------|-------|
 | "Что-то не так, давай разберёмся" | **problem-investigation** (this) |
 | "Знаю причину, нужно починить" | forge:systematic-debugging |
-| "Хочу добавить фичу" | forge:brainstorming |
+| "Хочу добавить фичу" | forge:new-task |
 | "Застрял, не знаю что делать" | forge:project-unblocker |

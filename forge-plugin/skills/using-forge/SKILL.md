@@ -30,8 +30,8 @@ This is not negotiable. This is not optional. You cannot rationalize your way ou
 digraph skill_flow {
     "User message received" [shape=doublecircle];
     "About to EnterPlanMode?" [shape=doublecircle];
-    "Already brainstormed?" [shape=diamond];
-    "Invoke brainstorming skill" [shape=box];
+    "Already ran new-task?" [shape=diamond];
+    "Invoke new-task skill" [shape=box];
     "Might any skill apply?" [shape=diamond];
     "Invoke Skill tool" [shape=box];
     "Announce: 'Using [skill] to [purpose]'" [shape=box];
@@ -40,10 +40,10 @@ digraph skill_flow {
     "Follow skill exactly" [shape=box];
     "Respond (including clarifications)" [shape=doublecircle];
 
-    "About to EnterPlanMode?" -> "Already brainstormed?";
-    "Already brainstormed?" -> "Invoke brainstorming skill" [label="no"];
-    "Already brainstormed?" -> "Might any skill apply?" [label="yes"];
-    "Invoke brainstorming skill" -> "Might any skill apply?";
+    "About to EnterPlanMode?" -> "Already ran new-task?";
+    "Already ran new-task?" -> "Invoke new-task skill" [label="no"];
+    "Already ran new-task?" -> "Might any skill apply?" [label="yes"];
+    "Invoke new-task skill" -> "Might any skill apply?";
 
     "User message received" -> "Might any skill apply?";
     "Might any skill apply?" -> "Invoke Skill tool" [label="yes, even 1%"];
@@ -79,10 +79,10 @@ These thoughts mean STOP—you're rationalizing:
 
 When multiple skills could apply, use this order:
 
-1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
+1. **Process skills first** (new-task, debugging) - these determine HOW to approach the task
 2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
 
-"Let's build X" → brainstorming first, then implementation skills.
+"Let's build X" → new-task first, then implementation skills.
 "Fix this bug" → debugging first, then domain-specific skills.
 
 ## FORGE Project Context (L0/L1/L2)
@@ -114,7 +114,7 @@ If `.forge/graph.json` exists — the project has a code knowledge graph built b
 2. `graphify path "ModuleA" "ModuleB" --graph .forge/graph.json` — traces dependencies between components
 3. `graphify explain "ClassName" --graph .forge/graph.json` — explains a node and its neighbors
 
-**This applies to ALL skills.** Whether debugging, planning, brainstorming, or reviewing — the graph gives you architecture context faster than reading files.
+**This applies to ALL skills.** Whether debugging, planning, scoping a new task, or reviewing — the graph gives you architecture context faster than reading files.
 
 **If `.forge/graph.json` does not exist** — work without it. Don't suggest building it unless user asks.
 
@@ -124,9 +124,9 @@ If `.forge/graph.json` exists — the project has a code knowledge graph built b
 
 | Skill | Purpose |
 |-------|---------|
-| forge:brainstorming | Pre-implementation design/requirements exploration |
-| forge:writing-plans | Bite-sized implementation plans from spec |
-| forge:executing-plans | Run plans with review checkpoints |
+| forge:new-task | Pre-implementation scoping: clarify goal and requirements |
+| forge:plan | Bite-sized implementation plans from spec |
+| forge:execute | Run plans with review checkpoints |
 | forge:dispatching-parallel-agents | Parallel dispatch of 2+ independent tasks |
 | forge:subagent-driven-development | Execute plans via fresh subagent per task with two-stage review |
 | forge:systematic-debugging | 4-phase root cause investigation |

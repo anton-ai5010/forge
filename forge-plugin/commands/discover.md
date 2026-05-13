@@ -18,7 +18,7 @@ ls .forge/plans/*.md 2>/dev/null | tail -1
 ```
 No implementation plan found in .forge/plans/
 
-Run `/forge:brainstorming` and `/forge:writing-plans` first to create a plan.
+Run `/forge:new-task` and `/forge:plan` first to create a plan.
 ```
 
 Stop.
@@ -240,9 +240,9 @@ If approved:
 
 ## When to Use
 
-**Trigger:** After plan is written (writing-plans completes), before execution begins.
+**Trigger:** After plan is written (`/plan` completes), before execution begins.
 
-**Integration:** writing-plans skill should prompt user to run this command before choosing execution approach.
+**Integration:** `plan` skill should prompt user to run this command before choosing execution approach.
 
 ## Rules
 
@@ -273,7 +273,7 @@ If you're about to:
 ## Error Handling
 
 **No plan file:**
-- Suggest running brainstorming and writing-plans first
+- Suggest running `/new-task` and `/plan` first
 
 **Marketplace API unavailable:**
 - Report current status

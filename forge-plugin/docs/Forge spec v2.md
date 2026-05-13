@@ -10,21 +10,28 @@ forge/
 │   └── marketplace.json
 ├── agents/
 │   ├── code-reviewer.md      # от Forge (с изменениями)
-│   └── forge-documenter.md   # НОВЫЙ — документатор на Sonnet
+│   ├── forge-documenter.md   # НОВЫЙ — документатор на Sonnet
+│   └── critique/             # 4 персоны для Phase 3
+│       ├── skeptic.md
+│       ├── pragmatist.md
+│       ├── architect.md
+│       └── user-advocate.md
 ├── commands/
-│   ├── brainstorm.md         # → /forge:brainstorm
-│   ├── execute-plan.md       # → /forge:execute-plan
-│   ├── write-plan.md         # → /forge:write-plan
-│   ├── sync.md               # НОВЫЙ → /forge:sync
-│   └── init.md               # НОВЫЙ → /forge:init
+│   ├── new-task.md          # → /forge:new-task     (Phase 1: Understanding)
+│   ├── plan.md              # → /forge:plan         (Phase 2: Planning)
+│   ├── critique.md          # → /forge:critique     (Phase 3: Critique)
+│   ├── execute.md           # → /forge:execute      (Phase 4: Implementation)
+│   ├── sync.md              # → /forge:sync
+│   └── init.md              # → /forge:init
 ├── hooks/
 │   ├── hooks.json
 │   └── session-start.sh      # инжектит using-forge/SKILL.md
 ├── skills/
-│   ├── using-forge/                    # переименован из using-forge
-│   ├── brainstorming/
-│   ├── writing-plans/
-│   ├── executing-plans/
+│   ├── using-forge/
+│   ├── new-task/             # Phase 1
+│   ├── plan/                 # Phase 2
+│   ├── critique/             # Phase 3
+│   ├── execute/              # Phase 4
 │   ├── subagent-driven-development/
 │   ├── test-driven-development/
 │   ├── systematic-debugging/
@@ -48,7 +55,9 @@ forge/
 ├── conventions.json      # правила проекта
 ├── state.json            # текущее состояние (перезаписывается при sync)
 ├── history.log           # лог сессий (append-only, Claude не читает)
-├── plans/                # дизайн-документы (создаются brainstorming → writing-plans)
+├── tasks/                # чистые формулировки задач (Phase 1 output)
+├── plans/                # планы с чекпоинтами (Phase 2 output)
+├── critiques/            # отчёты 4 персон + Execution Strategy (Phase 3 output)
 └── library/              # для Claude (машинночитаемое)
     ├── indicators/
     │   └── spec.json     # для Claude, машинночитаемый
@@ -73,11 +82,101 @@ ml/
 
 ---
 
+## Пайплайн: 4 фазы
+
+```
+┌─────────────────────────┐
+│  Phase 1: Understanding │  /forge:new-task
+│  raw prompt → clean task│  output: .forge/tasks/<id>.md
+│  + success criterion    │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│  Phase 2: Planning      │  /forge:plan
+│  task → plan with       │  output: .forge/plans/<id>.md
+│  checkpoints + recursion│
+│  on distant blockers    │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│  Phase 3: Critique      │  /forge:critique
+│  4 parallel personas    │  output: .forge/critiques/<id>.md
+│  tear the plan apart    │  + Execution Strategy appended
+│  → Execution Strategy   │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│  Phase 4: Implementation│  /forge:execute
+│  dirty work in subagents│  output: code + tests + docs
+│  stop at checkpoints    │
+└─────────────────────────┘
+```
+
+### Phase 1 — `/forge:new-task` (Understanding)
+
+**Цель:** превратить сырой промпт в формализованную задачу с критерием успеха.
+
+**Что делает:**
+- Читает `.forge/map.json`, `.forge/conventions.json`, `.forge/state.json`.
+- Переформулирует пользовательский запрос: WHY → WHAT → DONE-criterion.
+- Уточняет ровно одну неясность за раз, не угадывает.
+- Сохраняет результат в `.forge/tasks/<id>.md`.
+
+**Скилл:** `skills/new-task/SKILL.md`.
+
+### Phase 2 — `/forge:plan` (Planning)
+
+**Цель:** разложить задачу на пошаговый план с явными чекпоинтами.
+
+**Что делает:**
+- Читает `.forge/tasks/<id>.md`.
+- Строит план: шаги, ожидаемые артефакты, точки остановки (checkpoints).
+- Рекурсия на дальние блокеры: если шаг зависит от непонятной/незавершённой подсистемы — спускается в неё и делает мини-план (или выносит в отдельный `/forge:new-task`).
+- Помечает шаги, требующие критики персонами (например, архитектурные развилки).
+- Сохраняет в `.forge/plans/<id>.md`.
+
+**Скилл:** `skills/plan/SKILL.md`.
+
+### Phase 3 — `/forge:critique` (Critique)
+
+**Цель:** прогнать план через 4 параллельные персоны и зафиксировать стратегию исполнения.
+
+**Персоны (запускаются параллельно как субагенты):**
+1. **Skeptic** — ищет дыры, нереалистичные допущения, незакрытые риски.
+2. **Pragmatist** — режет лишнее, требует минимально достаточного решения.
+3. **Architect** — проверяет согласованность с `.forge/map.json` и `.forge/library/*/spec.json`, ловит каскадные эффекты, нарушения красных зон.
+4. **User Advocate** — смотрит глазами пользователя: понятно ли, ценно ли, не сломает ли существующий UX.
+
+**Что делает команда:**
+- Запускает 4 субагента параллельно с планом на вход.
+- Собирает их отчёты в `.forge/critiques/<id>.md`.
+- На основе сводных правок дописывает в конце документа **Execution Strategy**: какой режим запуска (см. ниже), порядок шагов, чекпоинты, кто отвечает.
+- Обновлённый план либо одобряется, либо возвращается в Phase 2 на доработку.
+
+**Скилл:** `skills/critique/SKILL.md`.
+
+### Phase 4 — `/forge:execute` (Implementation)
+
+**Цель:** реализовать план, грязную работу делегировать субагентам, останавливаться на чекпоинтах.
+
+**Что делает:**
+- Читает `.forge/plans/<id>.md` и `.forge/critiques/<id>.md` (Execution Strategy).
+- Идёт по шагам плана; на каждом чекпоинте — стоп, отчёт, ожидание подтверждения.
+- Грязные операции (массовые правки, генерация кода, эксперименты, отладка) выносит в субагентов через `subagent-driven-development`.
+- После завершения каждого шага вызывает `forge-documenter` для обновления `.forge/library/` и `[folder]/README.md`.
+
+**Скилл:** `skills/execute/SKILL.md`.
+
+---
+
 ## Часть 1: Конкретные изменения в каждом скилле
 
 ---
 
-### 1. using-forge → using-forge
+### 1. using-forge
 
 **Файл:** `skills/using-forge/SKILL.md`
 
@@ -92,115 +191,131 @@ Before any work, check if project has `.forge/map.json`. If yes:
 2. Read `.forge/conventions.json` — project rules
 3. Read `.forge/state.json` — current state and pending tasks
 
+For any non-trivial request, route through the 4-phase pipeline:
+`/forge:new-task` → `/forge:plan` → `/forge:critique` → `/forge:execute`.
+
 After completing any task, suggest: "Run /forge:sync to update documentation."
 
 If project has no `.forge/map.json`, suggest: "Run /forge:init to set up project documentation."
 ```
 
-**Глобальная замена:** `forge` → `forge` во всём файле.
+---
+
+### 2. new-task (Phase 1)
+
+**Файл:** `skills/new-task/SKILL.md`
+
+**Чеклист скилла:**
+
+```
+1. Read project context:
+   - .forge/map.json — project structure and red zones
+   - .forge/conventions.json — project rules
+   - .forge/state.json — current state
+   Only then, if deeper context needed — read specific files from map.
+
+2. Restate the request in your own words:
+   - WHY we are doing this
+   - WHAT the expected outcome is
+   - DONE-criterion (one testable sentence)
+   Get explicit confirmation before proceeding.
+
+3. Surface red-zone collisions:
+   - If the request touches files marked red zone in .forge/map.json —
+     warn user explicitly and ask to confirm.
+
+4. Save the clean task to .forge/tasks/<id>.md.
+
+5. Suggest next step: /forge:plan <id>.
+```
 
 ---
 
-### 2. brainstorming
+### 3. plan (Phase 2)
 
-**Файл:** `skills/brainstorming/SKILL.md`
+**Файл:** `skills/plan/SKILL.md`
 
-**Изменение 1 — чеклист, пункт "Explore project context":**
-
-БЫЛО:
-```
-Explore project context — check files, documentation, recent commits
-```
-
-СТАЛО:
-```
-Explore project context:
-  - Read .forge/map.json — project structure and red zones
-  - Read .forge/conventions.json — project rules
-  - Read .forge/state.json — current state
-  - Only then, if deeper context needed — read specific files from map
-```
-
-**Изменение 2 — после "Explore project context", новый пункт:**
+**Структура плана:**
 
 ```
-Confirm understanding of goal — restate in your own words WHY we are doing this
-and WHAT the expected outcome is. Get explicit confirmation before proceeding.
+# Plan: <task title>
+
+## Task
+Link to .forge/tasks/<id>.md, restated DONE-criterion.
+
+## Steps
+1. <step> — artifact: <file/output> — checkpoint: <yes/no>
+2. ...
+
+## Distant blockers
+- If a step depends on an unfinished / unclear subsystem,
+  either embed a mini-plan here, or extract a separate task
+  via /forge:new-task and link it.
+
+## Open questions for critique
+- <list of architectural forks or risky choices to surface in Phase 3>
 ```
 
-**Изменение 3 — в секцию "Present design in sections", добавить:**
-
-```
-Before presenting design:
-- Check .forge/map.json for red zones. If design touches red zone files —
-  warn user explicitly: "This design modifies [file] which is marked as red zone.
-  Confirm before proceeding."
-- Check .forge/library/[folder]/spec.json for dependencies of affected modules.
-  If change cascades to other modules — show this in design:
-  "Changing [X] will affect [Y] and [Z] because [dependency]."
-```
-
-**Изменение 4 — новое правило перед "Invoke writing-plans":**
-
-```
-If design document exceeds 150 lines — propose splitting into
-multiple independent designs. Each design = one complete feature
-that can be implemented and tested separately.
-```
-
-**Глобальная замена:** `forge:` → `forge:` во всех ссылках на скиллы.
+**Правила:**
+- Чекпоинты ставить перед необратимыми шагами и на стыках подсистем.
+- Если план превышает ~150 строк или 7 шагов — предложить разбить на несколько независимых задач, каждая со своим `new-task`.
+- Указать в конце: `> **For Claude:** REQUIRED SUB-SKILL: Use forge:execute (after forge:critique approves the plan).`
 
 ---
 
-### 3. writing-plans
+### 4. critique (Phase 3)
 
-**Файл:** `skills/writing-plans/SKILL.md`
+**Файл:** `skills/critique/SKILL.md`
 
-**Изменение 1 — секция "Execution Handoff", заменить два варианта на три:**
+**Процесс:**
+1. Загрузить план из `.forge/plans/<id>.md`.
+2. Параллельно запустить 4 субагента (`agents/critique/skeptic.md`, `pragmatist.md`, `architect.md`, `user-advocate.md`). Каждому на вход план + релевантные части `.forge/library/`.
+3. Собрать отчёты, агрегировать пересечения, отметить противоречия между персонами.
+4. Дописать в `.forge/critiques/<id>.md` секцию **Execution Strategy**:
+   - Какие шаги плана корректируются и как.
+   - Режим исполнения для Phase 4 (см. ниже).
+   - Где обязательны чекпоинты.
+   - Какие риски остаются принятыми сознательно.
 
-БЫЛО:
+**Режимы исполнения, выбираемые в Execution Strategy:**
+
 ```
-**1. Subagent-Driven (this session)**
-**2. Parallel Session (separate)**
-```
+1. Subagent-Driven (this session) — main agent dispatches a fresh subagent
+   per step, reviews between steps, fast iteration. User stays and watches.
+   REQUIRED SUB-SKILL: forge:subagent-driven-development
 
-СТАЛО:
-```
-**1. Subagent-Driven (this session)** — I dispatch fresh subagent per task,
-review between tasks, fast iteration. You stay and watch.
-- REQUIRED SUB-SKILL: Use forge:subagent-driven-development
+2. Step-by-step (separate session) — open a new terminal, Claude executes
+   steps one by one with explicit checkpoint pauses.
+   REQUIRED SUB-SKILL: forge:execute
 
-**2. Batch execution (separate session)** — Open new terminal, Claude executes
-tasks in batches of 3, pauses for your feedback between batches.
-- REQUIRED SUB-SKILL: New session uses forge:executing-plans
-
-**3. Autonomous (separate session)** — Open new terminal, Claude executes through
-subagents with auto-review. Works as autonomously as possible. You check results when done.
-- REQUIRED SUB-SKILL: New session uses forge:subagent-driven-development
-- Provide ready-to-copy command for second terminal
+3. Autonomous (separate session) — open a new terminal, Claude executes
+   through subagents with auto-review, stopping only at hard checkpoints.
+   REQUIRED SUB-SKILL: forge:subagent-driven-development
+   Provide ready-to-copy command for the second terminal.
 ```
-
-**Изменение 2 — в заголовке плана:**
-
-БЫЛО:
-```
-> **For Claude:** REQUIRED SUB-SKILL: Use forge:executing-plans
-```
-
-СТАЛО:
-```
-> **For Claude:** REQUIRED SUB-SKILL: Use forge:executing-plans or forge:subagent-driven-development
-```
-
-**Глобальная замена:** `forge:` → `forge:`
 
 ---
 
-### 4. subagent-driven-development
+### 5. execute (Phase 4)
+
+**Файл:** `skills/execute/SKILL.md`
+
+**Процесс:**
+1. Загрузить `.forge/plans/<id>.md` и `.forge/critiques/<id>.md` (Execution Strategy).
+2. Идти по шагам плана; на каждом чекпоинте — отчёт + ожидание подтверждения.
+3. Для грязной работы дёргать субагентов (`subagent-driven-development`).
+4. После каждого шага:
+   - Update `.forge/library/[folders]/spec.json` and `README.md` for files changed.
+   - Update `.forge/map.json` if new files were created or files deleted.
+5. По завершении — предложить `/forge:sync`.
+
+---
+
+### 6. subagent-driven-development
 
 **Файл:** `skills/subagent-driven-development/SKILL.md`
 
-**Изменение 1 — в процессе, после "Code quality reviewer subagent approves? → yes", добавить новый шаг перед "Mark task complete":**
+**Изменение 1 — в процессе, после "Code quality reviewer subagent approves? → yes", добавить шаг перед "Mark task complete":**
 
 ```
 Dispatch forge-documenter subagent (Sonnet):
@@ -213,10 +328,11 @@ Dispatch forge-documenter subagent (Sonnet):
 **Изменение 2 — в секцию "Integration", добавить:**
 
 ```
-**FORGE documentation:**
+**FORGE pipeline:**
 - **forge:forge-context** — Subagents read .forge/library/[folder]/spec.json before work
+- **forge:execute** — Driver skill that dispatches subagents step-by-step per plan
 - **forge:sync** — Manual update for state.json at end of session
-- **forge-documenter** agent — Automatic doc update after each task's review
+- **forge-documenter** agent — Automatic doc update after each step's review
 ```
 
 **Изменение 3 — в "Prompt Templates", добавить:**
@@ -225,26 +341,9 @@ Dispatch forge-documenter subagent (Sonnet):
 - `./forge-documenter-prompt.md` - Dispatch documentation updater subagent
 ```
 
-**Глобальная замена:** `forge:` → `forge:`
-
 ---
 
-### 5. executing-plans
-
-**Файл:** `skills/executing-plans/SKILL.md`
-
-**Изменение — в "Step 3: Report", добавить после "Show verification output":**
-
-```
-- Update .forge/library/[folders]/spec.json and README.md for files changed in this batch
-- Update .forge/map.json if new files were created
-```
-
-**Глобальная замена:** `forge:` → `forge:`
-
----
-
-### 6. code-reviewer (agent)
+### 7. code-reviewer (agent)
 
 **Файл:** `agents/code-reviewer.md`
 
@@ -256,11 +355,12 @@ Dispatch forge-documenter subagent (Sonnet):
 - Do changes align with file intent described in .forge/library/[folder]/spec.json?
 - Are dependent modules (from .forge/map.json) not broken by changes?
 - Do file naming and structure follow project patterns?
+- Does the change match the DONE-criterion from .forge/tasks/<id>.md?
 ```
 
 ---
 
-### 7. finishing-a-development-branch
+### 8. finishing-a-development-branch
 
 **Файл:** `skills/finishing-a-development-branch/SKILL.md`
 
@@ -273,11 +373,9 @@ Run /forge:sync to ensure documentation is up to date before merge.
 Verify .forge/map.json, .forge/library/ reflect all changes made in this branch.
 ```
 
-**Глобальная замена:** `forge:` → `forge:`
-
 ---
 
-### 8. dispatching-parallel-agents
+### 9. dispatching-parallel-agents
 
 **Файл:** `skills/dispatching-parallel-agents/SKILL.md`
 
@@ -288,11 +386,9 @@ Verify .forge/map.json, .forge/library/ reflect all changes made in this branch.
 - Update .forge/map.json if any agent created new files
 ```
 
-**Глобальная замена:** `forge:` → `forge:`
-
 ---
 
-### 9. implementer-prompt.md
+### 10. implementer-prompt.md
 
 **Файл:** `skills/subagent-driven-development/implementer-prompt.md`
 
@@ -304,11 +400,13 @@ Verify .forge/map.json, .forge/library/ reflect all changes made in this branch.
 Before starting work, read:
 - .forge/library/[your-working-folder]/spec.json — file intents and dependencies
 - .forge/conventions.json — project rules to follow
+- .forge/tasks/<id>.md — the DONE-criterion you are working toward
+- .forge/plans/<id>.md — the step you are implementing
 ```
 
 ---
 
-### Скиллы: только глобальная замена forge → forge
+### Прочие скиллы: без семантических правок
 
 - `skills/test-driven-development/SKILL.md`
 - `skills/test-driven-development/testing-anti-patterns.md`
@@ -335,35 +433,39 @@ Before starting work, read:
 **Файл:** `commands/init.md`
 
 **Что делает:**
-- Сканирует структуру проекта
-- Создаёт `.forge/` с map.json, conventions.json, state.json
-- Создаёт `.forge/library/` с spec.json для каждой папки
-- Создаёт README.md прямо в папках проекта (для человека)
-- Спрашивает пользователя: какие файлы отметить как red zone?
-- Спрашивает: какие конвенции уже есть? (именование, структура, паттерны)
+- Сканирует структуру проекта.
+- Создаёт `.forge/` с `map.json`, `conventions.json`, `state.json`.
+- Создаёт `.forge/library/` с `spec.json` для каждой папки.
+- Создаёт `.forge/tasks/`, `.forge/plans/`, `.forge/critiques/` (пустые директории под пайплайн).
+- Создаёт `README.md` прямо в папках проекта (для человека).
+- Спрашивает: какие файлы отметить как red zone? Какие конвенции уже есть?
 
 ### 2. /forge:sync (команда)
 
 **Файл:** `commands/sync.md`
 
 **Что делает:**
-- Читает `git diff HEAD~1` (или от последнего sync)
-- Обновляет .forge/library/[папки]/spec.json для изменённых файлов
-- Обновляет [папки]/README.md в папках проекта для изменённых файлов
-- Обновляет .forge/map.json если новые файлы или удалённые
-- Перезаписывает .forge/state.json с текущим состоянием
-- Добавляет строку в .forge/history.log
+- Читает `git diff HEAD~1` (или от последнего sync).
+- Обновляет `.forge/library/[папки]/spec.json` для изменённых файлов.
+- Обновляет `[папки]/README.md` в папках проекта для изменённых файлов.
+- Обновляет `.forge/map.json` если новые файлы или удалённые.
+- Перезаписывает `.forge/state.json` с текущим состоянием.
+- Добавляет строку в `.forge/history.log`.
 
-### 3. forge-context (скилл)
+### 3. /forge:new-task, /forge:plan, /forge:critique, /forge:execute (команды)
+
+Каждая команда — тонкая обёртка над соответствующим скиллом (`skills/new-task`, `skills/plan`, `skills/critique`, `skills/execute`). Команда подгружает скилл и принимает `<id>` задачи как аргумент (для plan/critique/execute) либо сырой промпт (для new-task).
+
+### 4. forge-context (скилл)
 
 **Файл:** `skills/forge-context/SKILL.md`
 
 **Что делает:**
-- Загружается при старте сессии (ссылка из using-forge)
-- Читает .forge/map.json, .forge/conventions.json, .forge/state.json
-- Даёт Claude полный контекст проекта за ~2k токенов
+- Загружается при старте сессии (ссылка из using-forge).
+- Читает `.forge/map.json`, `.forge/conventions.json`, `.forge/state.json`.
+- Даёт Claude полный контекст проекта за ~2k токенов.
 
-### 4. forge-documenter (агент)
+### 5. forge-documenter (агент)
 
 **Файл:** `agents/forge-documenter.md`
 
@@ -377,19 +479,25 @@ tools: Read, Write, Edit, Bash, Glob, Grep
 ```
 
 **Что делает:**
-- Получает отчёт имплементатора + git diff
-- Обновляет spec.json в .forge/library/ и README.md в папках проекта
-- Обновляет map.json
-- Работает на Sonnet (дешёво и быстро)
+- Получает отчёт имплементатора + git diff.
+- Обновляет `spec.json` в `.forge/library/` и `README.md` в папках проекта.
+- Обновляет `map.json`.
+- Работает на Sonnet (дёшево и быстро).
 
-### 5. forge-documenter-prompt.md (шаблон промпта)
+### 6. critique personas (4 агента)
+
+**Файлы:** `agents/critique/skeptic.md`, `pragmatist.md`, `architect.md`, `user-advocate.md`.
+
+Каждый — отдельный субагент с узкой ролью, см. Phase 3. Запускаются параллельно из `/forge:critique`.
+
+### 7. forge-documenter-prompt.md (шаблон промпта)
 
 **Файл:** `skills/subagent-driven-development/forge-documenter-prompt.md`
 
 **Шаблон:**
 ```
 Task tool (forge:forge-documenter):
-  description: "Update documentation for Task N changes"
+  description: "Update documentation for Step N changes"
   prompt: |
     You are updating project documentation after code changes.
 
@@ -397,7 +505,7 @@ Task tool (forge:forge-documenter):
     [From implementer's report: files created, modified, deleted]
 
     ## Git Diff
-    [Output of git diff for this task's commits]
+    [Output of git diff for this step's commits]
 
     ## Your Job
     1. For each CREATED file:
@@ -484,7 +592,8 @@ Task tool (forge:forge-documenter):
 ```json
 {
   "current_task": "Add MACD indicator",
-  "progress": "3/5 tasks done",
+  "current_phase": "execute",
+  "progress": "step 3/5 done",
   "last_session": "2026-02-15",
   "last_session_summary": "Added MACD calculation, wrote tests, need to connect to strategy",
   "pending": [
@@ -496,6 +605,61 @@ Task tool (forge:forge-documenter):
     "tests/test_macd.py — new file"
   ]
 }
+```
+
+### .forge/tasks/<id>.md
+```markdown
+# Task <id>: <title>
+
+## Why
+<one paragraph>
+
+## What
+<one paragraph>
+
+## DONE-criterion
+<one testable sentence>
+
+## Touched red zones
+- <file> — <reason>
+```
+
+### .forge/plans/<id>.md
+```markdown
+# Plan <id>: <title>
+
+## Steps
+1. <step> — artifact — checkpoint: yes/no
+2. ...
+
+## Distant blockers
+- ...
+
+## Open questions for critique
+- ...
+```
+
+### .forge/critiques/<id>.md
+```markdown
+# Critique <id>: <title>
+
+## Skeptic
+...
+
+## Pragmatist
+...
+
+## Architect
+...
+
+## User Advocate
+...
+
+## Execution Strategy
+- Mode: subagent-driven / step-by-step / autonomous
+- Checkpoints: <list>
+- Accepted risks: <list>
+- Plan corrections: <list>
 ```
 
 ### .forge/library/[folder]/spec.json
@@ -530,40 +694,34 @@ Task tool (forge:forge-documenter):
 Каждый индикатор — отдельная функция в своём файле.
 
 - **macd.py** — считает MACD (схождение-расхождение скользящих средних)
-- **rsi.py** — считает RSI (индекс относительной силы). ⚠️ Красная зона — от этого расчёта зависит рабочая стратегия.
+- **rsi.py** — считает RSI (индекс относительной силы). Красная зона — от этого расчёта зависит рабочая стратегия.
 - **bollinger.py** — считает полосы Боллинджера
 ```
 
-README.md находится прямо в папке проекта (indicators/README.md), а не в .forge/library/.
+README.md находится прямо в папке проекта (`indicators/README.md`), а не в `.forge/library/`.
 
 ---
 
 ## Часть 4: Порядок реализации (задачи для Claude Code)
 
-### Фаза 1 — Переименование и очистка
-1. Глобальная замена `forge` → `forge` во всех файлах
-2. Переименовать `skills/using-forge/` → `skills/using-forge/`
-3. Обновить `session-start.sh` — путь к using-forge
-4. Обновить `.claude-plugin/plugin.json` — name: "forge"
-5. Заменить "the user" / "Jesse" → "user" / "пользователь" где встречается
+### Фаза A — Каркас пайплайна
+1. Создать `commands/new-task.md`, `plan.md`, `critique.md`, `execute.md`.
+2. Создать `skills/new-task/SKILL.md`, `plan/SKILL.md`, `critique/SKILL.md`, `execute/SKILL.md`.
+3. Создать `agents/critique/{skeptic,pragmatist,architect,user-advocate}.md`.
 
-### Фаза 2 — Изменения в существующих скиллах
-6. using-forge — добавить секцию FORGE Project Context
-7. brainstorming — 4 изменения (контекст, цель, красные зоны, лимит 150 строк)
-8. writing-plans — 3 варианта исполнения
-9. subagent-driven-development — четвёртый шаг документатора
-10. executing-plans — обновление доков после батча
-11. code-reviewer agent — секция FORGE Compliance
-12. finishing-a-development-branch — шаг 1.5 sync перед мёржем
-13. dispatching-parallel-agents — обновление доков после интеграции
-14. implementer-prompt — секция Project Context
+### Фаза B — Контекст и документация
+4. `skills/using-forge/SKILL.md` — добавить секцию FORGE Project Context и упоминание 4-фазного пайплайна.
+5. Создать `commands/init.md`, `commands/sync.md`.
+6. Создать `skills/forge-context/SKILL.md`.
+7. Создать `agents/forge-documenter.md`.
+8. Создать `skills/subagent-driven-development/forge-documenter-prompt.md`.
 
-### Фаза 3 — Новые компоненты
-15. Создать commands/init.md
-16. Создать commands/sync.md
-17. Создать skills/forge-context/SKILL.md
-18. Создать agents/forge-documenter.md
-19. Создать skills/subagent-driven-development/forge-documenter-prompt.md
+### Фаза C — Изменения в существующих скиллах
+9. `subagent-driven-development` — шаг документатора, интеграция с `forge:execute`.
+10. `code-reviewer` — секция FORGE Compliance + проверка DONE-criterion.
+11. `finishing-a-development-branch` — шаг 1.5 sync перед мёржем.
+12. `dispatching-parallel-agents` — обновление доков после интеграции.
+13. `implementer-prompt` — секция Project Context (task + plan).
 
-### Фаза 4 — Тестирование
-20. Протестировать на реальном проекте (Football Predictor)
+### Фаза D — Тестирование
+14. Протестировать на реальном проекте (Football Predictor): прогнать одну задачу через все 4 фазы.

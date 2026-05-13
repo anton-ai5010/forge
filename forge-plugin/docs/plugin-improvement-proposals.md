@@ -1,7 +1,19 @@
 # Forge Plugin — Proposals for New Skills & Agents
 
 > Date: 2026-04-05
+> Last review: 2026-05-13 — re-evaluated against new 4-phase pipeline (`/forge:new-task` → `/forge:plan` → `/forge:critique` → `/forge:execute`)
 > Status: Draft — awaiting prioritization
+
+---
+
+## New 4-Phase Pipeline (context for the proposals below)
+
+1. `/forge:new-task` — Phase 1: Understanding (was `forge:brainstorm` / `brainstorming`)
+2. `/forge:plan` — Phase 2: Planning (was `forge:write-plan` / `writing-plans`)
+3. `/forge:critique` — Phase 3: Critique (4 personas)
+4. `/forge:execute` — Phase 4: Implementation (was `forge:execute-plan` / `executing-plans`)
+
+Several proposals below pre-date this pipeline. Where a proposal is already covered by the new phases, it is marked `STATUS: ВЫПОЛНЕНО в 4-phase pipeline (2026-05-13)`. Otherwise references are updated to the new commands.
 
 ---
 
@@ -23,7 +35,9 @@
 
 ### 2. `api-design`
 
-**Pain:** `brainstorming` is too generic for API work. Claude jumps straight to code without designing endpoints, schemas, auth, error codes, versioning.
+**Pain:** `/forge:new-task` + `/forge:plan` are too generic for API work. Claude jumps straight to code without designing endpoints, schemas, auth, error codes, versioning. The 4-phase pipeline covers *what* to build, but not the API-shape rigor.
+
+**Status:** Still relevant — a domain-specific design skill that plugs into Phase 2 (`/forge:plan`).
 
 **Solution:** Skill that forces structured API design before implementation:
 - List all resources and relationships
@@ -59,7 +73,9 @@
 
 ### 4. `security-review`
 
-**Pain:** `verification-before-completion` checks "does it work?" but not "is it safe?" Security issues slip through to merge.
+**Pain:** Phase 4 (`/forge:execute`) verifies "does it work?" but not "is it safe?" Security issues slip through to merge. Phase 3 (`/forge:critique`) covers design-level concerns but not OWASP-grade diff scanning.
+
+**Status:** Still relevant — complementary to `/forge:critique`, runs against the actual diff post-implementation.
 
 **Solution:** Pre-merge security audit skill:
 - OWASP Top 10 checklist against diff
@@ -69,7 +85,7 @@
 - Auth/authz logic review
 - Input validation at system boundaries
 
-**Trigger:** Before `finishing-a-development-branch` or on explicit `/forge:security-review`.
+**Trigger:** After Phase 4 (`/forge:execute`), before merge, or on explicit `/forge:security-review`.
 
 **Command:** `/forge:security-review`
 
@@ -151,7 +167,7 @@
 - Flag deprecated packages
 - Report CVEs with severity
 
-**Trigger:** Automatic in `finishing-a-development-branch`.
+**Trigger:** Automatic after `/forge:execute`, before merge.
 
 ---
 
@@ -182,6 +198,8 @@
 ---
 
 ## 11. Rename Forge internal docs to `.forge/`
+
+**STATUS: ВЫПОЛНЕНО в 4-phase pipeline (2026-05-13)** — Forge internal context now lives under `.forge/` (see `CLAUDE.md`: `.forge/index.yml`, `.forge/map.yml`, `.forge/plans/`, `.forge/library/`, …). `docs/` is free for public documentation. The migration described below was the actual implementation path. Kept for historical reference.
 
 **Pain:** Forge occupies `docs/` for its internal context (index.md, dead-ends, plans, journal). This conflicts with the industry standard where `docs/` is **public documentation** for users and contributors (getting-started, API reference, guides, architecture, changelog, FAQ).
 

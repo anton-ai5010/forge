@@ -162,7 +162,7 @@ Stop if you're thinking:
 
 ## Integration
 
-**Called after:** `forge:brainstorming` (requirements defined)
+**Called after:** `forge:new-task` (requirements defined)
 **Called before:** `forge:test-driven-development` (write endpoint tests from contract)
 **Reference:** `api-patterns.md` in this directory for status codes, filtering, sorting, rate limiting, versioning details
 **Output:** API contract in `.forge/plans/api-{name}.yml`

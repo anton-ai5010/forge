@@ -4,15 +4,17 @@ Forge is a complete software development workflow for your coding agents, built 
 
 ## How it works
 
-It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do. 
+It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it runs you through a four-phase pipeline.
 
-Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest. 
+**Phase 1 — Understanding (`new-task`).** Your raw prompt gets turned into a clean task statement with an explicit definition of done. Anything that's a logical or product question comes back to you. Anything technical, Claude researches itself.
 
-After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY. 
+**Phase 2 — Planning (`plan`).** Once the task is clear, the agent writes an implementation plan organised around checkpoints rather than micro-steps. Distant blockers get spun out into their own follow-up sessions so the current plan stays focused.
 
-Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for Claude to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
+**Phase 3 — Critique (`critique`).** Four personas — Skeptic, Pragmatist, Architect, User Advocate — run in parallel and tear the plan apart. They then write the Execution Strategy section: what runs in parallel, what gets delegated to subagents, where the checkpoints are.
 
-There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Forge.
+**Phase 4 — Implementation (`execute`).** Once you say "go", implementation happens in the main session. Dirty or parallelisable work goes to subagents. Execution stops at every checkpoint defined in the plan, so you stay in the loop without babysitting.
+
+There's a bunch more to it — TDD, code review, worktree management — but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Forge.
 
 
 ## Sponsorship
@@ -68,19 +70,22 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/forge/
 
 ## The Basic Workflow
 
-1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
+The core pipeline is four phases. Each phase has its own command, its own output, and a clean handoff to the next.
 
-2. **using-git-worktrees** - Activates after design approval. Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
+1. **new-task** (Phase 1: Understanding) — Activates on any new request. Turns a raw prompt into a clean task statement with an explicit definition of done. Logical/product questions go back to you; technical questions Claude researches itself. Optional HTML sketch when the result is visual.
 
-3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
+2. **plan** (Phase 2: Planning) — Activates once the task is clear. Builds an implementation plan structured around checkpoints (not micro-steps). Long-range blockers get spun out into their own follow-up sessions instead of bloating the current plan.
 
-4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
+3. **critique** (Phase 3: Critique) — Activates on a draft plan. Runs four personas in parallel — Skeptic, Pragmatist, Architect, User Advocate — who tear the plan apart and then write the Execution Strategy section (parallel vs sequential, subagents vs main session, checkpoints).
 
-5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
+4. **execute** (Phase 4: Implementation) — Activates with an approved plan. Implementation happens in the main session; dirty/parallelisable work is delegated to subagents. Execution stops at every checkpoint defined in the plan.
 
-6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
+Supporting skills:
 
-7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
+- **using-git-worktrees** — Creates an isolated workspace on a new branch, runs project setup, verifies clean test baseline.
+- **test-driven-development** — Enforces RED-GREEN-REFACTOR: failing test first, minimal code, commit. Code written before tests gets deleted.
+- **requesting-code-review** — Reviews work against the plan between checkpoints, reports issues by severity. Critical issues block progress.
+- **finishing-a-development-branch** — Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
@@ -95,10 +100,11 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/forge/
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
 - **verification-before-completion** - Ensure it's actually fixed
 
-**Collaboration** 
-- **brainstorming** - Socratic design refinement
-- **writing-plans** - Detailed implementation plans
-- **executing-plans** - Batch execution with checkpoints
+**Collaboration**
+- **new-task** - Phase 1: turn a raw prompt into a clean task + definition of done
+- **plan** - Phase 2: build a checkpoint-based implementation plan
+- **critique** - Phase 3: four personas tear the plan apart and write Execution Strategy
+- **execute** - Phase 4: implement against the plan, stop at every checkpoint
 - **dispatching-parallel-agents** - Concurrent subagent workflows
 - **requesting-code-review** - Pre-review checklist
 - **receiving-code-review** - Responding to feedback

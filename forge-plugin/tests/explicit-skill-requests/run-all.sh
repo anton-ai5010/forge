@@ -36,25 +36,25 @@ else
 fi
 echo ""
 
-# Test: please use brainstorming
-echo ">>> Test 3: please-use-brainstorming"
-if "$SCRIPT_DIR/run-test.sh" "brainstorming" "$PROMPTS_DIR/please-use-brainstorming.txt"; then
+# Test: please use new-task
+echo ">>> Test 3: please-use-new-task"
+if "$SCRIPT_DIR/run-test.sh" "new-task" "$PROMPTS_DIR/please-use-new-task.txt"; then
     PASSED=$((PASSED + 1))
-    RESULTS="$RESULTS\nPASS: please-use-brainstorming"
+    RESULTS="$RESULTS\nPASS: please-use-new-task"
 else
     FAILED=$((FAILED + 1))
-    RESULTS="$RESULTS\nFAIL: please-use-brainstorming"
+    RESULTS="$RESULTS\nFAIL: please-use-new-task"
 fi
 echo ""
 
-# Test: mid-conversation execute plan
-echo ">>> Test 4: mid-conversation-execute-plan"
-if "$SCRIPT_DIR/run-test.sh" "subagent-driven-development" "$PROMPTS_DIR/mid-conversation-execute-plan.txt"; then
+# Test: mid-conversation execute
+echo ">>> Test 4: mid-conversation-execute"
+if "$SCRIPT_DIR/run-test.sh" "subagent-driven-development" "$PROMPTS_DIR/mid-conversation-execute.txt"; then
     PASSED=$((PASSED + 1))
-    RESULTS="$RESULTS\nPASS: mid-conversation-execute-plan"
+    RESULTS="$RESULTS\nPASS: mid-conversation-execute"
 else
     FAILED=$((FAILED + 1))
-    RESULTS="$RESULTS\nFAIL: mid-conversation-execute-plan"
+    RESULTS="$RESULTS\nFAIL: mid-conversation-execute"
 fi
 echo ""
 

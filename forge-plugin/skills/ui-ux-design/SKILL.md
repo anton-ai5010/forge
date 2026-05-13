@@ -18,7 +18,7 @@ Data-driven design decisions powered by a BM25 search engine over curated databa
 - Building or updating a design system
 - Making UX decisions (accessibility, interaction patterns, responsive design)
 - Selecting chart types for data visualization
-- **After** `forge:brainstorming` when the task involves frontend/visual work
+- **After** `forge:new-task` when the task involves frontend/visual work
 
 ## Workflow
 

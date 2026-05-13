@@ -122,6 +122,6 @@ Save migration plan to `.forge/plans/migration-{name}.md` with: description, dat
 
 ## Integration
 
-- **After:** `forge:brainstorming` (schema design decided)
+- **After:** `forge:new-task` (schema design decided)
 - **Before:** `forge:test-driven-development` (test migration behavior)
 - **Records to:** `.forge/decisions.yml` (schema decisions)

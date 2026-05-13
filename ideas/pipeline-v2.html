@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Новый пайплайн разработки</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0d0d12;
+    color: #e8e8ee;
+    padding: 32px;
+    min-height: 100vh;
+  }
+  .container { max-width: 1400px; margin: 0 auto; }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    color: #8a8a99;
+    margin-bottom: 32px;
+    font-size: 15px;
+  }
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .phase {
+    background: #15151c;
+    border: 1px solid #25252e;
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    transition: all 0.2s;
+  }
+  .phase:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .phase[data-n="1"] { --accent: #6ea8ff; }
+  .phase[data-n="2"] { --accent: #b890ff; }
+  .phase[data-n="3"] { --accent: #ff9966; }
+  .phase[data-n="4"] { --accent: #6ed99a; }
+  .phase-num {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    background: var(--accent);
+    color: #0d0d12;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  .phase-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .phase-goal {
+    color: #8a8a99;
+    font-size: 13px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .io {
+    border-top: 1px solid #25252e;
+    padding-top: 12px;
+    font-size: 13px;
+  }
+  .io-row { margin-bottom: 8px; }
+  .io-label {
+    display: inline-block;
+    color: #5a5a6a;
+    width: 60px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .io-value { color: #d0d0dc; }
+  .process {
+    margin: 12px 0;
+    font-size: 12px;
+    color: #a0a0b0;
+    line-height: 1.6;
+  }
+  .process-item { padding: 4px 0; }
+  .process-item::before {
+    content: "→ ";
+    color: var(--accent);
+  }
+  .gate {
+    margin-top: 12px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.03);
+    border-left: 2px solid var(--accent);
+    font-size: 12px;
+    color: #c0c0d0;
+  }
+  .gate::before {
+    content: "⏸ ";
+    color: var(--accent);
+  }
+
+  .principles {
+    background: #15151c;
+    border: 1px solid #25252e;
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .principles h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #e8e8ee;
+  }
+  .principle-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .principle {
+    padding: 12px 14px;
+    background: #0d0d12;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .principle strong {
+    display: block;
+    color: #6ea8ff;
+    margin-bottom: 4px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .arrow {
+    position: absolute;
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #3a3a45;
+    font-size: 20px;
+    z-index: 1;
+  }
+  .phase:last-child .arrow { display: none; }
+
+  @media (max-width: 1100px) {
+    .pipeline { grid-template-columns: 1fr 1fr; }
+    .principle-grid { grid-template-columns: 1fr 1fr; }
+    .arrow { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Новый пайплайн разработки</h1>
+<p class="subtitle">От кривого промпта до готовой задачи — 4 фазы</p>
+
+<div class="pipeline">
+
+  <div class="phase" data-n="1">
+    <span class="phase-num">1</span>
+    <div class="phase-title">Понимание</div>
+    <div class="phase-goal">Точно понять что делать и когда задача готова</div>
+
+    <div class="process">
+      <div class="process-item">Логические вопросы — тебе</div>
+      <div class="process-item">Технические — Claude сам</div>
+      <div class="process-item">Один вопрос за раз</div>
+      <div class="process-item">Мультиагент внутри, один вопрос наружу</div>
+      <div class="process-item">Если буксуешь — Claude рисует HTML-набросок задачи (можешь и сам попросить)</div>
+    </div>
+
+    <div class="io">
+      <div class="io-row"><span class="io-label">Вход</span><span class="io-value">Сырой промпт</span></div>
+      <div class="io-row"><span class="io-label">Выход</span><span class="io-value">Чистая задача + критерий готовности</span></div>
+    </div>
+    <div class="gate">Твоё подтверждение "да, оно"</div>
+    <span class="arrow">→</span>
+  </div>
+
+  <div class="phase" data-n="2">
+    <span class="phase-num">2</span>
+    <div class="phase-title">Планирование</div>
+    <div class="phase-goal">Построить путь из точки А в точку Б</div>
+
+    <div class="process">
+      <div class="process-item">Изучает код, гуглит</div>
+      <div class="process-item">Спрашивает про бизнес-логику</div>
+      <div class="process-item">Блокер далеко от темы → промпт для отдельной сессии (рекурсия)</div>
+      <div class="process-item">В плане — естественные чекпоинты</div>
+    </div>
+
+    <div class="io">
+      <div class="io-row"><span class="io-label">Вход</span><span class="io-value">Чистая задача</span></div>
+      <div class="io-row"><span class="io-label">Выход</span><span class="io-value">План с чекпоинтами</span></div>
+    </div>
+    <span class="arrow">→</span>
+  </div>
+
+  <div class="phase" data-n="3">
+    <span class="phase-num">3</span>
+    <div class="phase-title">Критика</div>
+    <div class="phase-goal">Найти дыры в плане до того как кодить</div>
+
+    <div class="process">
+      <div class="process-item">Скептик: что может сломаться?</div>
+      <div class="process-item">Адвокат пользователя: понятно человеку?</div>
+      <div class="process-item">Архитектор: масштабируется?</div>
+      <div class="process-item">Прагматик: можно проще?</div>
+      <div class="process-item">Все параллельно, свежим взглядом</div>
+      <div class="process-item">Дописывают как выполнять: что в субагенты, что параллельно</div>
+    </div>
+
+    <div class="io">
+      <div class="io-row"><span class="io-label">Вход</span><span class="io-value">План (что делать)</span></div>
+      <div class="io-row"><span class="io-label">Выход</span><span class="io-value">Финальный план: что делать + как выполнять</span></div>
+    </div>
+    <div class="gate">Твоё подтверждение перед кодом</div>
+    <span class="arrow">→</span>
+  </div>
+
+  <div class="phase" data-n="4">
+    <span class="phase-num">4</span>
+    <div class="phase-title">Реализация</div>
+    <div class="phase-goal">Сделать как в плане, остановиться на чекпоинтах</div>
+
+    <div class="process">
+      <div class="process-item">Та же сессия, но грязная работа → в субагентов</div>
+      <div class="process-item">Из субагентов возвращается только итог</div>
+      <div class="process-item">Идёт по плану сам, не дёргает на каждом шаге</div>
+      <div class="process-item">Останавливается только на чекпоинтах плана</div>
+    </div>
+
+    <div class="io">
+      <div class="io-row"><span class="io-label">Вход</span><span class="io-value">Финальный план</span></div>
+      <div class="io-row"><span class="io-label">Выход</span><span class="io-value">Готовая задача</span></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="principles">
+  <h2>Сквозные принципы</h2>
+  <div class="principle-grid">
+    <div class="principle">
+      <strong>Простой язык</strong>
+      Объясняю как первокурснику. Без жаргона. Коротко. Только то что тебе надо знать.
+    </div>
+    <div class="principle">
+      <strong>Гигиена контекста</strong>
+      Тяжёлое — в субагентов (свой контекст). В основную сессию приходит только итог. Главная остаётся чистой.
+    </div>
+    <div class="principle">
+      <strong>Чекпоинты, не шаги</strong>
+      Остановка на смысловых границах, а не каждые N шагов. Их задаёт сам план.
+    </div>
+    <div class="principle">
+      <strong>Мультиагент внутри</strong>
+      Много "голов" думают параллельно, но наружу один чёткий вопрос/ответ.
+    </div>
+    <div class="principle">
+      <strong>Критика отдельной фазой</strong>
+      Свежий агент находит дыры. Тот кто строил план — влюблён в него.
+    </div>
+    <div class="principle">
+      <strong>Логика тебе, техника Claude</strong>
+      Спрашиваю только то на что можешь ответить только ты. Техническое ищу сам.
+    </div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>
