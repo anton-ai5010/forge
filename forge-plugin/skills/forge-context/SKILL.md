@@ -104,6 +104,6 @@ After loading context, check available tools:
 
 ## Integration
 
-**Called by:** using-forge skill (at session start)
+**Auto-triggers:** при начале сессии или явном запросе контекста проекта (description match).
 **Works with:** session-awareness skill (maintains .forge/index.yml live)
 **Before using:** Project must be initialized with `/forge:init`
