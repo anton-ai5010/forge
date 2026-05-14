@@ -559,6 +559,13 @@ DO NOT read source code before checking .forge/library/spec.yml.
 5. `/forge:sync` — update docs
 6. `/forge:validate` — verify code vs plan
 
+### Auto-handoff между фазами
+По "ОК" пользователя — Claude автоматически переходит в следующую фазу. "Стоп" / "пауза" — останавливает. Между Phase 3 и Phase 4 — если контекст уже большой, рекомендуется открыть свежий чат для `/execute`.
+
+### Эволюция плагина под проект
+- `/forge:hookify` — превратить повторное исправление в постоянное правило (`.forge/hookrules/`)
+- `/forge:evolve` — раз в 2 недели кластеризовать сквозные боли и предложить автоматизацию
+
 ### Hard rules
 - NO production code without a finalized plan (`/critique` complete)
 - NO implementation without approved task statement (`/new-task` complete)
@@ -583,14 +590,25 @@ DO NOT read source code before checking .forge/library/spec.yml.
 | Command | When |
 |---------|------|
 | `/forge:start` | Session start |
-| `/forge:new-task` | Phase 1 — раскрутить сырую задачу |
-| `/forge:plan` | Phase 2 — построить план |
-| `/forge:critique` | Phase 3 — критика плана 4 персонами |
-| `/forge:execute` | Phase 4 — реализация |
+| `/forge:new-task` | **Phase 1** — раскрутить сырую задачу |
+| `/forge:plan` | **Phase 2** — построить план |
+| `/forge:critique` | **Phase 3** — 4 персоны рвут план (confidence ≥80%) |
+| `/forge:execute` | **Phase 4** — реализация |
+| `/forge:hookify` | Превратить повторение в правило |
+| `/forge:evolve` | Кластеризация сквозных болей |
 | `/forge:design` | UI/UX design system |
-| `/forge:sync` | After work — update docs |
-| `/forge:validate` | Before merge |
-| `/forge:cleanup` | Code quality |
+| `/forge:sync` | After work — update `.forge/*.yml` |
+| `/forge:validate` | Before merge — verify code vs plan |
+| `/forge:cleanup` | Code quality audit |
+| `/forge:investigate` | Problem diagnosis before fixing |
+| `/forge:unblocker` | When stuck |
+| `/forge:product-map` | Project navigator (HTML) |
+| `/forge:explain` | Visual "how does X work?" (HTML) |
+
+Полезные **встроенные** команды Claude Code:
+- `/btw <вопрос>` — side-вопрос, ответ в overlay, не попадает в историю
+- `/clear` — очистить контекст
+- `/compact` — сжать историю
 
 ## Communication
 
@@ -609,7 +627,7 @@ Before showing to user, verify the generated CLAUDE.md:
 3. **Consistency:** Stack in CLAUDE.md matches `stack:` in index.yml. Red zones match Step 2 list.
 4. **Size:** Total < 300 lines (~4000 tokens). If larger — trim verbose sections, keep only essentials.
 5. **Correct paths:** All doc references use `.forge/` (not `docs/`)
-6. **Commands table complete:** At minimum: start, brainstorm, sync, validate, cleanup
+6. **Commands table complete:** At minimum: start, new-task, plan, critique, execute, sync, validate, cleanup
 7. **No empty sections:** Every section has content. If nothing to put — remove the section entirely.
 
 If any check fails — fix before showing to user. Do not ask about validation — just fix silently.
