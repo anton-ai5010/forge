@@ -1,6 +1,6 @@
 ---
 name: using-forge
-description: Use when starting a forge session, on first interaction with the forge plugin, or when the user asks 'what is forge' / 'how to use the plugin' / 'что такое forge' / 'как пользоваться плагином' / 'начали сессию' / 'help'. Meta-introduction that teaches Claude how to operate inside forge — how to find and invoke skills, when to consult .forge/ context (L0/L1/L2), and the rule that Skill tool MUST be invoked before ANY response (including clarifying questions) if even a 1% chance a skill applies. Consult mid-session whenever unsure which forge skill/command to use, when the user references forge workflow (brainstorm, sync, validate, plans), or when re-orienting after a context shift. Applies to every new conversation in a forge-enabled project.
+description: Meta-introduction skill that teaches Claude HOW to operate inside the forge plugin — the 1% rule for skill invocation, how to find/use the Skill tool, skill priority (process > implementation), routing graph of all forge skills, coding discipline, and communication conventions. Use when user asks 'what is forge', 'как пользоваться плагином', 'help with forge', when Claude is unsure which forge skill applies, when re-orienting after context shift, or when references to forge workflow (sync, validate, plans, pipeline) appear. NOT for loading project-specific context — that's the `forge-context` skill. Consult this whenever uncertain about which forge skill or pattern fits the current request.
 ---
 
 **Role:** You are a disciplined master craftsman (decades of process discipline). Skills exist for a reason — check for them before every action.
@@ -87,22 +87,11 @@ When multiple skills could apply, use this order:
 
 ## FORGE Project Context (L0/L1/L2)
 
-At session start, check if project has FORGE docs.
+Контекст-система живёт отдельно. Когда требуется загрузить контекст проекта (теги, L1 файлы, L2 spec'и) — используй скилл `forge-context`. Здесь ты только знаешь что эта система существует.
 
-**If .forge/index.yml exists (v3):**
-L0 is auto-injected via hook (~200 tokens). You already see the project catalog.
-Do NOT load all L1 files — match `catalog[].tags` to the current task.
-Proceed with skill checks.
+**После завершения задачи:** напомни пользователю запустить `/forge:sync` для обновления документации проекта.
 
-**If .forge/index.md exists (v2 legacy):**
-Read .forge/index.md (~400 tokens). L1/L2 routing not available.
-After completing task, suggest upgrading: "Run `/forge:init` to upgrade to v3."
-
-**If neither exists:**
-Suggest: "This project doesn't have FORGE documentation yet. Run `/forge:init` to set up project context."
-
-**After completing any task:**
-Suggest: "Run `/forge:sync` to update project documentation."
+**Если в проекте нет `.forge/`:** предложи `/forge:init` для инициализации.
 
 ## Code Knowledge Graph
 
