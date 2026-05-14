@@ -1,6 +1,6 @@
 ---
 name: deployment
-description: Use when setting up CI/CD pipelines, Dockerizing applications, choosing deployment strategies, or preparing production releases — triggers on "deploy", "Docker", "CI/CD", "pipeline", "rollback", "health check"
+description: "Use proactively when the user wants to ship code to production, set up CI/CD, dockerize an app, choose a hosting/deploy strategy, configure rollback, or prepare a release — even if they just say 'works locally, push it'. Trigger on Russian: 'задеплой', 'на прод', 'выложи', 'залей на сервер', 'докер', 'подними сервер', 'выкат', 'релиз', 'опубликуй', 'запусти онлайн', 'выкатываем', 'CI/CD', 'пайплайн', 'откат', 'хелсчек'. English: 'deploy', 'ship it', 'go live', 'production', 'Docker', 'Dockerfile', 'CI/CD', 'pipeline', 'rollback', 'health check', 'release', 'publish'. Use even for 'just one small deploy' — without rollback strategy and health checks a single bad push takes the product down with no way back, and at 2 AM there's no one to fix it manually. Skipping this skill costs hours of downtime and lost trust; running it costs 5 minutes upfront."
 ---
 
 # Deployment

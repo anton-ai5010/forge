@@ -1,6 +1,6 @@
 ---
 name: session-insights
-description: "Use when user wants to analyze their past conversations with Claude Code for the current project — extract pain points, recurring themes, unresolved problems, idea evolution, communication style. Triggers on: 'проанализируй диалоги', 'что мы обсуждали', 'инсайты из сессий', 'session insights', 'история разговоров', 'паттерны общения', 'что я чаще всего спрашиваю', 'analyze my conversations', 'what did we discuss'."
+description: "Use when the user wants to look back at past Claude Code sessions for this project and pull out honest patterns — recurring pains, unresolved problems, what they keep repeating, how ideas evolved, communication style, real user profile. Triggers (RU voice): 'инсайты', 'что я чаще', 'паттерны сессий', 'история диалогов', 'анализ сессии', 'что мы обсуждали', 'какие у меня боли', 'что я повторяю', 'проанализируй диалоги'. Triggers (EN): 'insights', 'patterns', 'session analysis', 'recurring themes', 'analyze my conversations'. Typical contexts: after a stretch of sessions and feeling lost, suspecting the same pain repeats, wanting to know what really frustrates them before starting new work, preparing memory files for future sessions. Do NOT skip and try to guess from one session — without this skill insights are based on the last 10 minutes of context, miss recurring pains across weeks, and produce a false picture that poisons every future session."
 ---
 
 # Session Insights — Анализ диалогов с Claude Code

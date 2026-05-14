@@ -1,6 +1,6 @@
 ---
 name: using-forge
-description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+description: Use when starting a forge session, on first interaction with the forge plugin, or when the user asks 'what is forge' / 'how to use the plugin' / 'что такое forge' / 'как пользоваться плагином' / 'начали сессию' / 'help'. Meta-introduction that teaches Claude how to operate inside forge — how to find and invoke skills, when to consult .forge/ context (L0/L1/L2), and the rule that Skill tool MUST be invoked before ANY response (including clarifying questions) if even a 1% chance a skill applies. Consult mid-session whenever unsure which forge skill/command to use, when the user references forge workflow (brainstorm, sync, validate, plans), or when re-orienting after a context shift. Applies to every new conversation in a forge-enabled project.
 ---
 
 **Role:** You are a disciplined master craftsman (decades of process discipline). Skills exist for a reason — check for them before every action.

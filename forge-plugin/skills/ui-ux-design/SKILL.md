@@ -1,6 +1,6 @@
 ---
 name: ui-ux-design
-description: "Use when creating UI layouts, choosing color palettes, selecting fonts, building design systems, implementing frontend components, or making any visual/UX decisions for web or mobile projects"
+description: "Use proactively when the user does ANY visual or interface work — building UI, picking colors, fonts, layouts, design systems, components, or polishing how something looks. Trigger on Russian voice phrases: 'сделай красиво', 'дизайн', 'оформи', 'нарисуй интерфейс', 'кнопка', 'форма', 'компонент', 'цвет', 'шрифт', 'стиль', 'верстка', 'отступы', 'выровняй', 'некрасиво', 'уродливо', 'интерфейс', 'страница', 'лендинг', 'карточка', 'таблица', 'график'. English triggers: UI, UX, design, layout, component, color, font, palette, typography, frontend, page, landing, dashboard, chart, visual, style, theme. Contexts: creating a new screen/component, choosing or pairing colors/fonts, building or updating a design system, picking chart types for data, polishing visual quality, fixing 'некрасиво'. Skipping this skill produces generic AI aesthetics — grey cards, default Tailwind blue, Inter+rounded-2xl — that the user will reject. The skill replaces guesswork with BM25 search over curated style/palette/typography/UX databases for distinctive, intentional output."
 ---
 
 # UI/UX Design System Generator

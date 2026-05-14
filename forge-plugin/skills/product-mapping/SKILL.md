@@ -1,6 +1,6 @@
 ---
 name: product-mapping
-description: "Use when user asks for a project overview, product map, wants to understand the full project, or asks 'what does this project do?' / 'show me the big picture'. Generates an interactive HTML navigator showing business logic flows, entities, and gaps — not code structure, but how the project works as a mechanism. Also trigger when user says 'карта проекта', 'обзор проекта', 'из чего состоит', 'полная картина', 'навигатор', 'product map'."
+description: "Use proactively when the user needs a bird's-eye view of an unfamiliar or half-forgotten project — new to the codebase, returning after a break, onboarding someone, or deciding what to build next. Trigger on Russian voice phrases 'карта проекта', 'что у нас в проекте', 'обзор', 'покажи структуру', 'что есть', 'из чего состоит', 'полная картина', 'навигатор', 'как лежит проект', and English 'product map', 'project overview', 'show me the structure', 'big picture', 'what does this project do'. Produces an interactive HTML navigator (4 tabs: Картина / Потоки / Детали / Дыры) that explains the project as a business mechanism, not a file tree — human-language flows, entities, and gaps. Skipping this when the user is disoriented forces them to read code or guess; one good map saves hours of confused exploration and prevents wrong assumptions about what already exists."
 ---
 
 # Product Mapping — Interactive Project Navigator

@@ -1,6 +1,6 @@
 ---
 name: api-design
-description: Use when designing REST API endpoints, creating new routes, defining API contracts between services, or reviewing API surface before making it public
+description: "Use proactively when designing or adding ANY HTTP endpoint, REST route, or API contract — BEFORE writing handler code. Trigger on Russian phrases like 'нужен api', 'сделай эндпоинт', 'добавь route', 'апишка', 'ручка', 'нужна ручка', 'роут', 'сделай ендпоинт', 'эндпойнт', 'контракт api', 'новый метод', 'GET /users', 'POST запрос', 'отдай json', 'фронт хочет данные', 'связать с бэком', and English 'new endpoint', 'design API', 'REST route', 'API contract', 'expose this', 'add route', 'make it public'. Also trigger when reviewing existing API surface, choosing pagination (cursor vs offset), defining error shape, or picking status codes. Don't skip even when: it's 'just an internal endpoint' (internal becomes external), 'we'll iterate later' (every consumer locks the contract — V2 costs 10x), 'only I will use it' (future-you in 3 months won't remember the shape), or 'it mirrors the DB schema' (consumers don't care about your storage). Contract-first takes 5 minutes; retrofit costs days. Outputs reviewable contract to .forge/plans/api-{name}.yml before any handler is written."
 ---
 
 # API Design

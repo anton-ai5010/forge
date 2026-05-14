@@ -1,17 +1,6 @@
 ---
 name: project-unblocker
-description: >
-  Помогает разобраться в проекте и понять что делать дальше когда застрял.
-  Сканирует кодовую базу, показывает конкретные проблемы и недоделки,
-  вытаскивает задачи из головы пользователя через реакции а не через открытые вопросы.
-  Используй этот скилл когда пользователь говорит что-то вроде:
-  "не знаю что делать дальше", "застрял", "что тут вообще происходит",
-  "с чего начать", "не понимаю проект", "что не доделано",
-  "помоги разобраться", "нужен план", "расставь приоритеты",
-  или любые признаки потерянности в проекте.
-  Также используй когда пользователь жалуется на что-то в проекте
-  ("не нравится дизайн", "тормозит", "криво работает") —
-  это сигнал что нужно помочь превратить ощущение в задачи.
+description: "Use proactively the moment the user shows ANY sign of being stuck, lost, or paralyzed in a project — even subtle ones. Trigger on Russian voice phrases: 'застрял', 'не знаю что делать', 'не знаю с чего начать', 'тупик', 'что дальше', 'с чего начать', 'потерялся', 'голова кругом', 'хз что делать', 'без понятия', 'куда двигать', 'не въезжаю', 'не пойму как', 'что тут вообще происходит', 'не понимаю проект', 'что не доделано', 'помоги разобраться', 'нужен план', 'расставь приоритеты', 'всё сломалось', 'ну такое', 'как-то криво', 'не нравится', 'тормозит'. English equivalents: 'stuck', 'lost', 'no idea what to do', 'where do I start', 'dead end', 'what next', 'help me figure out', 'need a plan', 'prioritize'. Also trigger on vague complaints about a project (design/perf/UX feelings without specifics) — those are stuck-signals in disguise. The skill scans the codebase with parallel agents, surfaces concrete unfinished pieces and problems, then extracts tasks via reactions (not open questions) and writes ROADMAP.md + CURRENT_TASKS.md. Skipping it = user keeps spinning, opens a new project instead of finishing this one, loses days. Don't ask 'what do you want to do' — if they knew, they wouldn't be stuck. Invoke immediately, scan first, ask reaction-style questions later."
 ---
 
 # Project Unblocker

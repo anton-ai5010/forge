@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: "Use when the user EXPLICITLY asks for the subagent-driven double-review pattern, OR when /execute delegates a step because the plan's tasks are independent enough for strict review gates. Triggers: 'subagent-driven', 'двойное ревью', 'свежий агент на каждую задачу', 'двухступенчатое ревью', 'spec + quality review', 'делегируй с проверкой'. NOT the default path — /execute is. Difference: /execute keeps decisions and checkpoints in the main session with user dialogue; this skill runs autonomous fresh-subagent-per-task with TWO mandatory reviews (spec compliance THEN code quality) and re-review loops until both approve, before next task. Use when tasks are mostly independent, plan is final, user wants minimal human-in-loop, and accepts extra subagent invocations for stricter quality. Skip for tightly coupled tasks, exploratory work, or anything needing user input mid-task — those belong in /execute."
 ---
 
 # Subagent-Driven Development

@@ -1,6 +1,6 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+description: "Use proactively when code is written, edited, or about to be merged — even if it 'looks fine'. Trigger when the user says 'проверь код', 'отревьюй', 'глянь код', 'посмотри код', 'код-ревью', 'код норм?', 'ничё не упустил?', 'оцени код', 'всё ок?', 'review', 'code review', 'check the code', 'before merge', or after finishing a feature / task / subagent run / bug fix / refactor. Dispatches the forge:code-reviewer subagent (senior reviewer, 3000+ PRs) to catch spec drift, missed edge cases, security issues, bad patterns, and silent regressions BEFORE they ship. Skipping this means bugs land in main, the user finds them in production, and the fix costs 10x more than catching it now. Run after each task in subagent-driven dev, after major features, and always before merge — review early, review often."
 ---
 
 # Requesting Code Review
