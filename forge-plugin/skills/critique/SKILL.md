@@ -19,6 +19,18 @@ description: "Use proactively right after /plan when a plan file exists in .forg
 - Свежий агент со специфической ролью находит реальные проблемы, а не ставит галочки.
 - Параллельные персоны бесплатны по времени (запускаются одновременно).
 
+## Process state (для statusline)
+
+В начале фазы перезаписываем `.forge/state.yml`:
+
+```bash
+mkdir -p .forge && cat > .forge/state.yml <<EOF
+phase: critique
+task: <slug-из-плана>
+started_at: $(date -Iseconds)
+EOF
+```
+
 ## Процесс
 
 ### 1. Прочитай план и задачу

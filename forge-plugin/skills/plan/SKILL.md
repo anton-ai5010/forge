@@ -40,6 +40,18 @@ description: "Use proactively right after /new-task finishes and a task file app
 
 **Один вопрос за раз. Простой язык.**
 
+## Process state (для statusline)
+
+В начале фазы перезаписываем `.forge/state.yml`:
+
+```bash
+mkdir -p .forge && cat > .forge/state.yml <<EOF
+phase: plan
+task: <slug-из-файла-task>
+started_at: $(date -Iseconds)
+EOF
+```
+
 ## Процесс
 
 ### 1. Прочитай вход
