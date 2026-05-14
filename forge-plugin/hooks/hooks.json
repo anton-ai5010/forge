@@ -33,6 +33,16 @@
             "async": false
           }
         ]
+      },
+      {
+        "matcher": "Bash|Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/user-rules-check.sh",
+            "async": false
+          }
+        ]
       }
     ],
     "Stop": [
