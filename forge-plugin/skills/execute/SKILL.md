@@ -32,6 +32,24 @@ description: "Use proactively right after /critique when a final plan with Execu
 
 **Правило большого пальца:** если шаг производит много токенов вывода — в субагент. Если шаг короткий и требует контекста разговора — в основной.
 
+## Process state (для statusline)
+
+В начале фазы:
+
+```bash
+mkdir -p .forge && cat > .forge/state.yml <<EOF
+phase: execute
+task: <slug-из-плана>
+started_at: $(date -Iseconds)
+EOF
+```
+
+При **финальном завершении задачи** (после прохождения критерия готовности) — очисти state:
+
+```bash
+echo "phase: idle" > .forge/state.yml
+```
+
 ## Процесс
 
 ### 1. Прочитай финальный план и задачу
