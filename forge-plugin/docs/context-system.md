@@ -209,9 +209,21 @@ entries:
 
 ```yaml
 entries:
-  - name: brainstorming
-    trigger: "BEFORE any creative/feature work"
-    gives: "requirements, constraints, scope"
+  - name: new-task
+    trigger: "Phase 1 — раскрутить сырой промпт пользователя"
+    gives: "понимание задачи, контекст, цель"
+
+  - name: plan
+    trigger: "Phase 2 — после понимания задачи"
+    gives: "план реализации с чекпоинтами"
+
+  - name: critique
+    trigger: "Phase 3 — критика плана перед реализацией"
+    gives: "ревью плана через 4 персоны"
+
+  - name: execute
+    trigger: "Phase 4 — реализация по утверждённому плану"
+    gives: "выполнение через субагентов, остановки на чекпоинтах"
 
   - name: ui-ux-design
     trigger: "WHEN building UI, choosing colors/fonts/layout"
@@ -225,10 +237,6 @@ entries:
   - name: test-driven-development
     trigger: "WHEN implementing features or fixes"
     gives: "red-green-refactor cycle"
-
-  - name: writing-plans
-    trigger: "WHEN have spec, before coding"
-    gives: "bite-sized implementation plan"
 
   - name: code-cleanup
     trigger: "WHEN code quality issues, dead code, naming"

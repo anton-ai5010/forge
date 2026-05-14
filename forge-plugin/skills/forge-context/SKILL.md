@@ -1,6 +1,6 @@
 ---
 name: forge-context
-description: Use at session start when project has .forge/index.yml — loads project context using L0/L1/L2 tiered system for minimal token usage
+description: "Use proactively at session start in any project with .forge/index.yml (or legacy .forge/index.md) to load project context via the L0/L1/L2 tiered system — L0 catalog is auto-injected (~200 tok), then route L1 files (map/conventions/status/decisions/dead-ends/journal/learnings/infrastructure/skills-catalog) by matching catalog tags to the current task, and reach for L2 specs only when an L1 summary is insufficient. Trigger when user says 'начали сессию', 'загрузи контекст', 'что у нас в проекте', 'статус проекта', 'на чём остановились', 'продолжаем', 'что было в прошлый раз', or opens a project after a break. Also trigger before any task that needs project memory: picking files, following naming conventions, avoiding past dead-ends, resuming an in-flight task, checking infra/Docker/DB. Skipping this means reading source code blindly (40k+ tokens) instead of the curated 200-tok index, repeating dead-ends already documented, violating project conventions, and rebuilding context the user already paid to write down. This is the context-loader (tiered, tag-routed) — distinct from using-forge which is the general 'check skills first' guardrail."
 ---
 
 # FORGE Project Context (L0/L1/L2)

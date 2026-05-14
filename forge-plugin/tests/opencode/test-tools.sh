@@ -36,7 +36,7 @@ output=$(timeout 60s opencode run --print-logs "Use the find_skills tool to list
 }
 
 # Check for expected patterns in output
-if echo "$output" | grep -qi "forge:brainstorming\|forge:using-forge\|Available skills"; then
+if echo "$output" | grep -qi "forge:new-task\|forge:using-forge\|Available skills"; then
     echo "  [PASS] find_skills tool discovered forge skills"
 else
     echo "  [FAIL] find_skills did not return expected skills"
@@ -79,9 +79,9 @@ fi
 # Test 3: Test use_skill with forge: prefix
 echo ""
 echo "Test 3: Testing use_skill with forge: prefix..."
-echo "  Running opencode with forge:brainstorming skill..."
+echo "  Running opencode with forge:new-task skill..."
 
-output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load forge:brainstorming and tell me the first few lines of what you received." 2>&1) || {
+output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load forge:new-task and tell me the first few lines of what you received." 2>&1) || {
     exit_code=$?
     if [ $exit_code -eq 124 ]; then
         echo "  [FAIL] OpenCode timed out after 60s"
@@ -90,11 +90,11 @@ output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load f
     echo "  [WARN] OpenCode returned non-zero exit code: $exit_code"
 }
 
-# Check for expected content from brainstorming skill
-if echo "$output" | grep -qi "brainstorming\|Launching skill\|skill.*loaded"; then
-    echo "  [PASS] use_skill loaded forge:brainstorming skill"
+# Check for expected content from new-task skill
+if echo "$output" | grep -qi "new-task\|Launching skill\|skill.*loaded"; then
+    echo "  [PASS] use_skill loaded forge:new-task skill"
 else
-    echo "  [FAIL] use_skill did not load forge:brainstorming correctly"
+    echo "  [FAIL] use_skill did not load forge:new-task correctly"
     echo "  Output was:"
     echo "$output" | head -50
     exit 1

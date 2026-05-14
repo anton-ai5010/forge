@@ -374,7 +374,7 @@ Next Steps:
 - After major refactoring
 
 **Integration points:**
-- After `/forge:execute-plan` completes
+- After `/forge:execute` completes
 - Before `/forge:finishing-a-development-branch`
 - Periodically during long development sessions
 

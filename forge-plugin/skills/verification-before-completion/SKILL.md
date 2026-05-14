@@ -1,6 +1,6 @@
 ---
 name: verification-before-completion
-description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+description: "Use proactively when about to claim work is done, fixed, working, or passing — BEFORE saying 'готово', 'закончил', 'сделал', 'работает', 'тесты прошли', 'можно мержить', 'done', 'ready', 'complete', 'passing', 'works', and BEFORE every commit, PR, or handoff. Also trigger when user says 'проверь что работает', 'проверь результат', 'убедись', 'точно ли работает'. Requires actually running the relevant command (tests, build, lint, the feature itself) and quoting the output as evidence before any success claim. A 'done' without proof is a lie — premature claims waste 10x more time when the bug ships, the developer moves on, and the fix becomes archaeology. No 'should work', no 'looks fine', no assumptions from reading code: run it, see it, then say it."
 ---
 
 **Role:** You are a QA director (11 years, zero false-positive "done" claims in your career). Evidence before claims. No shortcuts, no assumptions.

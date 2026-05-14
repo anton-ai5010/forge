@@ -1,6 +1,6 @@
 ---
 name: using-forge
-description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+description: Use when starting a forge session, on first interaction with the forge plugin, or when the user asks 'what is forge' / 'how to use the plugin' / 'что такое forge' / 'как пользоваться плагином' / 'начали сессию' / 'help'. Meta-introduction that teaches Claude how to operate inside forge — how to find and invoke skills, when to consult .forge/ context (L0/L1/L2), and the rule that Skill tool MUST be invoked before ANY response (including clarifying questions) if even a 1% chance a skill applies. Consult mid-session whenever unsure which forge skill/command to use, when the user references forge workflow (brainstorm, sync, validate, plans), or when re-orienting after a context shift. Applies to every new conversation in a forge-enabled project.
 ---
 
 **Role:** You are a disciplined master craftsman (decades of process discipline). Skills exist for a reason — check for them before every action.
@@ -30,8 +30,8 @@ This is not negotiable. This is not optional. You cannot rationalize your way ou
 digraph skill_flow {
     "User message received" [shape=doublecircle];
     "About to EnterPlanMode?" [shape=doublecircle];
-    "Already brainstormed?" [shape=diamond];
-    "Invoke brainstorming skill" [shape=box];
+    "Already ran new-task?" [shape=diamond];
+    "Invoke new-task skill" [shape=box];
     "Might any skill apply?" [shape=diamond];
     "Invoke Skill tool" [shape=box];
     "Announce: 'Using [skill] to [purpose]'" [shape=box];
@@ -40,10 +40,10 @@ digraph skill_flow {
     "Follow skill exactly" [shape=box];
     "Respond (including clarifications)" [shape=doublecircle];
 
-    "About to EnterPlanMode?" -> "Already brainstormed?";
-    "Already brainstormed?" -> "Invoke brainstorming skill" [label="no"];
-    "Already brainstormed?" -> "Might any skill apply?" [label="yes"];
-    "Invoke brainstorming skill" -> "Might any skill apply?";
+    "About to EnterPlanMode?" -> "Already ran new-task?";
+    "Already ran new-task?" -> "Invoke new-task skill" [label="no"];
+    "Already ran new-task?" -> "Might any skill apply?" [label="yes"];
+    "Invoke new-task skill" -> "Might any skill apply?";
 
     "User message received" -> "Might any skill apply?";
     "Might any skill apply?" -> "Invoke Skill tool" [label="yes, even 1%"];
@@ -79,10 +79,10 @@ These thoughts mean STOP—you're rationalizing:
 
 When multiple skills could apply, use this order:
 
-1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
+1. **Process skills first** (new-task, debugging) - these determine HOW to approach the task
 2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
 
-"Let's build X" → brainstorming first, then implementation skills.
+"Let's build X" → new-task first, then implementation skills.
 "Fix this bug" → debugging first, then domain-specific skills.
 
 ## FORGE Project Context (L0/L1/L2)
@@ -114,7 +114,7 @@ If `.forge/graph.json` exists — the project has a code knowledge graph built b
 2. `graphify path "ModuleA" "ModuleB" --graph .forge/graph.json` — traces dependencies between components
 3. `graphify explain "ClassName" --graph .forge/graph.json` — explains a node and its neighbors
 
-**This applies to ALL skills.** Whether debugging, planning, brainstorming, or reviewing — the graph gives you architecture context faster than reading files.
+**This applies to ALL skills.** Whether debugging, planning, scoping a new task, or reviewing — the graph gives you architecture context faster than reading files.
 
 **If `.forge/graph.json` does not exist** — work without it. Don't suggest building it unless user asks.
 
@@ -124,9 +124,9 @@ If `.forge/graph.json` exists — the project has a code knowledge graph built b
 
 | Skill | Purpose |
 |-------|---------|
-| forge:brainstorming | Pre-implementation design/requirements exploration |
-| forge:writing-plans | Bite-sized implementation plans from spec |
-| forge:executing-plans | Run plans with review checkpoints |
+| forge:new-task | Pre-implementation scoping: clarify goal and requirements |
+| forge:plan | Bite-sized implementation plans from spec |
+| forge:execute | Run plans with review checkpoints |
 | forge:dispatching-parallel-agents | Parallel dispatch of 2+ independent tasks |
 | forge:subagent-driven-development | Execute plans via fresh subagent per task with two-stage review |
 | forge:systematic-debugging | 4-phase root cause investigation |
@@ -174,6 +174,12 @@ These apply to ALL code you write, in every skill:
 - Кратко. Без воды.
 - Один уточняющий вопрос за раз, не список.
 - Ссылки на код: `file_path:line_number`
+
+## Полезные встроенные команды Claude Code (упомяни Антону когда уместно)
+
+- **`/btw <вопрос>`** — задать side-вопрос. Ответ показывается в overlay и **НЕ попадает в историю сессии**. Идеально для голосового ввода "а кстати, что такое X?" — основная задача не загаживается.
+- **`/clear`** — очистить контекст. Использовать когда контекст забит после длинной сессии и нужно начать свежим.
+- **`/compact`** — сжать историю в саммари сохранив главное. Альтернатива /clear когда нужно сохранить контекст задачи.
 
 ## User Instructions
 

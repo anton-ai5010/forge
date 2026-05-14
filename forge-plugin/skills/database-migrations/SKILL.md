@@ -1,6 +1,6 @@
 ---
 name: database-migrations
-description: Use when modifying database schema — adding/removing tables or columns, changing constraints, renaming fields, planning data migrations, or any ALTER TABLE targeting production
+description: "Use proactively when touching database schema in any way — adding/removing tables or columns, changing types or constraints, renaming fields, backfilling data, writing ALTER TABLE, or planning any migration against Postgres/MySQL/SQLite. Trigger on Russian voice phrases like 'добавь поле в базу', 'добавить столбец', 'поменяй колонку', 'переименуй поле', 'миграция', 'таблица', 'схема бд', 'базу почини', 'постгрес', 'накати миграцию', 'откати базу', 'индекс на таблицу', and English equivalents ('add column', 'alter table', 'migration', 'schema change', 'rename field', 'drop table', 'backfill', 'postgres', 'sql migration'). Also trigger when user edits files like migrations/*, schema.sql, models.py, prisma/schema.prisma, alembic/, knex migrations, or asks 'why is the DB slow after deploy'. Don't skip even for tiny schema tweaks — a missing rollback or a non-concurrent index on a live table brings down prod, locks writes, and turns a 5-minute change into a long night with data loss. Every migration needs a reversibility plan BEFORE it touches production."
 ---
 
 `!database`
@@ -122,6 +122,6 @@ Save migration plan to `.forge/plans/migration-{name}.md` with: description, dat
 
 ## Integration
 
-- **After:** `forge:brainstorming` (schema design decided)
+- **After:** `forge:new-task` (schema design decided)
 - **Before:** `forge:test-driven-development` (test migration behavior)
 - **Records to:** `.forge/decisions.yml` (schema decisions)

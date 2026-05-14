@@ -541,27 +541,30 @@ L2 (load rarely): `.forge/library/*/spec.yml`, `.forge/dead-ends/*.md`
 DO NOT load all L1 files. Match catalog tags to current task.
 DO NOT read source code before checking .forge/library/spec.yml.
 
-## Development Workflow
+## Development Workflow (4-phase pipeline)
 
-### Before any new work
-1. `/forge:brainstorm` — clarify requirements, get approval
-2. Plan saved to `.forge/plans/`
+### Phase 1 — Understanding
+1. `/forge:new-task` — превратить сырой промпт в чистую задачу + критерий готовности
 
-### During implementation
-3. TDD mandatory — failing test FIRST
-4. Bite-sized commits
-5. Record dead-ends IMMEDIATELY on failure
+### Phase 2 — Planning
+2. `/forge:plan` — построить план с чекпоинтами (рекурсия на дальние блокеры через отдельные сессии)
+
+### Phase 3 — Critique
+3. `/forge:critique` — 4 параллельных персоны рвут план + дописывают execution strategy
+
+### Phase 4 — Implementation
+4. `/forge:execute` — реализация, грязная работа делегируется субагентам, стоп на чекпоинтах плана
 
 ### After completing work
-6. `/forge:sync` — update docs
-7. `/forge:validate` — verify code vs plan
+5. `/forge:sync` — update docs
+6. `/forge:validate` — verify code vs plan
 
 ### Hard rules
-- NO production code without failing test first
-- NO implementation without approved brainstorming
+- NO production code without a finalized plan (`/critique` complete)
+- NO implementation without approved task statement (`/new-task` complete)
 - NO fixes without root cause analysis
 - NO "done" claims without running tests
-- NO skipping brainstorming even for "simple" changes
+- NO skipping `/new-task` even for "simple" changes
 
 ## Red Zones
 
@@ -580,7 +583,10 @@ DO NOT read source code before checking .forge/library/spec.yml.
 | Command | When |
 |---------|------|
 | `/forge:start` | Session start |
-| `/forge:brainstorm` | Before features/changes |
+| `/forge:new-task` | Phase 1 — раскрутить сырую задачу |
+| `/forge:plan` | Phase 2 — построить план |
+| `/forge:critique` | Phase 3 — критика плана 4 персонами |
+| `/forge:execute` | Phase 4 — реализация |
 | `/forge:design` | UI/UX design system |
 | `/forge:sync` | After work — update docs |
 | `/forge:validate` | Before merge |

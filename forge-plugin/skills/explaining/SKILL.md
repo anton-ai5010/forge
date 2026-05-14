@@ -1,6 +1,6 @@
 ---
 name: explaining
-description: "Use when user asks how something specific works in any project — 'how does auth work?', 'what happens when user pays?', 'explain the checkout flow'. Generates an interactive HTML page visualizing the answer as a flow with steps, forks, entities, and drill-down. Also trigger on: 'как работает', 'как устроен', 'объясни', 'покажи как', 'визуализируй', 'explain how', 'what happens when'."
+description: "Use proactively when the user wants to understand how a specific piece of a project works — auth, payment, checkout, sync, any flow or mechanism. Triggers in Russian (voice-style): 'объясни как', 'покажи как работает', 'что делает', 'как устроен', 'как это работает', 'визуализируй', 'нарисуй', 'как связан', 'покажи поток', 'расскажи как'. English: 'how does X work', 'explain how', 'what happens when', 'visualize', 'show the flow', 'walk me through'. Produces an interactive HTML page (dark theme, expandable cards, 🔍 drill-down blocks) showing краткий ответ + поток шагов с развилками + связанные сущности + похожие вопросы. Use when: user needs deep understanding (not a quick yes/no), HTML visualization will help more than text, user is learning how something works, or non-coder needs flow without jargon. Do NOT skip in favor of plain text — a confusing wall of words for a visual learner is worse than no answer; the HTML page is the whole point. Phase: explanation, not implementation."
 ---
 
 # Explaining — Visual Answer to "How Does X Work?"

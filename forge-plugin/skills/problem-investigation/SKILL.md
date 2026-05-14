@@ -1,6 +1,6 @@
 ---
 name: problem-investigation
-description: "Use when the user describes something broken, confusing, or unexpected and wants to understand what's going on — before any fixing happens. Trigger on phrases like 'что происходит', 'почему', 'не понимаю', 'странно себя ведёт', 'что-то не так', 'weird behavior', 'why is this happening'. Also use when the user pastes an error or stack trace without explicitly asking for a fix — they likely want to understand it first."
+description: "Use proactively when the user signals confusion or unexpected behavior BEFORE asking for a fix — this is the pre-fix understanding phase, not the debugging/fixing phase (that's systematic-debugging). Trigger on Russian voice phrases: 'почему', 'странно', 'непонятно', 'разбер', 'что происходит', 'не пойму', 'выясни', 'копни', 'расследуй', 'чё за фигня', 'хз почему', 'фиг знает', 'что-то не так', 'странно себя ведёт'. English: 'why', 'weird', 'investigate', 'diagnose', 'what happens', 'what's going on'. Also trigger when user pastes an error/stack trace/log without explicitly asking to fix it — they want to understand first. Concrete contexts: something broke and the cause is unclear, behavior contradicts expectations, need to map symptom-to-root-cause before touching code. DO NOT skip even when the fix seems obvious: jumping straight to a fix patches the symptom, misses context the user already has, and burns trust when the wrong fix breaks more things. Understanding first = right fix the first time."
 ---
 
 # Problem Investigation
@@ -95,7 +95,7 @@ Give a recommendation — don't just list options and ask "what do you think?" T
 
 Once the user picks an approach:
 - Clear fix needed → transition to `forge:systematic-debugging`
-- Design change needed → transition to `forge:brainstorming`
+- Design change needed → transition to `forge:new-task`
 - Quick one-liner → just do it
 
 For non-trivial problems, save the investigation to `.forge/plans/YYYY-MM-DD-investigate-<topic>.md` — it's useful context if the fix gets complicated later.
@@ -124,5 +124,5 @@ This skill doesn't exist in isolation. Here's when to use what:
 |-----------|-------|
 | "Что-то не так, давай разберёмся" | **problem-investigation** (this) |
 | "Знаю причину, нужно починить" | forge:systematic-debugging |
-| "Хочу добавить фичу" | forge:brainstorming |
+| "Хочу добавить фичу" | forge:new-task |
 | "Застрял, не знаю что делать" | forge:project-unblocker |

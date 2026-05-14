@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees with smart directory selection and safety verification
+description: "Use when user needs an ISOLATED workspace for a parallel branch — voice triggers: 'параллельная ветка', 'изолированный workspace', 'не хочу ломать основной код', 'отдельная папка для эксперимента', 'worktree', 'попробовать не трогая main', 'две задачи параллельно', plus English 'worktree', 'isolated workspace', 'parallel branch'. Concrete contexts: пользователь хочет поэкспериментировать с рискованной фичей не ломая working ветку; параллельно тащит две фичи без бесконечных stash/checkout; запускает долгий эксперимент в фоне пока в main продолжает работу. Skill создаёт отдельную git worktree-папку: умный выбор директории (.worktrees/ vs ~/.config/forge/), проверка что папка в .gitignore (иначе worktree-мусор попадёт в коммит), авто-установка зависимостей, baseline-тест. SKIP для рядовой работы в одной ветке — это overkill. Пропуск когда изоляция реально нужна = эксперимент сольётся с production одним случайным коммитом, или часовое распутывание конфликтов stash."
 ---
 
 # Using Git Worktrees
@@ -212,9 +212,9 @@ Ready to implement auth feature
 ## Integration
 
 **Called by:**
-- **brainstorming** (Phase 4) - REQUIRED when design is approved and implementation follows
+- **new-task** - REQUIRED when task is approved and implementation follows
 - **subagent-driven-development** - REQUIRED before executing any tasks
-- **executing-plans** - REQUIRED before executing any tasks
+- **execute** - REQUIRED before executing any tasks
 - Any skill needing isolated workspace
 
 **Pairs with:**

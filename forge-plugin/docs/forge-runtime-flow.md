@@ -64,77 +64,97 @@ flowchart LR
 
 ---
 
-## 3. Skill Invocation Flow
+## 3. The 4-Phase Pipeline
+
+Forge organizes любую новую задачу в строгий 4-фазный пайплайн. Каждая фаза — отдельная команда с явным переходом.
 
 ```mermaid
 flowchart TB
-    A["Claude получает задачу"] --> B{"Нужен brainstorming?<br/>(новая фича/компонент)"}
-    B -- Да --> C["/forge:brainstorm"]
-    B -- Нет --> D{"Баг или проблема?"}
-    D -- Да --> E["/forge:systematic-debugging"]
-    D -- Нет --> F{"Реализация по плану?"}
-    F -- Да --> G["/forge:execute-plan"]
-    F -- Нет --> H{"Код написан, нужна проверка?"}
-    H -- Да --> I["/forge:validate"]
-    H -- Нет --> J["Другие скиллы по ситуации"]
+    A["Claude получает задачу"] --> B{"Что именно нужно?"}
+    B -- "Новая задача / фича" --> P1["/forge:new-task<br/>Phase 1: Understanding"]
+    B -- "Баг или проблема" --> DBG["/forge:systematic-debugging"]
+    B -- "Простой read-only вопрос" --> ANS["Прямой ответ"]
 
-    subgraph BRAINSTORM_FLOW["Brainstorming → Plan → Execute"]
-        C --> C1["Загружает dead-ends + decisions"]
-        C1 --> C2["Сократический диалог<br/>уточняет требования"]
-        C2 --> C3["HARD GATE: дизайн одобрен?"]
-        C3 -- Нет --> C2
-        C3 -- Да --> C4["Автоматически → /forge:write-plan"]
-        C4 --> C5["План в .forge/plans/<br/>задачи по 2-5 мин"]
-        C5 --> C6["/forge:execute-plan<br/>или subagent-driven"]
-    end
+    P1 --> P1A["Сократический диалог<br/>уточнение требований<br/>чтение .forge/decisions, dead-ends"]
+    P1A --> P1G{"HARD GATE:<br/>понимание полное?"}
+    P1G -- Нет --> P1A
+    P1G -- Да --> P2["/forge:plan<br/>Phase 2: Planning"]
 
-    subgraph EXECUTION["Execution Loop"]
-        C6 --> EX1["Берёт задачу из плана"]
-        EX1 --> EX2["TDD: пишет тест → RED"]
-        EX2 --> EX3["Пишет код → GREEN"]
-        EX3 --> EX4["Рефакторинг"]
-        EX4 --> EX5{"Ещё задачи?"}
-        EX5 -- Да --> EX1
-        EX5 -- Нет --> EX6["/forge:sync — обновляет .forge/"]
-    end
+    P2 --> P2A["Декомпозиция на задачи<br/>2-5 мин каждая"]
+    P2A --> P2R{"Найден дальний блокер?"}
+    P2R -- Да --> P2REC["Рекурсия: under-plan<br/>для блокера"]
+    P2REC --> P2A
+    P2R -- Нет --> P2OUT[".forge/plans/YYYY-MM-DD-name.md"]
+    P2OUT --> P3["/forge:critique<br/>Phase 3: Critique"]
+
+    P3 --> P3PAR["4 персоны параллельно:<br/>• Architect<br/>• Security<br/>• UX<br/>• Pragmatist"]
+    P3PAR --> P3ES["Execution Strategy<br/>(порядок, риски, чекпоинты)"]
+    P3ES --> P3G{"План одобрен?"}
+    P3G -- Нет --> P2
+    P3G -- Да --> P4["/forge:execute<br/>Phase 4: Implementation"]
+
+    P4 --> P4SUB["Запуск через субагентов"]
+    P4SUB --> P4LOOP["Задача → TDD → diff → review"]
+    P4LOOP --> P4CHK{"Чекпоинт?"}
+    P4CHK -- Да --> P4STOP["СТОП: ждём подтверждения"]
+    P4STOP --> P4LOOP
+    P4CHK -- Нет --> P4MORE{"Ещё задачи?"}
+    P4MORE -- Да --> P4LOOP
+    P4MORE -- Нет --> SYNC["/forge:sync — обновляет .forge/"]
 ```
+
+### Phase contracts
+
+| Phase | Command | Outputs | Gate to next phase |
+|-------|---------|---------|--------------------|
+| 1. Understanding | `/forge:new-task` | Sharpened задача, открытые вопросы закрыты | Понимание подтверждено пользователем |
+| 2. Planning | `/forge:plan` | `.forge/plans/*.md` с задачами 2-5 мин; рекурсия на блокеры | План полный, блокеры покрыты |
+| 3. Critique | `/forge:critique` | Замечания от 4 персон + Execution Strategy | Critical issues закрыты, стратегия принята |
+| 4. Implementation | `/forge:execute` | Код, тесты, обновлённый `.forge/` | Все задачи зелёные, чекпоинты пройдены |
 
 ---
 
-## 4. Subagent-Driven Development — Detail
+## 4. Phase 4: Execute via Subagents
 
 ```mermaid
 sequenceDiagram
     participant U as Пользователь
     participant M as Main Claude
-    participant S1 as Subagent 1
-    participant S2 as Subagent 2
+    participant S1 as Subagent (task 1)
+    participant S2 as Subagent (task 2)
     participant R as Review Agent
 
-    U->>M: /forge:execute-plan
-    M->>M: Читает .forge/plans/plan.md
+    U->>M: /forge:execute
+    M->>M: Читает .forge/plans/plan.md + critique
     
     Note over M: Задача 1
     M->>S1: Промт с задачей + контекст
     S1->>S1: TDD: test → code → refactor
     S1-->>M: Результат + diff
 
-    M->>R: Review #1: соответствие спеке
+    M->>R: Review: соответствие плану + качество
     R-->>M: OK / замечания
-    M->>R: Review #2: качество кода
-    R-->>M: OK / замечания
-    
+
+    Note over M,U: Чекпоинт (если задан в стратегии)
+    M-->>U: Готов следующий шаг — продолжать?
+    U-->>M: Да
+
     Note over M: Задача 2
     M->>S2: Следующая задача (чистый контекст)
     S2->>S2: TDD: test → code → refactor
     S2-->>M: Результат + diff
 
-    M->>R: Review #1 + #2
+    M->>R: Review
     R-->>M: OK
 
     M->>M: /forge:sync — обновляет .forge/
     M-->>U: Отчёт о выполнении
 ```
+
+Ключевое:
+- Каждая задача — отдельный субагент с чистым контекстом.
+- Review — отдельный агент, независимый от исполнителя.
+- На чекпоинтах из Execution Strategy main Claude останавливается и ждёт пользователя.
 
 ---
 
@@ -148,14 +168,14 @@ flowchart TB
     end
 
     subgraph SKILLS_READ["Скиллы ЧИТАЮТ"]
-        SR1["brainstorming<br/>← .forge/dead-ends/*<br/>← .forge/decisions.md<br/>← .forge/library/"]
+        SR1["new-task<br/>← .forge/dead-ends/*<br/>← .forge/decisions.md<br/>← .forge/library/"]
         SR2["forge-context<br/>← .forge/index.md<br/>← .forge/map.json<br/>← .forge/conventions.json"]
-        SR3["executing-plans<br/>← .forge/plans/*.md"]
+        SR3["plan / critique / execute<br/>← .forge/plans/*.md"]
         SR4["systematic-debugging<br/>← .forge/dead-ends/*"]
     end
 
     subgraph SKILLS_WRITE["Скиллы ПИШУТ"]
-        SW1["brainstorming → writing-plans<br/>→ .forge/plans/YYYY-MM-DD-name.md"]
+        SW1["plan<br/>→ .forge/plans/YYYY-MM-DD-name.md"]
         SW2["session-awareness<br/>→ .forge/index.md (session section)<br/>→ .forge/dead-ends/topic.md<br/>→ .forge/journal.md"]
         SW3["/forge:sync<br/>→ .forge/index.md<br/>→ .forge/status.md<br/>→ .forge/map.json"]
         SW4["/forge:init<br/>→ ВСЮ структуру .forge/"]
@@ -205,8 +225,8 @@ flowchart TB
 │    ИТОГО за промт:             ~480 токенов              │
 │                                                          │
 │  По запросу (Skill tool):                                │
-│    brainstorming SKILL.md      ~500 токенов              │
-│    TDD SKILL.md                ~400 токенов              │
+│    new-task SKILL.md           ~500 токенов              │
+│    plan / critique / execute   ~400 токенов каждый       │
 │    другие скиллы               ~300-600 токенов          │
 │                                                          │
 │  Результат: 480 вместо 40,000+ на каждый промт           │
@@ -226,19 +246,23 @@ t=0     Claude Code запускается               пусто
 
 t=1     User: "хочу добавить JWT авторизацию"
         ↓ UserPromptSubmit hook               + .forge/index.md + dead-ends + git
-        ↓ Claude: подходит brainstorming      + brainstorming skill
-        ↓ Skill читает dead-ends, decisions   + контекст проекта
-        ↓ Claude задаёт вопросы               ...уточняет требования...
+        ↓ Claude → /forge:new-task            Phase 1: Understanding
+        ↓ Сократический диалог                ...уточняет требования...
 
-t=5     User одобряет дизайн
-        ↓ Claude → writing-plans skill        + writing-plans skill
-        ↓ Пишет план → .forge/plans/           .forge/ обновлён
+t=4     User подтверждает понимание
+        ↓ Claude → /forge:plan                Phase 2: Planning
+        ↓ Декомпозиция; рекурсия на блокер    план в .forge/plans/
 
-t=6     User: "выполняй"
-        ↓ UserPromptSubmit hook               + обновлённый index.md
-        ↓ Claude → executing-plans skill      + executing-plans skill
+t=7     План готов
+        ↓ Claude → /forge:critique            Phase 3: Critique
+        ↓ 4 персоны параллельно               замечания + Execution Strategy
+        ↓ User одобряет стратегию
+
+t=9     User: "выполняй"
+        ↓ Claude → /forge:execute             Phase 4: Implementation
         ↓ Задача 1: TDD cycle                 subagent с чистым контекстом
         ↓ Review → OK
+        ↓ Чекпоинт → стоп → user "go"
         ↓ Задача 2: TDD cycle                 новый subagent
         ↓ Review → OK
         ...

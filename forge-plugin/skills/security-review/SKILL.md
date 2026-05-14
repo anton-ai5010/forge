@@ -1,6 +1,6 @@
 ---
 name: security-review
-description: Use when reviewing code before PR/merge, when touching auth/payment/user-data/file-upload code, when adding new API endpoints, or when implementing secrets handling
+description: "Use proactively BEFORE any merge/deploy touching auth, payments, user data, file uploads, API endpoints, or secrets — even if the change looks small. Trigger when user says 'безопасно ли', 'проверь на дыры', 'проверь безопасность', 'авторизация', 'аутентификация', 'пароль', 'токен', 'ключ', 'секрет', 'шифрование', 'утечка', 'sql инжекция', 'инъекция', 'xss', 'csrf', 'cors', 'хакнут', 'взлом', 'уязвимость', 'дыра', or English equivalents: 'is this safe', 'security check', 'auth', 'login', 'password', 'token', 'secret', 'api key', 'sql injection', 'xss', 'csrf', 'cors', 'vulnerability', 'hack', 'leak', 'pentest', 'owasp'. Auto-trigger on code touching login flows, JWT/session handling, payment processing, file uploads, user input validation, .env files, database queries with string concat, new public API routes, third-party integrations, or anything written 'just for prototype'. Skipping = 5 min saved now, weeks of incident response and lost trust later. Security bugs caught at review cost minutes; in production they cost the business. Run the checklist even when 'framework handles it' or 'only admins use it' — those are the exact rationalizations attackers count on."
 ---
 
 # Security Review

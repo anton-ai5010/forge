@@ -228,7 +228,7 @@ Ask:
 If `.forge/learnings.yml` doesn't exist — create it:
 ```yaml
 # Уроки проекта — накапливаются через /forge:sync
-# Загружаются при brainstorming для informed decisions
+# Загружаются при /new-task и /plan для informed decisions
 entries: []
 ```
 

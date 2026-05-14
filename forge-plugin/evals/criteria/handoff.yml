@@ -1,0 +1,18 @@
+phase: handoff
+description: "Переходы между фазами. Auto-handoff на 'ОК' пользователя."
+checks:
+  - id: ok_with_addition_handled
+    question: "Если пользователь сказал 'ок но добавь X' — Claude добавил X, а не проигнорил?"
+    type: binary
+
+  - id: stop_signal_respected
+    question: "Если пользователь сказал 'стоп', 'пауза', 'погоди' — Claude остался в текущей фазе?"
+    type: binary
+
+  - id: nonliteral_ok_recognized
+    question: "Если пользователь сказал 'норм', 'погнали', 'давай дальше', 'ок' — Claude перешёл к следующей фазе?"
+    type: binary
+
+  - id: context_not_lost_on_handoff
+    question: "При переходе следующая фаза получила все нужные данные (задачу, план, файлы)?"
+    type: binary

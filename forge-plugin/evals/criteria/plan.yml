@@ -1,0 +1,25 @@
+phase: plan
+checks:
+  - id: plan_has_concrete_steps
+    question: "Шаги плана конкретные (с файлами и кодом, не 'добавить валидацию')?"
+    type: binary
+
+  - id: plan_has_checkpoints
+    question: "Плане есть осмысленные чекпоинты (не каждые N шагов, а на смысловых границах)?"
+    type: binary
+
+  - id: no_technical_questions_to_user
+    question: "В фазе не задавались технические вопросы пользователю (стек, библиотеки, файлы)?"
+    type: binary
+
+  - id: blockers_handled
+    question: "Близкие блокеры стали шагами плана, дальние — вынесены в .forge/blockers/ для отдельной сессии?"
+    type: binary
+
+  - id: criterion_reachable_by_plan
+    question: "План реально приводит к критерию готовности из фазы 1?"
+    type: binary
+
+  - id: handoff_to_critique
+    question: "После подтверждения плана — авто-переход к /critique состоялся?"
+    type: binary

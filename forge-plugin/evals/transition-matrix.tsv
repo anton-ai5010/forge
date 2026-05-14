@@ -1,0 +1,5 @@
+from_phase	to_new-task	to_plan	to_critique	to_execute	to_END
+new-task	-	0	0	0	0
+plan	0	-	0	0	0
+critique	0	0	-	0	0
+execute	0	0	0	-	0

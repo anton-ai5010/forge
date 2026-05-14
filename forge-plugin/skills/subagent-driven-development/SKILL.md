@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: "Use when the user EXPLICITLY asks for the subagent-driven double-review pattern, OR when /execute delegates a step because the plan's tasks are independent enough for strict review gates. Triggers: 'subagent-driven', 'двойное ревью', 'свежий агент на каждую задачу', 'двухступенчатое ревью', 'spec + quality review', 'делегируй с проверкой'. NOT the default path — /execute is. Difference: /execute keeps decisions and checkpoints in the main session with user dialogue; this skill runs autonomous fresh-subagent-per-task with TWO mandatory reviews (spec compliance THEN code quality) and re-review loops until both approve, before next task. Use when tasks are mostly independent, plan is final, user wants minimal human-in-loop, and accepts extra subagent invocations for stricter quality. Skip for tightly coupled tasks, exploratory work, or anything needing user input mid-task — those belong in /execute."
 ---
 
 # Subagent-Driven Development
@@ -20,19 +20,19 @@ digraph when_to_use {
     "Tasks mostly independent?" [shape=diamond];
     "Stay in this session?" [shape=diamond];
     "subagent-driven-development" [shape=box];
-    "executing-plans" [shape=box];
-    "Manual execution or brainstorm first" [shape=box];
+    "execute" [shape=box];
+    "Manual execution or new-task first" [shape=box];
 
     "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
-    "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
+    "Have implementation plan?" -> "Manual execution or new-task first" [label="no"];
     "Tasks mostly independent?" -> "Stay in this session?" [label="yes"];
-    "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
+    "Tasks mostly independent?" -> "Manual execution or new-task first" [label="no - tightly coupled"];
     "Stay in this session?" -> "subagent-driven-development" [label="yes"];
-    "Stay in this session?" -> "executing-plans" [label="no - parallel session"];
+    "Stay in this session?" -> "execute" [label="no - parallel session"];
 }
 ```
 
-**vs. Executing Plans (parallel session):**
+**vs. Execute (parallel session):**
 - Same session (no context switch)
 - Fresh subagent per task (no context pollution)
 - Two-stage review after each task: spec compliance first, then code quality
@@ -190,7 +190,7 @@ Done!
 - Parallel-safe (subagents don't interfere)
 - Subagent can ask questions (before AND during work)
 
-**vs. Executing Plans:**
+**vs. Execute:**
 - Same session (no handoff)
 - Continuous progress (no waiting)
 - Review checkpoints automatic
@@ -249,7 +249,7 @@ Done!
 
 **Required workflow skills:**
 - **forge:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
-- **forge:writing-plans** - Creates the plan this skill executes
+- **forge:plan** - Creates the plan this skill executes
 - **forge:requesting-code-review** - Code review template for reviewer subagents
 - **forge:finishing-a-development-branch** - Complete development after all tasks
 
@@ -262,4 +262,4 @@ Done!
 - **forge-documenter** agent - Automatic doc update after each task's review
 
 **Alternative workflow:**
-- **forge:executing-plans** - Use for parallel session instead of same-session execution
+- **forge:execute** - Use for parallel session instead of same-session execution
