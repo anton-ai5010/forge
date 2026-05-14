@@ -1,0 +1,21 @@
+phase: new-task
+checks:
+  - id: clarification_questions_logical_only
+    question: "Все вопросы пользователю были логические (бизнес-логика), не технические (стек/файлы/библиотеки)?"
+    type: binary
+
+  - id: one_question_at_a_time
+    question: "Не было дампа из 3+ вопросов одним сообщением?"
+    type: binary
+
+  - id: voice_typos_tolerated
+    question: "Если был голосовой ввод с опечатками — Claude угадал намерение, не переспрашивал 'имел ли ты в виду X'?"
+    type: binary
+
+  - id: output_has_task_and_criterion
+    question: "Финальный output содержит чёткую задачу + критерий готовности (наблюдаемый)?"
+    type: binary
+
+  - id: handoff_to_plan_on_ok
+    question: "После 'ОК' пользователя — авто-переход к /plan состоялся?"
+    type: binary

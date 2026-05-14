@@ -1,0 +1,21 @@
+phase: critique
+checks:
+  - id: four_personas_ran_parallel
+    question: "Все 4 персоны (Skeptic, Pragmatist, Architect, User Advocate) запустились параллельно в одном сообщении?"
+    type: binary
+
+  - id: critique_found_real_issues
+    question: "Критика нашла конкретные проблемы (не общие фразы 'обработка ошибок')?"
+    type: binary
+
+  - id: execution_strategy_added
+    question: "В план дописана секция Execution Strategy (что параллельно, что в субагенты, чекпоинты)?"
+    type: binary
+
+  - id: critique_synthesis_not_dump
+    question: "Пользователю показан синтез по приоритетам (Блокеры/Важное/Опционально), не полные отчёты 4 персон?"
+    type: binary
+
+  - id: handoff_to_execute
+    question: "После применения правок — авто-переход к /execute состоялся?"
+    type: binary

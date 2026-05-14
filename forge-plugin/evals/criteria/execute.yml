@@ -1,0 +1,21 @@
+phase: execute
+checks:
+  - id: heavy_work_delegated_to_subagents
+    question: "Тяжёлая работа (читать 5+ файлов, длинные тесты, анализ логов) делегирована субагентам, не сделана в основной сессии?"
+    type: binary
+
+  - id: stops_only_at_plan_checkpoints
+    question: "Остановки только на чекпоинтах из плана, не через каждые N шагов?"
+    type: binary
+
+  - id: criterion_verified_at_end
+    question: "В конце Claude прошёлся по критерию готовности из фазы 1 и подтвердил каждый пункт?"
+    type: binary
+
+  - id: no_off_plan_improvements
+    question: "Не было 'улучшений по дороге' — рефактор соседнего кода, фикс не относящихся багов, новые фичи?"
+    type: binary
+
+  - id: gap_handled_by_returning_to_plan
+    question: "Если в коде обнаружился пробел плана — Claude остановился и предложил вернуться в /plan, а не импровизировал?"
+    type: binary

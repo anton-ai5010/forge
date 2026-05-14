@@ -1,25 +1,38 @@
 #!/usr/bin/env bash
-# SessionStart hook for forge plugin
+# SessionStart hook — лёгкое введение в forge plugin
+# Не дампим весь using-forge skill — Claude подгрузит через Skill tool когда нужно.
+# Содержимое using-forge становится lazy-load по trigger через description match.
 
 set -euo pipefail
 
-# Determine plugin root directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
-PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-
-# Check if legacy skills directory exists and build warning
-warning_message=""
+# Legacy warning (если кто-то имеет старую папку)
 legacy_skills_dir="${HOME}/.config/forge/skills"
+warning=""
 if [ -d "$legacy_skills_dir" ]; then
-    warning_message="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER:⚠️ **WARNING:** Forge now uses Claude Code's skills system. Custom skills in ~/.config/forge/skills will not be read. Move custom skills to ~/.claude/skills instead. To make this message go away, remove ~/.config/forge/skills</important-reminder>"
+    warning="\n\n⚠️ Найдена legacy папка ~/.config/forge/skills — Claude Code её НЕ читает. Перенеси скиллы в ~/.claude/skills, а потом удали legacy."
 fi
 
-# Read using-forge content
-using_forge_content=$(cat "${PLUGIN_ROOT}/skills/using-forge/SKILL.md" 2>&1 || echo "Error reading using-forge skill")
+# Короткое введение — что есть forge и как им пользоваться
+intro="<forge-plugin-loaded>
+Forge plugin (v6.2.3) активен.
 
-# Escape string for JSON embedding using bash parameter substitution.
-# Each ${s//old/new} is a single C-level pass - orders of magnitude
-# faster than the character-by-character loop this replaces.
+Доступен 4-фазный pipeline разработки:
+  Phase 1 /new-task   — раскрутить сырую задачу в чистую задача + критерий
+  Phase 2 /plan       — план с чекпоинтами
+  Phase 3 /critique   — 4 параллельных персоны рвут план
+  Phase 4 /execute    — реализация через субагентов
+
+И ~24 поддерживающих скилла (debugging, design, deployment, etc.) — триггерятся автоматически по описанию или вызываются явно через /forge:<name>.
+
+ROUTING: Match .forge/index.yml catalog[].tags with current task to decide which L1 files to load. Do NOT load all L1 files — only what matches.
+
+DOC DISCIPLINE: If you just made a technical decision — record in .forge/decisions.yml. If an approach failed — record in .forge/dead-ends.yml. If you learned something non-obvious — record in .forge/learnings.yml. Do it NOW, not later.
+
+Для глубокого введения — Skill tool: forge:using-forge.
+$warning
+</forge-plugin-loaded>"
+
+# Escape для JSON
 escape_for_json() {
     local s="$1"
     s="${s//\\/\\\\}"
@@ -30,15 +43,13 @@ escape_for_json() {
     printf '%s' "$s"
 }
 
-using_forge_escaped=$(escape_for_json "$using_forge_content")
-warning_escaped=$(escape_for_json "$warning_message")
+escaped=$(escape_for_json "$intro")
 
-# Output context injection as JSON
 cat <<EOF
 {
   "hookSpecificOutput": {
     "hookEventName": "SessionStart",
-    "additionalContext": "<EXTREMELY_IMPORTANT>\nYou have forge.\n\n**Below is the full content of your 'forge:using-forge' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_forge_escaped}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
+    "additionalContext": "${escaped}"
   }
 }
 EOF
