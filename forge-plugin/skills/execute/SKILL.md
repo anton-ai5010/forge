@@ -89,6 +89,14 @@ echo "phase: idle" > .forge/state.yml
 - Жди все ответы
 - Применяй
 
+#### После каждого выполненного шага — GitHub-sync (тихо если выключен)
+
+```bash
+bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh close-step <task-slug> <step-num>
+```
+
+Закроет соответствующий sub-issue на GitHub. Молча no-op если sync выключен или sub-issues не создавались.
+
 ### 4. На чекпоинте — стоп и показ
 
 Чекпоинты в плане размечены явно (например `### ✅ Чекпоинт A`).
@@ -148,6 +156,29 @@ echo "phase: idle" > .forge/state.yml
 
 Открыть в редакторе? Запустить тесты целиком? Сделать коммит?
 ```
+
+### Финал: GitHub-sync (тихо если выключен)
+
+После того как критерий готовности пройден и пользователю показан финальный отчёт:
+
+```bash
+bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh close-task <task-slug>
+bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh sync-all
+```
+
+- `close-task` — закрывает родительский Issue, ставит label `forge:done`, добавляет запись в `.forge/journal.yml`
+- `sync-all` — обновляет шапку README.md и тело Pinned Issue (карта проекта)
+
+Одной строкой в чат: "Карта проекта обновлена" (если sync включён).
+
+### Триггер "переcyдь" (перепривязать задачу к другой цели)
+
+Если пользователь в любой момент во время выполнения говорит "переcyдь задачу на цель X", "не туда привязал, перенеси на Y", "это к другой цели":
+
+1. Получи открытые milestones: `gh api 'repos/{owner}/{repo}/milestones?state=open' --jq '.[] | "\(.number)|\(.title)"'`
+2. Найди номер цели по имени (если пользователь сказал название) или спроси одной фразой какую цель имел в виду
+3. `bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh reassign-task <task-slug> <new-milestone-num>`
+4. Одной строкой: "Переcyдил на цель **'X'**"
 
 ## Что НЕ делаешь в этой фазе
 

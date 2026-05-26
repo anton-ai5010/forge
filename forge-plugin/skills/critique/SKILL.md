@@ -199,6 +199,16 @@ EOF
 
 4. Подожди ответ. После ОК — обновляй план в `.forge/plans/...` с правками.
 
+### 4.5. GitHub-sync (опционально, тихо если выключен)
+
+Запиши сводку блокеров + важного в `/tmp/forge-critique-<task-slug>.md` (формат markdown с заголовками "## Блокеры" и "## Важное"), затем:
+
+```bash
+bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh add-critique <task-slug> /tmp/forge-critique-<task-slug>.md
+```
+
+Добавит комментарий в родительский Issue + сменит label на `forge:phase-3`. Молча no-op если sync выключен.
+
 ### 5. Допиши секцию "Как выполнять"
 
 После применения правок, добавь в конец плана секцию **Execution Strategy**:

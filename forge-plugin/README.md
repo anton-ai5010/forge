@@ -72,6 +72,7 @@
 - **L0/L1/L2 контекст** — плагин помнит структуру твоего проекта в `.forge/` и сам подгружает только нужное
 - **Output Style "Forge Concise"** — заставляет Claude отвечать коротко и по делу (нативный механизм Claude Code, авто-активируется при включении плагина)
 - **PreToolUse bash safety** — блокирует опасные команды (`rm -rf /`, `git push --force main`, etc.)
+- **GitHub синхронизация** — Issue per task + Sub-issues per step + Pinned Issue с картой проекта + шапка в README. Включается флагом `github_sync: true` в `.forge/index.yml` или плагин сам предложит при первой задаче. Управление целями — `/forge:roadmap`.
 - **Звуки** — mp3 на завершении ответа и запросе разрешения
 
 ## Спасибо
