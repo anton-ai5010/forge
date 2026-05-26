@@ -36,11 +36,15 @@ description: "Полная загрузка контекста проекта в
 !`git branch --show-current 2>/dev/null`
 !`git diff --stat 2>/dev/null | tail -5`
 
+### Карта проекта из GitHub (если есть github-sync)
+
+!`if [ -f .forge/.github-pinned-id ] && command -v gh >/dev/null 2>&1; then gh issue view "$(cat .forge/.github-pinned-id)" --json body -q .body 2>/dev/null > /tmp/.forge-pinned-body.md && echo "PINNED_BODY_FILE: /tmp/.forge-pinned-body.md"; else echo "нет github-sync в этом проекте (это нормально)"; fi`
+
 ---
 
 ## Step 3: Common-Ground Check
 
-На основе загруженного контекста — покажи краткий дашборд (3-5 строк):
+На основе загруженного контекста — покажи краткий дашборд (3-7 строк):
 
 ```
 Проект: {name} ({stack}) — {stage}, прогресс {X}%
@@ -49,6 +53,11 @@ description: "Полная загрузка контекста проекта в
 Блокеры: {blockers or "нет"}
 Ключевое: {1 важный факт из dead-ends, decisions или learnings}
 ```
+
+**Если выше есть `PINNED_BODY_FILE:` строка** — Прочитай этот файл (cat) и **сжми** его в 2-3 строки человеческим языком (не выводи сырой markdown с маркерами и эмодзи-барами):
+- "Цели в работе: {имена через запятую}, прогресс {N}% по основной"
+- "Последняя задача: {название}"
+- "Открытых задач сейчас: {N}"
 
 Спроси: **"Верно? Что исправить?"**
 

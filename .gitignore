@@ -5,3 +5,10 @@ node_modules/
 .claude/settings.local.json
 .claude/agent-memory-local/
 CLAUDE.local.md
+
+# forge github-sync runtime artifacts (already covered by .forge/, listed for clarity)
+.forge/.github-pinned-id
+.forge/.github-issue-*
+.forge/.github-substeps-*
+.forge/.github-bootstrapped
+.forge/.github-project-id

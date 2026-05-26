@@ -227,6 +227,14 @@ async def search_notes(q: str, user_id: int = Depends(get_current_user)):
 ## Шаг 3: ...
 ```
 
+### 7.5. GitHub-sync (опционально, тихо если выключен)
+
+```bash
+bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh add-steps <task-slug> .forge/plans/YYYY-MM-DD-<slug>.md
+```
+
+Создаёт sub-issues под родительским Issue (если он был создан в Phase 1). Идемпотентно — повторный вызов ничего не дублирует. Если sync выключен или нет parent Issue — молча no-op.
+
 ### 8. Покажи план пользователю
 
 Кратко (не дамп всего файла):
