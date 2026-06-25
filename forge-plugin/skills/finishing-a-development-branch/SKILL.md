@@ -61,7 +61,9 @@ Or ask: "This branch split from main - is that correct?"
 
 ### Step 3: Present Options
 
-Present exactly these 4 options:
+**Short-circuit для не-кодера:** если пользователь явно сказал «мержим» / «всё готово» / «влей» / «закрой ветку» / «ship it» (однозначное намерение слить локально) — **НЕ показывай меню**. Сразу иди по Option 1 (локальный мерж) и заверши человеческим подтверждением. Меню из 4 опций — только когда намерение неоднозначно или пользователь явно спросил про PR / «что дальше».
+
+Если намерение неоднозначно — present exactly these 4 options:
 
 ```
 Implementation complete. What would you like to do?
@@ -81,11 +83,20 @@ Which option?
 #### Option 1: Merge Locally
 
 ```bash
+# Auto-commit any uncommitted work on the feature branch BEFORE merge.
+# НЕ слепой git add -A: сначала показать пользователю что попадёт в коммит.
+if [ -n "$(git status --porcelain)" ]; then
+  git status --short        # покажи человеку список файлов
+  git add -A
+  git reset -q .forge/      # не тащить forge runtime-состояние (часть .forge tracked исторически)
+  git commit -m "<краткое описание задачи на русском>"
+fi
+
 # Switch to base branch
 git checkout <base-branch>
 
-# Pull latest
-git pull
+# Pull latest — только если есть upstream/remote; иначе пропусти (не фатально на локальном репо)
+git rev-parse --abbrev-ref --symbolic-full-name @{u} >/dev/null 2>&1 && git pull --ff-only || true
 
 # Merge feature branch
 git merge <feature-branch>
@@ -96,6 +107,13 @@ git merge <feature-branch>
 # If tests pass
 git branch -d <feature-branch>
 ```
+
+**Перед авто-коммитом** скажи человеку простой строкой что сохраняешь: *«Сохраняю эти файлы: …»* (перечисли из `git status --short`) — **это единственная защита**: показанный список и есть то, что уйдёт в коммит. (`.gitignore` НЕ спасает уже-отслеживаемые файлы — поэтому forge runtime-состояние `.forge/` выше явно убирается из коммита через `git reset`.) Текст коммита формируй сам из названия задачи, **на русском** — пользователь его не подтверждает, не грузим.
+
+**Если `git merge` упал с конфликтом** — НЕ оставляй репозиторий в полу-смерженном состоянии молча. Останови, объясни человеку простыми словами что две версии файла разошлись, и предложи помочь разрулить. Не-кодер не должен видеть сырой conflict-вывод без объяснения.
+
+**После успешного мержа** дай человеческое подтверждение без жаргона (не говори commit/merge/branch):
+> *«Готово. Правки сохранил, задачу влил в master, рабочую ветку убрал. Ты сейчас на master.»*
 
 Then: Cleanup worktree (Step 5)
 
@@ -179,7 +197,7 @@ git worktree remove <worktree-path>
 
 **Open-ended questions**
 - **Problem:** "What should I do next?" → ambiguous
-- **Fix:** Present exactly 4 structured options
+- **Fix:** When intent is ambiguous, present exactly 4 structured options. On explicit merge intent («мержим» / «ship it») — skip the menu and go straight to Option 1.
 
 **Automatic worktree cleanup**
 - **Problem:** Remove worktree when might need it (Option 2, 3)
@@ -199,7 +217,7 @@ git worktree remove <worktree-path>
 
 **Always:**
 - Verify tests before offering options
-- Present exactly 4 options
+- Present exactly 4 options when intent is ambiguous (on explicit merge intent — skip the menu, go straight to Option 1)
 - Get typed confirmation for Option 4
 - Clean up worktree for Options 1 & 4 only
 
@@ -208,6 +226,8 @@ git worktree remove <worktree-path>
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete
 - **execute** - After implementation completes
+
+> ⚠️ Авто-коммит несохранённого в Option 1 срабатывает при **любом** вызывающем — и из execute, и из subagent-driven-development. В sdd-потоке состояние дерева может отличаться (промежуточные артефакты субагентов), поэтому показ `git status --short` перед коммитом обязателен в обоих случаях — коммить только то, что показал пользователю.
 
 **Pairs with:**
 - **using-git-worktrees** - Cleans up worktree created by that skill

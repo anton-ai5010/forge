@@ -1,6 +1,9 @@
 node_modules/
 .DS_Store
 *.log
+*.pyc
+__pycache__/
+.vscode/
 .forge/
 .claude/settings.local.json
 .claude/agent-memory-local/
