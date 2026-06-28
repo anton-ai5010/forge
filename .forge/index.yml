@@ -42,7 +42,7 @@ catalog:
   direction:
     path: .forge/direction.yml
     tags: [direction, goal, strategy, hypotheses, backlog, navigate, where-to-go]
-    note: "Strategic layer — directions/hypotheses toward the goal, deferred backlog, goal-shift history. Read + written by the project-unblocker navigator."
+    note: "Strategic layer — project map (parts by step + honest status), directions/hypotheses toward the goal, deferred backlog, goal-shift history. Read + written by the project-unblocker navigator."
 
 session:
   started: "2026-04-09"

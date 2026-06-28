@@ -381,7 +381,7 @@ catalog:
   direction:
     path: .forge/direction.yml
     tags: [direction, goal, strategy, hypotheses, backlog, navigate, where-to-go]
-    note: "Strategic layer — directions/hypotheses toward the goal, deferred backlog, goal-shift history. Read + written by the project-unblocker navigator."
+    note: "Strategic layer — project map (parts by step + honest status), directions/hypotheses toward the goal, deferred backlog, goal-shift history. Read + written by the project-unblocker navigator."
 
   infrastructure:
     path: .forge/infrastructure.yml
@@ -450,6 +450,7 @@ On fresh init, write the empty skeleton — the navigator fills it on first run:
 ```yaml
 # Стратегический слой для Клода (петля навигатора).
 # Цель и стадия НЕ дублируются — канон в index.yml (goal/stage, они в L0).
+map: []          # карта проекта: части по шагам со статусом (part, status: known|half|unsure|unknown|todo|risk, note)
 directions: []   # все направления к цели, кратко (name, why, kind: hypothesis|blocker|build, priority)
 backlog: []      # отложенные направления — банк (name, why_deferred)
 goal_shift: []   # лёгкая история смещения цели (date, from, to, why)
