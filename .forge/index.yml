@@ -39,6 +39,11 @@ catalog:
     path: .forge/learnings.yml
     tags: [lesson, learning, pattern, insight, remember, learned]
 
+  direction:
+    path: .forge/direction.yml
+    tags: [direction, goal, strategy, hypotheses, backlog, navigate, where-to-go]
+    note: "Strategic layer — directions/hypotheses toward the goal, deferred backlog, goal-shift history. Read + written by the project-unblocker navigator."
+
 session:
   started: "2026-04-09"
   goal: "Sync документации после v5.4.0-v5.5.0"

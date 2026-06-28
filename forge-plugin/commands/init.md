@@ -378,6 +378,11 @@ catalog:
     path: .forge/learnings.yml
     tags: [lesson, learning, pattern, insight, remember, learned]
 
+  direction:
+    path: .forge/direction.yml
+    tags: [direction, goal, strategy, hypotheses, backlog, navigate, where-to-go]
+    note: "Strategic layer — directions/hypotheses toward the goal, deferred backlog, goal-shift history. Read + written by the project-unblocker navigator."
+
   infrastructure:
     path: .forge/infrastructure.yml
     tags: [docker, server, database, deploy, nginx, ssh, containers, ports, services, api, infra]
@@ -434,6 +439,20 @@ entries:
     result: ".forge/ структура создана"
     next: "Начать разработку"
     files: [.forge/]
+```
+
+## Step 12.5: Generate .forge/direction.yml (L1 — strategic layer)
+
+Strategic navigation layer (machine-readable, for Claude). Goal/stage are NOT duplicated here — they are canonical in `index.yml` (L0). This file holds only strategy that lives nowhere else: directions toward the goal, deferred backlog, and a light goal-shift history. Filled and maintained by the `project-unblocker` navigator skill.
+
+On fresh init, write the empty skeleton — the navigator fills it on first run:
+
+```yaml
+# Стратегический слой для Клода (петля навигатора).
+# Цель и стадия НЕ дублируются — канон в index.yml (goal/stage, они в L0).
+directions: []   # все направления к цели, кратко (name, why, kind: hypothesis|blocker|build, priority)
+backlog: []      # отложенные направления — банк (name, why_deferred)
+goal_shift: []   # лёгкая история смещения цели (date, from, to, why)
 ```
 
 ## Step 13: Generate library/ Documentation (PARALLEL)
@@ -778,6 +797,7 @@ Created:
 - .forge/decisions.yml (L1 — technical decisions)
 - .forge/dead-ends.yml (L1 — failed approaches index)
 - .forge/journal.yml (L1 — session history)
+- .forge/direction.yml (L1 — strategic layer: directions, backlog, goal-shift)
 - .forge/infrastructure.yml (L1 — Docker, servers, DBs, APIs)
 - .forge/graph.json (code knowledge graph — if graphify installed)
 - .forge/structure.md (expected layout)

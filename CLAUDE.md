@@ -51,6 +51,7 @@ ROUTING и DOC DISCIPLINE инжектятся **один раз** через `s
 - `.forge/dead-ends.yml` — failed approaches [tags: failed, tried, avoid]
 - `.forge/journal.yml` — session history [tags: history, last-session, resume]
 - `.forge/learnings.yml` — project lessons [tags: lesson, learning, insight]
+- `.forge/direction.yml` — strategic layer: directions/hypotheses, backlog, goal-shift [tags: direction, strategy, navigate]
 
 **L2 (load rarely):** `.forge/library/*/spec.yml`, `.forge/dead-ends/*.md`
 
@@ -80,6 +81,13 @@ Projects v2 board не используется — Pinned Issue + README пок
 **Runtime артефакты** в проекте пользователя (gitignored): `.forge/.github-pinned-id`, `.forge/.github-issue-<slug>`, `.forge/.github-substeps-<slug>`, `.forge/.github-bootstrapped`.
 
 ## Development Workflow — 5-фазный pipeline
+
+### Phase 0 — Direction (`/forge:unblocker`)
+Навигатор направления — **над** пайплайном. Когда непонятно КУДА двигать проект (не «как сделать задачу X», а «какие глобальные направления ведут к цели») или когда застрял. Показывает живую цель строкой-якорем из `index.yml`, читает всю `.forge`-память + сканирует код, расписывает ВСЕ направления к цели кратко (что делает + зачем, как гипотезы/блокеры, приоритет с учётом стадии), рекомендует дефолт-движение **не выбирая молча**, заканчивает одним физическим шагом → кормит `/forge:new-task`. Антон — не-кодер: слаб в придумывании стратегии, поэтому навигатор расписывает поле и рекомендует, но финальный выбор за ним.
+
+**Память (петля):** пишет `.forge/direction.yml` (для Клода: directions/backlog/goal_shift) + `ROADMAP.md` (для глаз — все направления человекочитаемо). Цикл: разговор → память → навигатор → задачи → результаты → снова память.
+
+**Выход:** обновлённые `direction.yml` + `ROADMAP.md`, первый физический шаг подан в `/forge:new-task`.
 
 ### Phase 1 — Understanding (`/forge:new-task`)
 Сырой промпт → чистая задача + критерий готовности. Логические вопросы пользователю по одному, технические — Claude ищет сам в коде/доках. Опциональный HTML-набросок если пользователь буксует.
@@ -156,6 +164,7 @@ Projects v2 board не используется — Pinned Issue + README пок
 | Command | When |
 |---------|------|
 | `/forge:start` | Session start |
+| `/forge:unblocker` | **Phase 0** — навигатор направления: куда двигать проект |
 | `/forge:new-task` | **Phase 1** — раскрутить сырую задачу |
 | `/forge:refine-idea` | **Phase 1.5** — реалити-чек идеи до плана |
 | `/forge:plan` | **Phase 2** — построить план |

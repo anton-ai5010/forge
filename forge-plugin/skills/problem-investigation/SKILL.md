@@ -125,4 +125,4 @@ This skill doesn't exist in isolation. Here's when to use what:
 | "Что-то не так, давай разберёмся" | **problem-investigation** (this) |
 | "Знаю причину, нужно починить" | forge:systematic-debugging |
 | "Хочу добавить фичу" | forge:new-task |
-| "Застрял, не знаю что делать" | forge:project-unblocker |
+| "Куда двигать проект / что дальше / застрял" | forge:project-unblocker (навигатор направления) |
