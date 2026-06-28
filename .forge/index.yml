@@ -1,14 +1,15 @@
 project: forge-plugin
-goal: "Плагин для Claude Code, автоматизирующий рабочие процессы разработки через систему скиллов и L0/L1/L2 контекста"
+github_sync: true
+goal: "Плагин для Claude Code, автоматизирующий рабочие процессы разработки через 4-фазный pipeline (new-task → plan → critique → execute) + систему скиллов + L0/L1/L2 контекст"
 stage: maintenance
 progress: 100%
 blocked: нет
-version: "5.5.0"
-stack: [javascript, python, markdown, claude-code-plugin]
+version: "7.1.2"
+stack: [javascript, python, bash, markdown, claude-code-plugin]
 
 now:
-  task: "Режим поддержки. Баги и улучшения — по мере использования на других проектах"
-  branch: master
+  task: "Готово к мерджу feat/github-project-map (GitHub-sync + roadmap)"
+  branch: feat/github-project-map
 
 catalog:
   map:
@@ -40,14 +41,13 @@ catalog:
     tags: [lesson, learning, pattern, insight, remember, learned]
 
 session:
-  started: "2026-04-09"
-  goal: "Sync документации после v5.4.0-v5.5.0"
+  started: "2026-05-14"
+  goal: "Sync документации под v7.1.0 — 4-фазный pipeline заменил brainstorm/write-plan/execute-plan"
   done:
-    - "Звуковые уведомления (Stop + PermissionRequest хуки)"
-    - "23 скилла — enhanced roles with stakes-based pressure"
-    - "PermissionRequest хук вместо Notification"
+    - "CLAUDE.md синхронизирован с v7.1.0 (4-фазный pipeline)"
+    - ".forge/* обновлены под v7.1.2"
   now: "Sync завершён"
   next: ""
   errors: []
 
-last_session: "2026-04-09 — Sync: документация sounds/, обновление map/spec/status после v5.4-v5.5"
+last_session: "2026-05-14 — Sync: обновление .forge/* под v7.1.0 pipeline (new-task → plan → critique → execute)"
