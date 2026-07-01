@@ -561,10 +561,13 @@ L2 (load rarely): `.forge/library/*/spec.yml`, `.forge/dead-ends/*.md`
 DO NOT load all L1 files. Match catalog tags to current task.
 DO NOT read source code before checking .forge/library/spec.yml.
 
-## Development Workflow (4-phase pipeline)
+## Development Workflow (5-phase pipeline)
 
 ### Phase 1 — Understanding
 1. `/forge:new-task` — превратить сырой промпт в чистую задачу + критерий готовности
+
+### Phase 1.5 — Idea Check
+1.5. `/forge:refine-idea` — реалити-чек самой идеи до плана: та ли проблема, нет ли пути проще, что сломает; на каждую слабость — конкретная альтернатива
 
 ### Phase 2 — Planning
 2. `/forge:plan` — построить план с чекпоинтами (рекурсия на дальние блокеры через отдельные сессии)
@@ -784,7 +787,53 @@ echo '{"input":"test"}' | bash {FORGE_HOOKS_PATH}
 
 If output contains `"FORGE L0 CONTEXT"` — hook is configured correctly.
 
-## Step 16: Confirm Completion
+## Step 16: Configure GitHub Sync (optional)
+
+Wire up GitHub integration so the project map, Issues per task, and README header
+work out of the box. All `gh` logic lives in one script — just call it.
+
+### 16a: Find sync.sh
+
+```bash
+SYNC=$(find ~/.claude/plugins -path '*/forge*/skills/github-sync/sync.sh' 2>/dev/null | head -1)
+```
+
+If not found — skip this whole step silently (plugin layout changed; GitHub sync unavailable).
+
+### 16b: Should we even offer it?
+
+```bash
+bash "$SYNC" should-offer
+```
+
+- Output `no` → project has no GitHub remote, or `gh` missing/not authed. **Skip silently** —
+  GitHub sync is optional and the project works fine without it. Do NOT nag.
+- Output `yes` → there's a GitHub remote and `gh` is authed but `github_sync` not set yet. Ask:
+
+```
+Этот проект на GitHub. Включить синхронизацию?
+Тогда forge будет вести карту проекта Issue'ами: задача → Issue, шаги плана → sub-issues,
+плюс Pinned Issue «🗺 Карта проекта» и авто-шапка в README.
+(да / нет)
+```
+
+If user says no → `bash "$SYNC" disable` (writes `github_sync: false`, so we don't ask again). Done.
+
+### 16c: Enable and bootstrap (only if user said yes)
+
+```bash
+bash "$SYNC" enable            # github_sync: true в .forge/index.yml
+bash "$SYNC" diagnose          # громкая проверка auth/scope — покажи вывод пользователю
+bash "$SYNC" bootstrap-labels  # 6 forge-лейблов (идемпотентно)
+bash "$SYNC" ensure-pinned-map # создать/найти Pinned Issue «🗺 Карта проекта»
+```
+
+If `diagnose` prints warnings (auth expired, no scope) — surface them verbatim and tell the user
+to run `gh auth login`, then re-run `/forge:init` or just `/forge:roadmap`. Don't silently continue.
+
+After this, the pipeline (new-task → plan → critique → execute) mirrors to GitHub automatically.
+
+## Step 17: Confirm Completion
 
 ```
 FORGE initialized (v5 — L0/L1/L2 context system)
@@ -806,8 +855,14 @@ Created:
 
 Configured:
 - .claude/settings.json — UserPromptSubmit hook (L0 auto-inject)
+- GitHub sync — {включён: Issues + Pinned карта + README шапка / пропущен: нет remote или gh / отключён пользователем}
 
 Context budget: ~200 tok/prompt (L0) + ~500 tok on-demand (L1)
 
 Хук настроен — L0 контекст будет инжектиться в каждый промпт автоматически.
 ```
+
+Replace the GitHub sync line with the actual outcome from Step 16:
+- enabled → `GitHub sync — включён: задачи и карта проекта будут зеркалиться в Issues`
+- offered but declined → `GitHub sync — отключён (можно включить позже через /forge:roadmap)`
+- not applicable → omit the line entirely

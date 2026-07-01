@@ -25,6 +25,7 @@ fi
 phase_icon=""
 case "$phase" in
     new-task|"Phase 1"|1) phase_icon="🎯 Phase 1: Understanding" ;;
+    refine-idea|"Phase 1.5"|1.5) phase_icon="🔬 Phase 1.5: Idea Check" ;;
     plan|"Phase 2"|2) phase_icon="📋 Phase 2: Planning" ;;
     critique|"Phase 3"|3) phase_icon="🔍 Phase 3: Critique" ;;
     execute|"Phase 4"|4) phase_icon="🚀 Phase 4: Implementation" ;;
