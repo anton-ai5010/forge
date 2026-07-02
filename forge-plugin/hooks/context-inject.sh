@@ -7,8 +7,13 @@
 set -euo pipefail
 
 # Check for FORGE docs (new format first, then legacy)
+truncate_note=""
 if [ -f ".forge/index.yml" ]; then
-    index_content=$(cat .forge/index.yml 2>/dev/null || echo "")
+    index_content=$(head -c 2500 .forge/index.yml 2>/dev/null || echo "")
+    index_size=$(wc -c < .forge/index.yml 2>/dev/null || echo 0)
+    if [ "$index_size" -gt 2500 ]; then
+        truncate_note="\n[index.yml truncated — читай файл целиком при необходимости]"
+    fi
 elif [ -f ".forge/index.md" ]; then
     index_content=$(cat .forge/index.md 2>/dev/null || echo "")
 else
@@ -23,8 +28,9 @@ branch=$(git branch --show-current 2>/dev/null || echo "unknown")
 git_log=$(git log --oneline -3 2>/dev/null || echo "no git")
 
 # ============ GRAPH HINT ============
+# Советуем graphify только если CLI реально установлен
 graph_hint=""
-if [ -f ".forge/graph.json" ]; then
+if [ -f ".forge/graph.json" ] && command -v graphify >/dev/null 2>&1; then
     node_count=$(python3 -c "import json; d=json.load(open('.forge/graph.json')); print(len(d.get('nodes',d.get('elements',{}).get('nodes',[]))))" 2>/dev/null || echo "?")
     graph_hint="\n--- Graph: .forge/graph.json (${node_count} nodes). Before grep/find, try: graphify query/path/explain --graph .forge/graph.json"
 fi
@@ -40,7 +46,7 @@ escape_for_json() {
     printf '%s' "$s"
 }
 
-context="FORGE L0 CONTEXT (auto-injected):\n\n${index_content}\n\n--- Branch: ${branch}\n--- Recent: ${git_log}${graph_hint}"
+context="FORGE L0 CONTEXT (auto-injected):\n\n${index_content}\n\n--- Branch: ${branch}\n--- Recent: ${git_log}${graph_hint}${truncate_note}"
 
 escaped=$(escape_for_json "$context")
 

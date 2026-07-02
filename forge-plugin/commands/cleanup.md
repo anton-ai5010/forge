@@ -1,5 +1,6 @@
 ---
 description: Analyze project code quality and produce a cleanup report — finds dead code, naming issues, complexity, duplication, and convention violations using parallel agents
+disable-model-invocation: true
 ---
 
 # FORGE Code Cleanup

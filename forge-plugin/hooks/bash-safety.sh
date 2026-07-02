@@ -8,8 +8,10 @@
 set -euo pipefail
 
 # Парсим JSON от Claude Code (tool input в поле .tool_input.command)
+# python3 вместо sed: sed-регэксп обрывался на первой экранированной кавычке,
+# и любая команда с кавычкой обходила все паттерны.
 hook_input=$(cat)
-cmd=$(printf '%s' "$hook_input" | sed -n 's/.*"command"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+cmd=$(printf '%s' "$hook_input" | python3 -c "import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))" 2>/dev/null || true)
 
 # Если команды нет (другой Bash параметр) — пропускаем
 [ -z "$cmd" ] && exit 0
@@ -17,7 +19,7 @@ cmd=$(printf '%s' "$hook_input" | sed -n 's/.*"command"[[:space:]]*:[[:space:]]*
 # ============ ОПАСНЫЕ ПАТТЕРНЫ ============
 
 # 1. rm -rf на корень / home / etc
-if printf '%s' "$cmd" | grep -qE 'rm[[:space:]]+(-[a-zA-Z]*r[a-zA-Z]*f[a-zA-Z]*|-rf|-fr)[[:space:]]+(/[[:space:]]*$|/[[:space:]]+|~[[:space:]]*$|~/[[:space:]]+|\$HOME)'; then
+if printf '%s' "$cmd" | grep -qE 'rm[[:space:]]+(-[a-zA-Z]*r[a-zA-Z]*f[a-zA-Z]*|-rf|-fr)[[:space:]]+(/[[:space:]]*$|/[[:space:]]+|~[[:space:]]*$|~/[[:space:]]*$|~/[[:space:]]+|\$HOME)'; then
     echo "BLOCKED: rm -rf на критический путь (/, ~, \$HOME). Если правда нужно — попроси пользователя сделать руками." >&2
     exit 2
 fi

@@ -114,7 +114,9 @@ If `.forge/graph.json` exists — the project has a code knowledge graph built b
 | Skill | Purpose |
 |-------|---------|
 | forge:new-task | Pre-implementation scoping: clarify goal and requirements |
+| forge:refine-idea | Phase 1.5 — реалити-чек идеи до плана |
 | forge:plan | Bite-sized implementation plans from spec |
+| forge:critique | Phase 3 — 4 персоны рвут план |
 | forge:execute | Run plans with review checkpoints |
 | forge:dispatching-parallel-agents | Parallel dispatch of 2+ independent tasks |
 | forge:subagent-driven-development | Execute plans via fresh subagent per task with two-stage review |
@@ -132,13 +134,18 @@ If `.forge/graph.json` exists — the project has a code knowledge graph built b
 | forge:code-cleanup | Refactor and simplify code |
 | forge:using-git-worktrees | Isolate feature work in git worktrees |
 | forge:session-awareness | Track session state and context |
-| forge:project-unblocker | Unblock stuck sessions |
+| forge:project-unblocker | Phase 0 — навигатор направления |
 | forge:forge-context | L0/L1/L2 context loading at session start |
 | forge:writing-skills | Create and test new skills using TDD methodology |
 | forge:problem-investigation | Collaborative problem diagnosis — understand before fixing |
 | forge:session-insights | Analyze session patterns and extract actionable insights |
 | forge:product-mapping | Full project visualization — flows, entities, gaps → interactive HTML |
 | forge:explaining | Per-question visualization — "how does X work?" → interactive HTML |
+| forge:hookify | Persistent rules in .forge/hookrules/ enforced via PreToolUse hook |
+| forge:evolve | Cluster recurring pain patterns across sessions, propose automation |
+| forge:roadmap | Карта целей (milestones) на GitHub — человеческий язык |
+| forge:github-sync | Internal — mirror pipeline state to GitHub Issues (auto-invoked) |
+| forge:using-forge | This skill — how to operate inside the forge plugin |
 
 ## Skill Types
 

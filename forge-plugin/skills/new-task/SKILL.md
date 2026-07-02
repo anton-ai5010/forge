@@ -1,6 +1,6 @@
 ---
 name: new-task
-description: "Use proactively at the start of ANY new development request — even ones that look simple or clear. Phase 1 of the forge dev pipeline. Trigger when the user says 'хочу', 'нужно', 'помоги с', 'добавь', 'почему не работает', 'сделай', or gives any task, bug report, or feature request, even if they don't explicitly ask for clarification. The skill clarifies the request through logical questions (asking the user one at a time about WHAT, WHO, WHY), researches technical context silently (HOW), optionally draws a one-screen HTML sketch when words aren't enough, and outputs a clean task statement + completion criteria for Phase 2 (/plan). Skipping this even for 'obvious' tasks costs 10x more later when hidden assumptions surface mid-implementation."
+description: "Use proactively at the start of ANY new development request — even simple-looking ones. Phase 1 of the forge pipeline. RU: 'хочу', 'нужно', 'помоги с', 'добавь', 'сделай' — any feature request, even without an explicit ask for clarification. Clarifies through logical questions (one at a time: WHAT, WHO, WHY), researches technical context silently (HOW), outputs a clean task statement + completion criteria. Маршрут: жалоба на поломку → problem-investigation; просят починить → systematic-debugging; новая задача → этот скилл. Hands off to /refine-idea (Phase 1.5)."
 ---
 
 # New Task — Phase 1: Understanding
@@ -86,55 +86,21 @@ EOF
 
    **Критерий должен быть наблюдаемым.** Не "работает хорошо", а "когда пользователь делает X, на экране Y". Если ты сам не можешь проверить выполнение — критерий плохой.
 
-8. **Покажи пользователю. Спроси одним вопросом:** "Да, оно? Или поправить?"
+8. **Покажи пользователю. Спроси одним вопросом:** "Да, оно? Или поправить?" Заверши ход — дождись ответа.
 
-9. **Если ОК** — сохрани в `.forge/tasks/YYYY-MM-DD-<slug>.md`.
+   - **8а. Если нет** — назад к вопросам, начиная с того что не так.
+   - **8б. Если ОК** — переходи к «После подтверждения».
 
-9.5. **GitHub-sync (опционально, тихо если не настроен)**
+### После подтверждения
 
-   а) Проверь надо ли предложить включить sync в этом проекте:
-   ```bash
-   bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh should-offer
-   ```
-   - Если `yes` — спроси Антона **одним вопросом простым языком**: "У тебя в этом проекте есть GitHub репо. Хочешь чтобы плагин писал задачи и карту проекта туда сам? (один раз спрашиваю)"
-     - Ответ "да" / "ок" / "давай" → `bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh enable`
-     - Ответ "нет" / "не надо" → `bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh disable` (запомнит явный отказ, больше не спросит)
-   - Если `no` — пропусти этот пункт молча.
+9. **Сохрани** в `.forge/tasks/YYYY-MM-DD-<slug>.md`.
 
-   б) Проверь работает ли sync:
-   ```bash
-   bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh enabled
-   ```
-   Если `no` — переходи к шагу 10 (sync выключен или сломан — это нормально).
+10. **GitHub-sync (опционально):** выполни шаги github-sync из скилла `forge:github-sync` (раздел «Процедура для new-task»). Тихо пропусти, если sync выключен.
 
-   в) Проверь нужен ли roadmap-init (карта пустая на первом запуске):
-   ```bash
-   bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh roadmap-init-needed
-   ```
-   Если `yes` — **НЕ создавай Issue молча**. Скажи: "У тебя в проекте пока нет крупных целей в карте — нужно их назвать прежде чем привязывать задачи. Запускаю /forge:roadmap." Инвокай skill `roadmap` в режиме init. Дождись завершения.
-
-   г) Получи открытые milestones:
-   ```bash
-   gh api 'repos/{owner}/{repo}/milestones?state=open&per_page=100' --jq '.[] | "\(.number)|\(.title)|\(.description)"'
-   ```
-   Семантически сматчи задачу к подходящей цели:
-   - Если есть явный кандидат (одна цель явно подходит по смыслу) — используй её номер
-   - Если ни одна не подходит ИЛИ есть несколько похожих — **спроси Антона одной фразой**: "Привязываю к цели 'X' — или скажи 'к цели Y', или 'новая цель'."
-
-   д) Создай Issue:
-   ```bash
-   bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh create-task .forge/tasks/<slug>.md <milestone-num>
-   ```
-   (milestone-num опциональный — без него Issue создаётся без привязки)
-
-   е) Одной строкой в чат: "Привязал к цели **'X'**" (используй человеческое имя цели, не slug).
-
-10. Сообщи пользователю:
+11. Сообщи пользователю:
    *"Задача зафиксирована. Прежде чем строить план — быстро разберём саму идею: не туплю ли где, нет ли пути проще. Скажи 'стоп' если хочешь паузу."*
 
    Затем **сразу инвокни refine-idea skill** (Phase 1.5). Не жди явного `/refine-idea` от пользователя — он уже подтвердил, цепочка идёт автоматически. Разбор идеи доработает задачу и сам передаст её в `/plan`. Останься в фазе 1 только если пользователь сказал 'стоп' / 'пауза' / 'погоди' / любой эквивалент.
-
-11. **Если нет** — назад к вопросам, начиная с того что не так.
 
 ### Пример хорошего выхода
 

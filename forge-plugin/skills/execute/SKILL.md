@@ -1,6 +1,6 @@
 ---
 name: execute
-description: "Use proactively right after /critique when a final plan with Execution Strategy exists in .forge/plans/, OR when the user says 'выполняй', 'делай', 'погнали', 'запускай', 'приступай', 'реализуй план'. Phase 4 of the forge dev pipeline. The critical move here is to delegate heavy work to subagents (file reading, test runs, log analysis, anything that produces volume) — their isolated context returns only short summaries to the main session, keeping it clean for orchestration and your interactions with the user. Stops ONLY at the checkpoints defined in the plan — not every N tasks. At each checkpoint, shows the user what changed and waits for ok. Don't invent new steps not in the plan — if a gap appears, surface it and propose returning to Phase 2 (/plan) rather than improvising."
+description: "Use proactively when a final plan with Execution Strategy exists in .forge/plans/ AND either /critique just finished or the user says 'выполняй', 'погнали', 'запускай', 'реализуй план'. The plan file is a mandatory precondition — without it route to /plan first. Phase 4 of the forge pipeline. Delegates heavy work to subagents (file reading, tests, logs) to keep the main session clean. Stops ONLY at plan checkpoints. Never invents steps not in the plan — gaps go back to /plan."
 ---
 
 # Execute — Phase 4: Doing it without polluting context
@@ -172,7 +172,8 @@ bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh close-step <task-slug> <step
 ### 6. После всех шагов — проверь критерий готовности
 
 Возьми критерий из задачи (фаза 1) и пройдись по нему:
-- Каждый пункт критерия → подтверждение что выполнено
+- По каждому пункту — выполненная команда/действие И её реальный вывод. Пункт без наблюдаемого доказательства помечается ❌ (не ✅), отчёт не финализируется.
+- Если проверить нечем — честно пиши "не проверено" и почему.
 - Если что-то не выполнено → не финализируй, верни в работу
 
 ### 7. Финальный отчёт
@@ -182,9 +183,9 @@ bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh close-step <task-slug> <step
 
 **Что сделано:** [1-2 предложения]
 
-**Критерий готовности — пройден:**
-- ✅ [пункт 1]: [как подтверждено]
-- ✅ [пункт 2]: [как подтверждено]
+**Критерий готовности:**
+- ✅/❌ [пункт 1]: [команда] → [вывод]
+- ✅/❌ [пункт 2]: [команда] → [вывод]
 
 **Файлы:** N изменено, M создано.
 
@@ -205,14 +206,14 @@ bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh sync-all
 
 Одной строкой в чат: "Карта проекта обновлена" (если sync включён).
 
-### Триггер "переcyдь" (перепривязать задачу к другой цели)
+### Триггер "перепривяжи" (перепривязать задачу к другой цели)
 
-Если пользователь в любой момент во время выполнения говорит "переcyдь задачу на цель X", "не туда привязал, перенеси на Y", "это к другой цели":
+Если пользователь в любой момент во время выполнения говорит "перепривяжи задачу на цель X", "не туда привязал, перенеси на Y", "это к другой цели":
 
 1. Получи открытые milestones: `gh api 'repos/{owner}/{repo}/milestones?state=open' --jq '.[] | "\(.number)|\(.title)"'`
 2. Найди номер цели по имени (если пользователь сказал название) или спроси одной фразой какую цель имел в виду
 3. `bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh reassign-task <task-slug> <new-milestone-num>`
-4. Одной строкой: "Переcyдил на цель **'X'**"
+4. Одной строкой: "Перепривязал на цель **'X'**"
 
 ## Что НЕ делаешь в этой фазе
 

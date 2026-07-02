@@ -1,6 +1,6 @@
 ---
 name: dispatching-parallel-agents
-description: "Use proactively when 2+ independent tasks could run in parallel instead of one-by-one — dispatching them concurrently saves real wall-clock time. Trigger when the user says 'запусти параллельно', 'несколько одновременно', 'разбей на агентов', 'параллельно проверь', 'кучу файлов прочитай', 'почитай сразу несколько', 'проверь все', 'in parallel', 'concurrently', 'dispatch agents', 'multiple at once'. Concrete contexts: 3+ failing test files with different root causes, multiple unrelated bugs across subsystems, reading 5+ files to compare them, auditing several modules independently, investigating N unrelated questions, refactoring isolated folders, running searches across distinct codebases. Skipping this means doing sequentially what could finish in 1/N time — and you lose focus juggling everything in one context. Don't use when failures are related, when state is shared, or when one fix might cascade — sequential is safer there."
+description: "Use proactively when 2+ independent tasks could run in parallel instead of one-by-one. RU: 'запусти параллельно', 'несколько одновременно', 'разбей на агентов', 'проверь все', 'почитай сразу несколько'. EN: 'in parallel', 'concurrently', 'dispatch agents'. Contexts: 3+ failing test files with separate causes, unrelated bugs across subsystems, reading 5+ files to compare, auditing modules independently. Don't use when failures are related or state is shared — sequential is safer there."
 ---
 
 # Dispatching Parallel Agents

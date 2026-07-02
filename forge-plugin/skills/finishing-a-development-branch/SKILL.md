@@ -1,6 +1,6 @@
 ---
 name: finishing-a-development-branch
-description: "Use proactively when a feature/fix is done and the user wants to ship it — triggers: 'закрой ветку', 'готов к мержу', 'влить', 'смержить', 'закончил работу', 'всё готово', 'можно мержить', 'закрыть пр', 'finish the branch', 'ready to merge', 'wrap up this work', 'ship it', 'close the PR', 'merge it in'. Use at the end of a feature when tests pass, at the end of a bugfix before integration, when the user signals work is complete, or when a branch needs to be closed cleanly. Verifies tests actually pass (not 'should pass'), presents structured options (squash merge, PR, rebase, cleanup), updates docs, deletes the branch, and leaves main green. Skipping this skill is how dirty merges break main for the whole team, how stale branches pile up, how 'I thought tests passed' becomes a rollback, and how the next developer repeats your mistakes because docs weren't updated. One disciplined finish is cheaper than one hotfix."
+description: "Use proactively when a feature/fix is done and ready to ship. RU: 'закрой ветку', 'готов к мержу', 'влить', 'смержить', 'всё готово', 'можно мержить'. EN: 'finish the branch', 'ready to merge', 'ship it', 'close the PR'. Verifies tests actually pass (not 'should pass'), presents merge options (squash, PR, rebase), updates docs, deletes the branch, leaves main green."
 ---
 
 # Finishing a Development Branch

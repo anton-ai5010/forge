@@ -12,17 +12,28 @@ if [ -d "$legacy_skills_dir" ]; then
     warning="\n\n⚠️ Найдена legacy папка ~/.config/forge/skills — Claude Code её НЕ читает. Перенеси скиллы в ~/.claude/skills, а потом удали legacy."
 fi
 
+# Версия плагина из manifest (fallback — просто без версии)
+plugin_root="${CLAUDE_PLUGIN_ROOT:-$(dirname "$0")/..}"
+version=$(grep -m1 '"version"' "$plugin_root/.claude-plugin/plugin.json" 2>/dev/null | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || true)
+if [ -n "$version" ]; then
+    header="Forge plugin (v${version}) активен."
+else
+    header="Forge plugin активен."
+fi
+
 # Короткое введение — что есть forge и как им пользоваться
 intro="<forge-plugin-loaded>
-Forge plugin (v6.2.3) активен.
+${header}
 
-Доступен 4-фазный pipeline разработки:
-  Phase 1 /new-task   — раскрутить сырую задачу в чистую задача + критерий
-  Phase 2 /plan       — план с чекпоинтами
-  Phase 3 /critique   — 4 параллельных персоны рвут план
-  Phase 4 /execute    — реализация через субагентов
+Доступен pipeline разработки:
+  Phase 0   /forge:unblocker   — куда двигать проект
+  Phase 1   /forge:new-task    — сырой запрос → чистая задача
+  Phase 1.5 /forge:refine-idea — реалити-чек идеи
+  Phase 2   /forge:plan        — план с чекпоинтами
+  Phase 3   /forge:critique    — 4 персоны рвут план
+  Phase 4   /forge:execute     — реализация
 
-И ~24 поддерживающих скилла (debugging, design, deployment, etc.) — триггерятся автоматически по описанию или вызываются явно через /forge:<name>.
+И 30+ поддерживающих скиллов (debugging, design, deployment, etc.) — триггерятся автоматически по описанию или вызываются явно через /forge:<name>.
 
 ROUTING: Match .forge/index.yml catalog[].tags with current task to decide which L1 files to load. Do NOT load all L1 files — only what matches.
 

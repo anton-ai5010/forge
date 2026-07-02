@@ -1,6 +1,6 @@
 ---
 name: roadmap
-description: "Use when the user wants to manage project goals/milestones on GitHub map — voice triggers (RU): 'добавь цель', 'новая цель', 'переименуй цель', 'поставь цель в сейчас', 'переcyдь задачу', 'не туда привязал', 'это к другой цели', 'перепривяжи задачу', 'не та цель', 'почисти карту', 'покажи карту проекта', 'удали цель', 'переставь приоритеты', 'roadmap'. EN: 'manage goals', 'add milestone', 'reassign to', 'project map', 'roadmap'. Also use INIT mode when github_sync включён в проекте и в карте 0 целей (вызывается из new-task). The skill talks to the user in human language — no priority numbers, no GraphQL IDs, no slugs. It infers structured data from natural phrasing and shows back human-friendly names."
+description: "Use when the user manages project goals/milestones on the GitHub map. RU: 'добавь цель', 'новая цель', 'переименуй цель', 'перепривяжи задачу', 'не туда привязал', 'почисти карту', 'покажи карту целей', 'покажи цели', 'удали цель', 'roadmap'. EN: 'manage goals', 'add milestone', 'reassign'. Also INIT mode when github_sync is on and the map has 0 goals (called from new-task). Talks human language — no priority numbers, no IDs, no slugs."
 ---
 
 # Roadmap — управление картой целей проекта
@@ -13,7 +13,7 @@ description: "Use when the user wants to manage project goals/milestones on GitH
 
 - Без аргументов: `/forge:roadmap` — обычный режим управления (показать карту, добавить/изменить/удалить цель)
 - Через триггер из new-task при пустой карте: режим **INIT** (см. ниже)
-- Через триггер "переcyдь" в любой фазе — режим **REASSIGN**
+- Через триггер "перепривяжи" в любой фазе — режим **REASSIGN**
 
 ## Pre-flight
 
@@ -59,13 +59,13 @@ bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh diagnose
 7. Кратко: "Карта готова: <N> целей. Возвращаюсь к твоей задаче."
    Управление возвращается в new-task (вызывающий скилл продолжает с шага семантического матча).
 
-## Режим REASSIGN (триггер "переcyдь")
+## Режим REASSIGN (триггер "перепривяжи")
 
 1. Получи открытые milestones:
    ```bash
    gh api 'repos/{owner}/{repo}/milestones?state=open' --jq '.[] | "\(.number)|\(.title)"'
    ```
-2. Найди номер целевой milestone по имени (если Антон сказал "переcyдь на 'X'") или, если он сказал общо ("не туда привязал"), спроси одной фразой:
+2. Найди номер целевой milestone по имени (если Антон сказал "перепривяжи на 'X'") или, если он сказал общо ("не туда привязал"), спроси одной фразой:
    > "На какую цель перепривязать? Сейчас есть: 'Цель A', 'Цель B', 'Цель C'."
 3. Определи task_slug — это slug текущей задачи из `.forge/state.yml` (`task:` поле) или из последней записи `.forge/index.yml`.
 4. Выполни:
@@ -73,7 +73,7 @@ bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh diagnose
    bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh reassign-task <task-slug> <new-milestone-num>
    bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh sync-pinned
    ```
-5. Одной строкой: "Переcyдил на цель **'X'**".
+5. Одной строкой: "Перепривязал на цель **'X'**".
 
 ## Режим обычный (`/forge:roadmap`)
 

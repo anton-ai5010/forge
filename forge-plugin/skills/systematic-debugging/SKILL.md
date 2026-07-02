@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: "Use proactively when ANYTHING broken, failing, or behaving unexpectedly — BEFORE proposing any fix. Trigger on Russian voice: 'почини', 'пофикс', 'фикс', 'сломалось', 'не работает', 'падает', 'крашит', 'глючит', 'вылетает', 'отвалил', 'отвалилось', 'ошибка', 'баг', 'кривой', 'кривое', 'тупит', 'тормозит', 'странно ведёт себя', 'почему так'. English: fix, debug, crash, error, broken, fail, exception, stacktrace, regression, flaky. Concrete contexts: test failure, bug report, unexpected behavior, exception trace, build failure, performance regression, integration breakage. Forces 4-phase process (root cause → pattern → hypothesis → fix) instead of guess-patch-pray. WHY NOT SKIP: random fixes mask the real bug and create new ones — symptom fixes are failure. Don't guess — measure, trace, prove. If you can't explain WHY it broke, you haven't found the cause. Use ESPECIALLY when under time pressure or 'just one quick fix' feels obvious — that's exactly when guessing burns the most time."
+description: "Use when something is broken and the user asks to FIX it — before proposing any fix. RU: 'почини', 'пофикси', 'сломалось', 'не работает', 'падает', 'крашит', 'глючит', 'вылетает', 'ошибка', 'баг'. EN: fix, debug, crash, error, broken, fail, exception, regression. Forces 4-phase process (root cause → pattern → hypothesis → fix) instead of guess-patch-pray. Маршрут: непонятно ПОЧЕМУ → problem-investigation; просят ПОЧИНИТЬ → этот скилл; новая фича → new-task."
 ---
 
 # Systematic Debugging

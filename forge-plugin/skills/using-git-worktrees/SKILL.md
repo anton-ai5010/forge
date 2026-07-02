@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: "Use when user needs an ISOLATED workspace for a parallel branch — voice triggers: 'параллельная ветка', 'изолированный workspace', 'не хочу ломать основной код', 'отдельная папка для эксперимента', 'worktree', 'попробовать не трогая main', 'две задачи параллельно', plus English 'worktree', 'isolated workspace', 'parallel branch'. Concrete contexts: пользователь хочет поэкспериментировать с рискованной фичей не ломая working ветку; параллельно тащит две фичи без бесконечных stash/checkout; запускает долгий эксперимент в фоне пока в main продолжает работу. Skill создаёт отдельную git worktree-папку: умный выбор директории (.worktrees/ vs ~/.config/forge/), проверка что папка в .gitignore (иначе worktree-мусор попадёт в коммит), авто-установка зависимостей, baseline-тест. SKIP для рядовой работы в одной ветке — это overkill. Пропуск когда изоляция реально нужна = эксперимент сольётся с production одним случайным коммитом, или часовое распутывание конфликтов stash."
+description: "Use when the user needs an ISOLATED workspace for a parallel branch — risky experiment without touching main, or two tasks in parallel. RU: 'параллельная ветка', 'изолированный workspace', 'отдельная папка для эксперимента', 'попробовать не трогая main', 'две задачи параллельно'. EN: 'worktree', 'isolated workspace', 'parallel branch'. Creates a separate git worktree: smart directory choice, .gitignore check, dependency install, baseline test. SKIP for ordinary single-branch work — overkill."
 ---
 
 # Using Git Worktrees

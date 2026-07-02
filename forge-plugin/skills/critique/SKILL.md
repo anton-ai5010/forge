@@ -1,6 +1,6 @@
 ---
 name: critique
-description: "Use proactively right after /plan when a plan file exists in .forge/plans/, OR when the user says 'покритикуй план', 'разберите план', 'проверь план', 'найди дыры', 'что не так с планом', 'погоняй критиков'. Phase 3 of the forge dev pipeline. Don't skip this even when the plan looks solid — the planner is in love with their plan, fresh eyes find holes the planner can't see. The skill dispatches 4 persona-subagents in parallel (Skeptic / Pragmatist / Architect / User Advocate), each reviewing the plan from an independent angle, then synthesizes their findings into the plan as concrete edits plus an execution strategy section (what goes to subagents, what's parallel, what's sequential). The goal isn't to praise the plan — it's to break it cheaply now so we don't break code expensively later. Hands off to /execute (Phase 4)."
+description: "Use proactively right after /plan when a plan file exists in .forge/plans/, OR when the user says 'покритикуй план', 'проверь план', 'найди дыры в плане', 'что не так с планом', 'погоняй критиков'. Phase 3 of the forge pipeline. Dispatches 4 persona-subagents in parallel (Skeptic / Pragmatist / Architect / User Advocate), synthesizes findings into concrete plan edits + an Execution Strategy section. Breaks the plan cheaply now so code doesn't break expensively later. Hands off to /execute."
 ---
 
 # Critique — Phase 3: Tearing the plan apart cheaply
@@ -197,7 +197,7 @@ EOF
 Применить блокеры + важное? (опциональные оставим если есть время)
 ```
 
-4. Подожди ответ. После ОК — обновляй план в `.forge/plans/...` с правками.
+5. Подожди ответ. После ОК — обновляй план в `.forge/plans/...` с правками.
 
 ### 4.5. GitHub-sync (опционально, тихо если выключен)
 

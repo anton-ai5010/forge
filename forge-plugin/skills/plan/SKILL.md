@@ -1,6 +1,6 @@
 ---
 name: plan
-description: "Use proactively right after /new-task finishes and a task file appears in .forge/tasks/, OR whenever the user says 'давай план', 'распиши шаги', 'как это сделать', 'построй план', 'разбей на этапы', 'что нужно сделать чтобы...'. Phase 2 of the forge dev pipeline. Don't skip this even when the task looks straightforward — a plan without checkpoints turns into 20 unreviewable steps, and a plan that hand-waves over hidden blockers wastes hours mid-implementation. The skill silently researches code/libraries/decisions/dead-ends, asks the user only about business logic (never about tech stack or file paths — those it finds itself), recursively offloads distant blockers to a separate session via a saved handoff prompt so the main session's context stays clean, and produces a plan with concrete file paths, inline code, and mandatory checkpoints placed on meaningful milestones. The plan is the contract Phase 3 (/critique) will tear apart, so concreteness is mandatory: 'add validation' is a bad step, 'add Email value object that throws on empty string, test in tests/value_objects/email_test.py' is a good step. Hands off to /critique."
+description: "Use proactively right after the task file appears in .forge/tasks/ (after /new-task or /refine-idea), OR when the user says 'давай план', 'распиши шаги', 'построй план', 'разбей на этапы', 'как это сделать'. Phase 2 of the forge pipeline. Silently researches code/decisions/dead-ends, asks the user only about business logic (never tech), offloads distant blockers to a separate session, produces a plan with concrete file paths, inline code, and mandatory checkpoints. Hands off to /critique (Phase 3)."
 ---
 
 # Plan — Phase 2: Building the route from A to B
@@ -238,9 +238,9 @@ bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh add-steps <task-slug> .forge
 ### 8. Покажи план пользователю
 
 Кратко (не дамп всего файла):
-*"План готов: N шагов, M чекпоинтов. Лежит в `.forge/plans/...`. Открой посмотри. Если ОК — я сразу запускаю критику. Скажи 'стоп' если хочешь паузу."*
+*"План готов: N шагов, M чекпоинтов. Лежит в `.forge/plans/...`. Открой посмотри. Если ОК — запускаю критику. Скажи 'стоп' если хочешь паузу."*
 
-Затем **сразу инвокни critique skill** (Phase 3). Не жди явного `/critique` — пользователь подтвердил, цепочка идёт сама. Останься в фазе 2 только если пользователь сказал 'стоп' / 'пауза' / 'погоди' или попросил правки плана.
+Покажи сводку плана и **заверши ход — дождись ответа**. Если пользователь ответил 'ОК' / 'да' / 'погнали' — инвокни critique skill (Phase 3). Если 'стоп' / правки — примени правки и снова покажи сводку.
 
 ## Что НЕ делаешь в этой фазе
 

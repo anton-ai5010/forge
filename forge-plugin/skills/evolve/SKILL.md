@@ -1,6 +1,6 @@
 ---
 name: evolve
-description: "Use when user says 'эволюция', 'evolve', 'кластеризуй боли', 'найди паттерны', 'что я повторяю', 'мои сквозные грабли', 'что автоматизировать', 'одни и те же грабли', 'из месяца в месяц одно', 'улучши плагин под меня'. Periodically (every 2 weeks) analyzes .forge/learnings.yml + .forge/journal.yml + memory's project_pain_patterns.md to find recurring user pain patterns across sessions, clusters them, and proposes automation: create hooks via /forge:hookify, new skills, commit helpers, workflow tweaks. Output is HTML report (visual-first for non-coder) with concrete suggestions ranked by frequency × impact. The user can accept/reject each suggestion."
+description: "Use when user says 'эволюция', 'evolve', 'кластеризуй боли', 'мои сквозные грабли', 'что автоматизировать', 'из месяца в месяц одно', 'улучши плагин под меня'. Analyzes .forge/learnings.yml + journal.yml + memory pain patterns, clusters recurring pains, proposes automation (hooks via hookify, new skills, workflow tweaks) as an HTML report ranked by frequency × impact. session-insights находит паттерны, evolve превращает их в автоматизацию."
 ---
 
 # Evolve — превращаем повторяющиеся боли в автоматизацию

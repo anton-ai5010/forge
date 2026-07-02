@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: "Use proactively when implementing ANY feature, bugfix, or new function — BEFORE writing implementation code. Trigger when the user says 'напиши тест', 'тесты', 'покрытие', 'TDD', 'юнит', 'тест на', 'проверь тестом', 'сначала тест', 'добавь функцию', 'почини баг', or English 'test', 'tdd', 'unit', 'spec', 'coverage', 'RED-GREEN', 'write a test'. Applies whenever you are about to add behavior to code: new feature, bugfix reproduction, refactor with safety net, edge-case hardening. The skill enforces RED-GREEN-REFACTOR: write a failing test FIRST, watch it fail (RED), write minimal code to pass (GREEN), then clean up (REFACTOR). Tests are the SPECIFICATION of what the code must do, not paperwork added later — if you didn't watch the test fail, you don't know what it tests, only that it passes. Skipping this even on 'trivial' changes means shipping code you can't prove works; bugs surface in production instead of in the test runner."
+description: "Use during plan/execute when the step involves implementing a feature, bugfix, or new function — BEFORE writing implementation code. RU: 'напиши тест', 'тесты', 'покрытие', 'TDD', 'юнит', 'тест на', 'сначала тест'. EN: 'test', 'tdd', 'unit', 'spec', 'coverage', 'RED-GREEN', 'write a test'. Enforces RED-GREEN-REFACTOR: write a failing test first, watch it fail, minimal code to pass, then refactor. Tests are the specification — if you didn't watch it fail, you don't know what it tests."
 ---
 
 **Role:** Senior engineer, TDD evangelist. Tests come first, always.

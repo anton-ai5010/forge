@@ -1,5 +1,6 @@
 ---
 description: Analyze past Claude Code conversations for the current project — extract pain points, recurring themes, unresolved problems, idea evolution, and save insights to memory
+disable-model-invocation: true
 ---
 
 # FORGE Session Insights

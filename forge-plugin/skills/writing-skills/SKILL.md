@@ -1,6 +1,6 @@
 ---
 name: writing-skills
-description: "Use when creating, editing, or verifying a Claude skill — voice triggers 'создай скилл', 'новый скилл', 'напиши скилл', 'сделай скилл', 'добавь скилл', 'редактируй скилл', 'поправь скилл', and English equivalents 'create skill', 'write skill', 'edit skill', 'modify skill'. Covers concrete contexts: authoring a new SKILL.md from scratch, modifying an existing skill's description/triggers/body, debugging why a skill doesn't fire, or tuning the YAML frontmatter for reliability. Applies TDD to process docs — write a failing pressure test with a subagent FIRST, watch baseline behavior fail, then write the minimal skill, then verify the agent now complies. Skipping this verification loop is the #1 reason skills look correct but never trigger in practice — they get false confidence from the author and silently fail in real sessions. If you can't test it, you can't trust it."
+description: "Use when creating, editing, or verifying a Claude skill. RU: 'создай скилл', 'новый скилл', 'напиши скилл', 'сделай скилл', 'добавь скилл', 'поправь скилл', 'редактируй скилл'. EN: 'create skill', 'write skill', 'edit skill', 'modify skill'. Covers: authoring SKILL.md, changing description/triggers/body, debugging why a skill doesn't fire, tuning frontmatter. Applies TDD to process docs — write a failing pressure test with a subagent first, then the minimal skill, then verify compliance."
 ---
 
 # Writing Skills

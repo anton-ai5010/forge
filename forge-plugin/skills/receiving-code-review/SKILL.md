@@ -1,6 +1,6 @@
 ---
 name: receiving-code-review
-description: "Use when receiving code review feedback — triggers: 'мне написали ревью', 'код-ревью прислали', 'критика на код', 'комменты к коду', 'ревьювер сказал', 'review feedback', 'reviewer said', 'got comments on my PR', 'критикуют мой код', 'правки от ревью', 'разбери комменты', 'PR review came in'. Use BEFORE applying any suggestion from a reviewer, especially when feedback feels unclear, contradictory, or technically questionable. The skill enforces technical evaluation over emotional reaction: verify each comment against the actual codebase, separate correct critique from wrong critique, push back with evidence when reviewer is wrong, agree with evidence when reviewer is right — never performative 'good catch, fixing now' without checking. Skipping this means you either ship bugs by blindly applying wrong feedback, or ship bugs by blindly rejecting correct feedback — both are expensive. Use even for 'small' comments and 'obvious' fixes — those are exactly where blind agreement breaks code."
+description: "Use when receiving code review feedback, BEFORE applying any suggestion. RU: 'мне написали ревью', 'ревьювер сказал', 'критика на код', 'разбери комменты', 'правки от ревью'. EN: 'review feedback', 'reviewer said', 'PR comments'. Verify each comment against the actual codebase: push back with evidence when the reviewer is wrong, agree with evidence when right — never blind 'good catch, fixing now' without checking. Use even for 'small' and 'obvious' comments."
 ---
 
 # Code Review Reception
