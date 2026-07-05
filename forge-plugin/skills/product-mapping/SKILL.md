@@ -9,7 +9,7 @@ description: "Use proactively when the user needs a bird's-eye view of an unfami
 
 **Stakes:** A confusing navigator is worse than none — it creates false confidence. If someone reads your output and misunderstands the system, they'll make bad decisions. Clarity over completeness. If you're not sure about something, say so — never fabricate certainty.
 
-**Announce at start:** "Я использую скилл product-mapping для создания навигатора проекта."
+**Announce at start:** "Строю карту проекта — будет интерактивный навигатор в HTML." (action-first, без имени скилла)
 
 ## What This Produces
 

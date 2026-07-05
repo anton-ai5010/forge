@@ -70,8 +70,8 @@ DO NOT read source code before checking `.forge/library/spec.yml`.
 
 **Что появляется на GitHub:**
 - **Issue per task** — `/forge:new-task` создаёт Issue с чистой задачей и критерием готовности
-- **Sub-issues per step** — `/forge:plan` под каждый шаг плана заводит дочерний Issue
-- **Pinned Issue карта проекта** — единый Issue со всеми задачами, сгруппированными по приоритетам и milestones; обновляется при каждой фазе
+- **Sub-issues per step** — `/forge:critique` по финальному плану заводит дочерний Issue под каждый шаг (по черновику из `/forge:plan` — не заводит; повторный вызов обновляет состав шагов)
+- **Pinned Issue карта проекта** — единый Issue с целями и счётчиками задач; обновляется механически внутри sync.sh (create-task, add-steps) и в финале execute
 - **README шапка** — короткий блок "над чем идёт работа" в README.md, перегенерируется при изменении состояния
 
 Projects v2 board не используется — Pinned Issue + README покрывают навигацию без требования non-default scope `project` в `gh auth`.

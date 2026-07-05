@@ -44,11 +44,10 @@
 **Автоматический GitHub-sync (опционально):**
 Если включён флаг `github_sync: true` в `.forge/index.yml` (или плагин сам предложил при первой задаче через `sync.sh should-offer`), каждая фаза автоматически публикует артефакты на GitHub:
 - `/forge:new-task` → Issue с задачей и критерием готовности
-- `/forge:plan` → Sub-issues под каждый шаг плана
-- `/forge:critique` → комментарий с результатом критики в Issue задачи
+- `/forge:critique` → комментарий с результатом критики + Sub-issues под каждый шаг финального плана (черновик из `/forge:plan` на GitHub не попадает)
 - `/forge:execute` → закрытие Sub-issues по мере прохождения шагов
 
-После каждой фазы пересобирается Pinned Issue (карта всех задач по приоритетам/milestones) и шапка `README.md`. Projects v2 board не используется (см. `.forge/decisions.yml: no-projects-v2-board`).
+Pinned Issue (карта целей со счётчиками) и шапка `README.md` пересобираются механически внутри sync.sh (create-task, add-steps) и в финале execute. Projects v2 board не используется (см. `.forge/decisions.yml: no-projects-v2-board`).
 
 Управление картой целей — через `/forge:roadmap`.
 

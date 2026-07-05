@@ -1,6 +1,6 @@
 ---
 name: finishing-a-development-branch
-description: "Use proactively when a feature/fix is done and ready to ship. RU: 'закрой ветку', 'готов к мержу', 'влить', 'смержить', 'всё готово', 'можно мержить'. EN: 'finish the branch', 'ready to merge', 'ship it', 'close the PR'. Verifies tests actually pass (not 'should pass'), presents merge options (squash, PR, rebase), updates docs, deletes the branch, leaves main green."
+description: "Use proactively when a feature/fix is done and ready to ship. RU: 'закрой ветку', 'готов к мержу', 'влить', 'смержить', 'всё готово', 'можно мержить'. EN: 'finish the branch', 'ready to merge', 'ship it', 'close the PR'. Verifies tests actually pass (not 'should pass'), presents plain-Russian options (merge locally / PR / keep / discard) and decides technical details (squash, rebase) itself, updates docs, deletes the branch, leaves main green."
 ---
 
 # Finishing a Development Branch
@@ -14,7 +14,7 @@ Guide completion of development work by presenting clear options and handling ch
 
 **Core principle:** Verify tests → Present options → Execute choice → Clean up.
 
-**Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
+**Первая фраза (по-русски, действием):** «Завершаю задачу: проверяю тесты и готовлю слияние.» — без объявления имени скилла.
 
 ## The Process
 
@@ -44,39 +44,43 @@ Stop. Don't proceed to Step 2.
 
 Before presenting merge options, ensure documentation is current:
 ```bash
-# Check if FORGE docs exist
-ls .forge/map.json 2>/dev/null
+# Check if FORGE docs exist (map.json — legacy)
+ls .forge/map.yml .forge/map.json 2>/dev/null
 ```
 
 If FORGE docs exist, suggest running `/forge:sync` to update documentation before merge. Documentation should reflect all changes made in this branch.
 
 ### Step 2: Determine Base Branch
 
+Тем же способом, что execute (шаг 1.5) заводил ветку — обе стороны git-модели обязаны говорить об одной ветке:
+
 ```bash
-# Try common base branches
-git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
+BASE=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's@^origin/@@')
+if [ -z "$BASE" ]; then
+  git show-ref --verify --quiet refs/heads/main && BASE=main || BASE=master
+fi
 ```
 
-Or ask: "This branch split from main - is that correct?"
+Определяй молча. **НЕ спрашивай пользователя про базовую ветку** — это технический вопрос, он решается кодом выше.
 
 ### Step 3: Present Options
 
 **Short-circuit для не-кодера:** если пользователь явно сказал «мержим» / «всё готово» / «влей» / «закрой ветку» / «ship it» (однозначное намерение слить локально) — **НЕ показывай меню**. Сразу иди по Option 1 (локальный мерж) и заверши человеческим подтверждением. Меню из 4 опций — только когда намерение неоднозначно или пользователь явно спросил про PR / «что дальше».
 
-Если намерение неоднозначно — present exactly these 4 options:
+Если намерение неоднозначно — покажи ровно эти 4 варианта, **на русском, без git-жаргона**:
 
 ```
-Implementation complete. What would you like to do?
+Работа готова и проверена. Что делаем?
 
-1. Merge back to <base-branch> locally
-2. Push and create a Pull Request
-3. Keep the branch as-is (I'll handle it later)
-4. Discard this work
+1. Влить в основную ветку — задача станет частью проекта
+2. Отправить на GitHub как заявку на проверку (PR) — если нужно ревью
+3. Оставить как есть — вернёшься к этому позже
+4. Выбросить эту работу
 
-Which option?
+Я бы выбрал 1. Какой вариант?
 ```
 
-**Don't add explanation** - keep options concise.
+**Без длинных объяснений** — варианты короткие, рекомендация-дефолт одна. Технические решения внутри варианта (squash / rebase / как оформить PR) принимай сам по контексту — не спрашивай не-кодера.
 
 ### Step 4: Execute Choice
 
@@ -115,6 +119,11 @@ git branch -d <feature-branch>
 **После успешного мержа** дай человеческое подтверждение без жаргона (не говори commit/merge/branch):
 > *«Готово. Правки сохранил, задачу влил в master, рабочую ветку убрал. Ты сейчас на master.»*
 
+**Обязательно: обнови `.forge/index.yml`** (если он есть) — этот файл инжектится в каждый промпт, протухший он врёт всем будущим сессиям:
+- `now.task` → что делаем теперь (задача влита), `now.branch` → `$BASE`
+- `last_session` → одна строка «дата — что сделали»
+- `version` → если в этой работе поднимали версию плагина/проекта, подними и здесь
+
 Then: Cleanup worktree (Step 5)
 
 #### Option 2: Push and Create PR
@@ -138,23 +147,22 @@ Then: Cleanup worktree (Step 5)
 
 #### Option 3: Keep As-Is
 
-Report: "Keeping branch <name>. Worktree preserved at <path>."
+Скажи по-человечески: *«Оставляю как есть. Работа сохранена в ветке <имя>, ничего не потеряется»* (если была отдельная рабочая папка — добавь: *«папка на месте: <путь>»*).
 
 **Don't cleanup worktree.**
 
 #### Option 4: Discard
 
-**Confirm first:**
+**Сначала подтверждение, на русском:**
 ```
-This will permanently delete:
-- Branch <name>
-- All commits: <commit-list>
-- Worktree at <path>
+Это удалит безвозвратно:
+- всю работу по задаче «<название задачи по-человечески>»
+- изменения: <краткий список что менялось, простыми словами>
 
-Type 'discard' to confirm.
+Напиши «удалить», чтобы подтвердить.
 ```
 
-Wait for exact confirmation.
+Жди точного слова «удалить» — ничего другого не принимай.
 
 If confirmed:
 ```bash
@@ -205,7 +213,7 @@ git worktree remove <worktree-path>
 
 **No confirmation for discard**
 - **Problem:** Accidentally delete work
-- **Fix:** Require typed "discard" confirmation
+- **Fix:** Require typed «удалить» confirmation
 
 ## Red Flags
 

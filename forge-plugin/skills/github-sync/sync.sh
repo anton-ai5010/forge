@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # forge github-sync — синхронизирует пайплайн с GitHub Issues/Sub-issues + карту проекта
-# (Pinned Issue + README шапка). Вызывается из скиллов new-task/plan/critique/execute.
+# (Pinned Issue + README шапка). Вызывается из скиллов new-task/critique/execute/roadmap.
 # Тихо no-op если выключено; громко предупреждает если включено но сломано.
+# Slug-контракт: <task-slug> = имя task-файла без датного префикса и .md (см. normalize_slug).
 #
 # Документация: SKILL.md рядом.
 
@@ -89,6 +90,35 @@ ensure_forge_dir() {
     mkdir -p .forge
 }
 
+# ---- Slug-контракт ----
+# slug задачи = имя task-файла в .forge/tasks/ БЕЗ датного префикса и БЕЗ .md:
+#   .forge/tasks/2026-07-03-search-fix.md  →  search-fix
+# Все фазы (plan/critique/execute) обязаны передавать один и тот же slug.
+# Для устойчивости sync сам нормализует вход, а на чтении принимает и старые
+# маркеры с датой (см. find_marker).
+normalize_slug() {
+    basename "$1" .md | sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2}-//'
+}
+
+# find_marker <issue|substeps> <slug>: найти marker-файл по slug.
+# Порядок: каноничное имя (без даты) → как передали → легаси-имя с датным префиксом.
+# stdout: путь к файлу; return 1 если не найден. Легаси-попадание — громкий warning в stderr.
+find_marker() {
+    local prefix="$1" raw="$2" slug f
+    slug=$(normalize_slug "$raw")
+    for f in ".forge/.github-$prefix-$slug" ".forge/.github-$prefix-$raw"; do
+        [ -f "$f" ] && { echo "$f"; return 0; }
+    done
+    for f in .forge/.github-"$prefix"-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-"$slug"; do
+        if [ -f "$f" ]; then
+            echo "⚠ sync: маркер для '$slug' найден только в старом формате с датой ($f). Работаю с ним, но все фазы должны передавать slug без даты (имя task-файла без датного префикса и .md)." >&2
+            echo "$f"
+            return 0
+        fi
+    done
+    return 1
+}
+
 # ============ ACTIONS ============
 
 # bootstrap-labels: создать 6 forge-лейблов (идемпотентно)
@@ -148,12 +178,13 @@ create_task() {
     ensure_forge_dir
     ensure_bootstrap
     local task_file="$1" milestone_num="${2:-}"
-    local slug title body url issue_num
-    slug=$(basename "$task_file" .md)
+    local slug title body url issue_num marker
+    # Единый slug-контракт: имя файла без даты и .md (см. «Slug-контракт» в SKILL.md)
+    slug=$(normalize_slug "$task_file")
 
-    # Dedup
-    if [ -f ".forge/.github-issue-$slug" ]; then
-        issue_num=$(cat ".forge/.github-issue-$slug")
+    # Dedup (включая старые маркеры с датным префиксом)
+    if marker=$(find_marker issue "$slug"); then
+        issue_num=$(cat "$marker")
         if [ -n "$issue_num" ]; then
             echo "issue #$issue_num уже существует для $slug"
             return 0
@@ -173,60 +204,88 @@ create_task() {
     issue_num="${url##*/}"
     echo "$issue_num" > ".forge/.github-issue-$slug"
     echo "$issue_num"
+
+    # Карта обновляется на каждой фазе: новая задача видна сразу, не в финале execute
+    sync_all || true
 }
 
-# add-steps <task-slug> <plan-file>: создать sub-issues по шагам плана
+# add-steps <task-slug> <plan-file>: создать/обновить sub-issues по шагам плана.
+# Повторный вызов (план правили после критики) — НЕ no-op: новые шаги создаёт,
+# убранные закрывает, переименованные переименовывает. Mapping всегда = текущий план.
 add_steps() {
     check_enabled || return 0
     ensure_bootstrap
     local task_slug="$1" plan_file="$2"
-    local parent
-    parent=$(cat ".forge/.github-issue-$task_slug" 2>/dev/null || echo "")
-    [ -n "$parent" ] || { echo "sync: no parent issue for $task_slug, skipping" >&2; return 0; }
+    local marker parent
+    marker=$(find_marker issue "$task_slug") || { echo "⚠ sync: не нашёл Issue задачи для '$task_slug' — sub-issues не создаю. Проверь slug: имя task-файла без даты и .md." >&2; return 0; }
+    parent=$(cat "$marker")
+    [ -n "$parent" ] || { echo "⚠ sync: маркер Issue для '$task_slug' пуст, пропускаю" >&2; return 0; }
 
     local parent_node_id mapping_file
     parent_node_id=$(gh issue view "$parent" --json id -q .id)
-    mapping_file=".forge/.github-substeps-$task_slug"
+    mapping_file=$(find_marker substeps "$task_slug") || mapping_file=".forge/.github-substeps-$(normalize_slug "$task_slug")"
+    [ -f "$mapping_file" ] || : > "$mapping_file"
 
-    # Идемпотентность
-    if [ -f "$mapping_file" ] && [ -s "$mapping_file" ]; then
-        echo "substeps уже созданы для $task_slug"
-        relabel_phase "$parent" phase-2
-        return 0
-    fi
-
-    : > "$mapping_file"
-    # Читаем шаги из плана. Используем mapfile чтобы избежать subshell у while
+    # Читаем шаги из плана. Номер шага бывает дробным (3.5 — вставка после критики).
+    # Используем mapfile чтобы избежать subshell у while
     mapfile -t step_lines < <(grep -E "^## Шаг " "$plan_file")
-    local step_title step_num url sub_num
+    local step_title step_num url sub_num new_mapping
+    new_mapping=$(mktemp)
     for line in "${step_lines[@]}"; do
         step_title=$(echo "$line" | sed 's/^## //')
-        step_num=$(echo "$step_title" | sed -E 's/^Шаг ([0-9]+).*/\1/')
-        url=$(gh issue create --title "$step_title" --body "Часть #$parent" --label "forge:phase-2")
-        sub_num="${url##*/}"
+        step_num=$(echo "$step_title" | sed -E 's/^Шаг ([0-9]+(\.[0-9]+)?).*/\1/')
+        sub_num=$(awk -F: -v n="$step_num" '$1==n{print $2; exit}' "$mapping_file")
+        if [ -n "$sub_num" ]; then
+            # Шаг уже есть — обновить заголовок (мог измениться при правках плана)
+            gh issue edit "$sub_num" --title "$step_title" 2>/dev/null || true
+        else
+            url=$(gh issue create --title "$step_title" --body "Часть #$parent" --label "forge:phase-2")
+            sub_num="${url##*/}"
 
-        # Использовать subIssueUrl вариант — не нужен второй node_id lookup
-        gh api graphql -f query='
-            mutation($parent:ID!, $childUrl:String!) {
-              addSubIssue(input:{issueId:$parent, subIssueUrl:$childUrl}) {
-                subIssue { number }
-              }
-            }' -F parent="$parent_node_id" -f childUrl="$url" >/dev/null 2>&1 || \
-            echo "⚠ не удалось привязать sub-issue #$sub_num к #$parent (возможно репо не поддерживает sub-issues — оставляю как обычный Issue)" >&2
-
-        echo "$step_num:$sub_num" >> "$mapping_file"
+            # Использовать subIssueUrl вариант — не нужен второй node_id lookup
+            gh api graphql -f query='
+                mutation($parent:ID!, $childUrl:String!) {
+                  addSubIssue(input:{issueId:$parent, subIssueUrl:$childUrl}) {
+                    subIssue { number }
+                  }
+                }' -F parent="$parent_node_id" -f childUrl="$url" >/dev/null 2>&1 || \
+                echo "⚠ не удалось привязать sub-issue #$sub_num к #$parent (возможно репо не поддерживает sub-issues — оставляю как обычный Issue)" >&2
+        fi
+        echo "$step_num:$sub_num" >> "$new_mapping"
     done
 
-    relabel_phase "$parent" phase-2
+    # Шаги, исчезнувшие из плана — закрыть их sub-issues
+    local old_num old_sub
+    while IFS=: read -r old_num old_sub; do
+        [ -n "$old_num" ] || continue
+        if ! awk -F: -v n="$old_num" '$1==n{f=1} END{exit !f}' "$new_mapping"; then
+            echo "sync: шаг $old_num убран из плана — закрываю sub-issue #$old_sub" >&2
+            gh issue close "$old_sub" 2>/dev/null || true
+        fi
+    done < "$mapping_file"
+
+    mv "$new_mapping" "$mapping_file"
+
+    # Фазу назад не откатываем: add-steps в critique идёт ПОСЛЕ add-critique (phase-3)
+    local cur_label
+    cur_label=$(gh issue view "$parent" --json labels -q '[.labels[].name | select(startswith("forge:phase-") or . == "forge:done")] | first // ""' 2>/dev/null || echo "")
+    case "$cur_label" in
+        forge:phase-3|forge:phase-4|forge:done) : ;;
+        *) relabel_phase "$parent" phase-2 ;;
+    esac
+
+    # Карта обновляется на каждой фазе, не только в финале execute
+    sync_all || true
 }
 
 # add-critique <task-slug> <summary-file>: комментарий + label
 add_critique() {
     check_enabled || return 0
     local task_slug="$1" summary_file="$2"
-    local parent
-    parent=$(cat ".forge/.github-issue-$task_slug" 2>/dev/null || echo "")
-    [ -n "$parent" ] || { echo "sync: no parent for $task_slug" >&2; return 0; }
+    local marker parent
+    marker=$(find_marker issue "$task_slug") || { echo "⚠ sync: не нашёл Issue задачи для '$task_slug' — комментарий критики не добавлен. Проверь slug: имя task-файла без даты и .md." >&2; return 0; }
+    parent=$(cat "$marker")
+    [ -n "$parent" ] || { echo "⚠ sync: маркер Issue для '$task_slug' пуст, пропускаю" >&2; return 0; }
     [ -f "$summary_file" ] || { echo "sync: no summary file $summary_file" >&2; return 0; }
     gh issue comment "$parent" --body-file "$summary_file"
     relabel_phase "$parent" phase-3
@@ -236,10 +295,10 @@ add_critique() {
 close_step() {
     check_enabled || return 0
     local task_slug="$1" step_num="$2"
-    local mapping_file=".forge/.github-substeps-$task_slug"
-    [ -f "$mapping_file" ] || { echo "sync: no substeps mapping for $task_slug" >&2; return 0; }
+    local mapping_file
+    mapping_file=$(find_marker substeps "$task_slug") || { echo "⚠ sync: не нашёл mapping шагов для '$task_slug' — sub-issue не закрыт. Либо sub-issues не создавались (критика не запускалась), либо slug не тот: нужно имя task-файла без даты и .md." >&2; return 0; }
     local sub_num
-    sub_num=$(grep "^$step_num:" "$mapping_file" | cut -d: -f2 || echo "")
+    sub_num=$(awk -F: -v n="$step_num" '$1==n{print $2; exit}' "$mapping_file")
     [ -n "$sub_num" ] && gh issue close "$sub_num" 2>/dev/null || true
 }
 
@@ -247,9 +306,10 @@ close_step() {
 close_task() {
     check_enabled || return 0
     local task_slug="$1"
-    local parent
-    parent=$(cat ".forge/.github-issue-$task_slug" 2>/dev/null || echo "")
-    [ -n "$parent" ] || return 0
+    local marker parent
+    marker=$(find_marker issue "$task_slug") || { echo "⚠ sync: не нашёл Issue задачи для '$task_slug' — на GitHub ничего не закрыто. Проверь slug: имя task-файла без даты и .md." >&2; return 0; }
+    parent=$(cat "$marker")
+    [ -n "$parent" ] || { echo "⚠ sync: маркер Issue для '$task_slug' пуст, пропускаю" >&2; return 0; }
     relabel_phase "$parent" done
     gh issue close "$parent" 2>/dev/null || true
 
@@ -284,9 +344,10 @@ PYEOF
 reassign_task() {
     check_enabled || return 0
     local task_slug="$1" new_milestone="${2:-}"
-    local parent
-    parent=$(cat ".forge/.github-issue-$task_slug" 2>/dev/null || echo "")
-    [ -n "$parent" ] || { echo "sync: no parent for $task_slug" >&2; return 0; }
+    local marker parent
+    marker=$(find_marker issue "$task_slug") || { echo "⚠ sync: не нашёл Issue задачи для '$task_slug' — перепривязка не сделана. Проверь slug: имя task-файла без даты и .md." >&2; return 0; }
+    parent=$(cat "$marker")
+    [ -n "$parent" ] || { echo "⚠ sync: маркер Issue для '$task_slug' пуст, пропускаю" >&2; return 0; }
     if [ -n "$new_milestone" ]; then
         gh issue edit "$parent" --milestone "$new_milestone" 2>/dev/null || true
     else
@@ -369,8 +430,8 @@ forge github-sync — actions:
   bootstrap-labels      | создать forge-лейблы
   ensure-pinned-map     | создать/найти Pinned Issue карты
   roadmap-init-needed   | нужно ли знакомство с целями (yes/no)
-  create-task <f> [m]   | создать Issue из task-файла
-  add-steps <s> <f>     | sub-issues из шагов плана
+  create-task <f> [m]   | создать Issue из task-файла (+ обновить карту)
+  add-steps <s> <f>     | sub-issues из шагов плана (повтор обновляет под текущий план)
   add-critique <s> <f>  | комментарий критики + label phase-3
   close-step <s> <n>    | закрыть sub-issue
   close-task <s>        | закрыть Issue + journal update

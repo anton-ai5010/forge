@@ -14,7 +14,7 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 
 **Core principle:** Systematic directory selection + safety verification = reliable isolation.
 
-**Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
+**Announce at start:** "Делаю отдельную рабочую копию проекта — основную не трогаю." (action-first, по-русски, без имени скилла)
 
 ## Directory Selection Process
 
@@ -38,17 +38,18 @@ grep -i "worktree.*director" CLAUDE.md 2>/dev/null
 
 **If preference specified:** Use it without asking.
 
-### 3. Ask User
+### 3. Default: .worktrees/
 
-If no directory exists and no CLAUDE.md preference:
+If no directory exists and no CLAUDE.md preference — **don't ask**. Choosing a path on disk is a technical decision: decide silently, use `.worktrees/` (project-local, hidden), verify it's gitignored (next section). Mention it in one plain Russian line when reporting:
 
 ```
-No worktree directory found. Where should I create worktrees?
+Сделал отдельную рабочую копию в .worktrees/ — основной проект не трогаю.
+```
 
-1. .worktrees/ (project-local, hidden)
-2. ~/.config/forge/worktrees/<project-name>/ (global location)
+Ask ONLY if the context genuinely conflicts (e.g., CLAUDE.md mentions two different worktree locations). Then one short question in Russian, plain words, with a recommended default — never a technical menu in English:
 
-Which would you prefer?
+```
+Куда положить отдельную копию проекта: скрытой папкой внутри проекта (советую) или отдельно от него?
 ```
 
 ## Safety Verification
@@ -151,7 +152,7 @@ Ready to implement <feature-name>
 | `.worktrees/` exists | Use it (verify ignored) |
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
-| Neither exists | Check CLAUDE.md → Ask user |
+| Neither exists | Check CLAUDE.md → default `.worktrees/` silently |
 | Directory not ignored | Add to .gitignore + commit |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
@@ -163,10 +164,10 @@ Ready to implement <feature-name>
 - **Problem:** Worktree contents get tracked, pollute git status
 - **Fix:** Always use `git check-ignore` before creating project-local worktree
 
-### Assuming directory location
+### Ignoring existing directory or CLAUDE.md preference
 
 - **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > CLAUDE.md > ask
+- **Fix:** Follow priority: existing > CLAUDE.md > default `.worktrees/`
 
 ### Proceeding with failing tests
 
@@ -181,7 +182,7 @@ Ready to implement <feature-name>
 ## Example Workflow
 
 ```
-You: I'm using the using-git-worktrees skill to set up an isolated workspace.
+You: Делаю отдельную рабочую копию проекта — основную не трогаю.
 
 [Check .worktrees/ - exists]
 [Verify ignored - git check-ignore confirms .worktrees/ is ignored]
@@ -200,11 +201,11 @@ Ready to implement auth feature
 - Create worktree without verifying it's ignored (project-local)
 - Skip baseline test verification
 - Proceed with failing tests without asking
-- Assume directory location when ambiguous
+- Ask the user to pick a directory when the default works — decide silently
 - Skip CLAUDE.md check
 
 **Always:**
-- Follow directory priority: existing > CLAUDE.md > ask
+- Follow directory priority: existing > CLAUDE.md > default `.worktrees/`
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline

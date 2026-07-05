@@ -109,7 +109,7 @@ Before dispatching an implementer, read `.forge/conventions.yml` → detect lang
 ## Example Workflow
 
 ```
-You: I'm using Subagent-Driven Development to execute this plan.
+You: Выполняю план — каждый шаг делает отдельный агент с двойной проверкой.
 
 [Read plan file once: .forge/plans/feature-plan.md]
 [Extract all 5 tasks with full text and context]

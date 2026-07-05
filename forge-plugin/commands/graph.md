@@ -6,7 +6,7 @@ description: Build or update code knowledge graph for the project — stores in 
 
 **Purpose:** Build a navigable graph of code relationships (modules, functions, imports, dependencies) using graphify. Stored in `.forge/graph.json` — all Forge skills use it automatically for smarter navigation.
 
-**Announce at start:** "I'm using the forge:graph command to build/query the code knowledge graph."
+**Первая фраза (по-русски, действием):** «Строю граф знаний по коду проекта.» — без объявления имени команды.
 
 ## Pre-Check
 

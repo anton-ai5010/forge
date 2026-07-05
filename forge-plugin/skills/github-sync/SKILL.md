@@ -1,6 +1,6 @@
 ---
 name: github-sync
-description: "Internal skill — invoked automatically by forge pipeline skills (new-task, plan, critique, execute) to mirror task state to GitHub Issues + Sub-issues + auto-updated README header + Pinned Issue with project map. Enabled by `github_sync: true` in `.forge/index.yml`. NOT for manual use — use /forge:roadmap for goal management. Silently no-ops when no GitHub remote / no gh / no github_sync flag. Loudly warns when flag is on but auth is broken."
+description: "Internal skill — invoked automatically by forge pipeline skills (new-task, critique, execute, roadmap) to mirror task state to GitHub Issues + Sub-issues + auto-updated README header + Pinned Issue with project map. Enabled by `github_sync: true` in `.forge/index.yml`. NOT for manual use — use /forge:roadmap for goal management. Silently no-ops when no GitHub remote / no gh / no github_sync flag. Loudly warns when flag is on but auth is broken."
 ---
 
 # GitHub Sync — внутренний скилл
@@ -11,19 +11,29 @@ description: "Internal skill — invoked automatically by forge pipeline skills 
 
 ## Что это
 
-Один централизованный bash-скрипт `sync.sh` инкапсулирует все `gh` CLI вызовы. Существующие скиллы (new-task / plan / critique / execute / forge-context) добавляют в свой процесс однострочный вызов `bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh <action> <args>` в нужный момент.
+Один централизованный bash-скрипт `sync.sh` инкапсулирует все `gh` CLI вызовы. Существующие скиллы (new-task / critique / execute / roadmap) добавляют в свой процесс однострочный вызов `bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh <action> <args>` в нужный момент.
+
+## Slug-контракт (единое правило для всех фаз)
+
+`<task-slug>` — имя файла задачи в `.forge/tasks/` **без датного префикса и без `.md`**:
+`.forge/tasks/2026-07-03-search-fix.md` → slug `search-fix`. Тот же slug — в имени файла плана (дата может отличаться, slug совпадает).
+
+Все фазы (plan / critique / execute) передают в `sync.sh` ровно этот slug — иначе lookup маркеров (`.forge/.github-issue-*`, `.forge/.github-substeps-*`) разъезжается и sync перестаёт находить Issue задачи. `sync.sh` подстраховывает: сам срезает дату из входа, а на чтении находит и старые маркеры с датой (с громким предупреждением в stderr) — но это запасной механизм, а не норма.
 
 ## Когда вызывается
 
 | Скилл | Когда | Action |
 |---|---|---|
 | `new-task` | Раздел «После подтверждения» — после сохранения task-файла | `create-task <task-file> [milestone-num]` |
-| `plan` | Шаг 7.5 — после сохранения плана | `add-steps <task-slug> <plan-file>` |
-| `critique` | Шаг 4 — после применения правок | `add-critique <task-slug> <summary-file>` |
+| `plan` | Шаг 7.5 | ничего — sub-issues создаёт критика по финальному плану |
+| `critique` | Шаг 4.5 — после применения правок | `add-critique <task-slug> <summary-file>` |
+| `critique` | Шаг 5.5 — после Execution Strategy (состав шагов финален) | `add-steps <task-slug> <plan-file>` |
 | `execute` | После каждого шага плана | `close-step <task-slug> <step-num>` |
 | `execute` | Финал (после критерия готовности) | `close-task <task-slug>` затем `sync-all` |
 | `roadmap` | После любого изменения карты | `sync-pinned` и `sync-readme` |
 | `forge:start` | Чтение карты для дашборда | inline `gh issue view` (см. commands/start.md) |
+
+Карта (Pinned Issue + README шапка) обновляется на каждой фазе: `create-task` и `add-steps` в конце сами запускают `sync-all` — отдельный вызов из new-task/critique не нужен.
 
 ## Доступные actions
 
@@ -34,15 +44,15 @@ description: "Internal skill — invoked automatically by forge pipeline skills 
 - `bootstrap-labels` — создать 6 forge-лейблов (идемпотентно)
 - `ensure-pinned-map` — создать/найти Pinned Issue "🗺 Карта проекта"
 - `roadmap-init-needed` — карта пустая? (yes/no)
-- `create-task <task-file> [milestone-num]` — Issue из task-файла, dedup
-- `add-steps <task-slug> <plan-file>` — sub-issues из шагов плана
+- `create-task <task-file> [milestone-num]` — Issue из task-файла, dedup; в конце сам обновляет карту (`sync-all`)
+- `add-steps <task-slug> <plan-file>` — sub-issues из шагов плана; повторный вызов НЕ no-op: новые шаги создаёт, убранные закрывает, переименованные переименовывает; в конце сам обновляет карту
 - `add-critique <task-slug> <summary-file>` — комментарий + label phase-3
 - `close-step <task-slug> <step-num>` — закрыть конкретный sub-issue
 - `close-task <task-slug>` — закрыть Issue + journal.yml update
 - `reassign-task <task-slug> <new-milestone-num>` — перепривязать к другому milestone
 - `sync-readme` — обновить шапку README.md
 - `sync-pinned` — обновить тело Pinned Issue
-- `sync-all` — sync-readme + sync-pinned (вызывается финалом execute)
+- `sync-all` — sync-readme + sync-pinned (вызывается финалом execute; `create-task` и `add-steps` запускают его сами)
 
 ## Процедура для new-task
 
@@ -85,10 +95,23 @@ bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh create-task .forge/tasks/<sl
 
 е) Одной строкой в чат: "Привязал к цели **'X'**" (используй человеческое имя цели, не slug).
 
+ж) Карту проекта (Pinned Issue + README шапку) `create-task` обновил сам — новая задача видна на карте сразу, отдельный `sync-all` вызывать не нужно.
+
+## Процедура для plan и critique (sub-issues по шагам)
+
+Состав шагов плана финализируется только ПОСЛЕ критики (она добавляет шаги вида 3.5 и убирает лишние), поэтому вызов `add-steps` идёт после критики:
+
+- **plan (шаг 7.5)** — sub-issues НЕ создаёт: карта не должна показывать черновик.
+- **critique (шаг 5.5, после применения правок и Execution Strategy)** — точка создания:
+  ```bash
+  bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh add-steps <task-slug> .forge/plans/<файл-плана>.md
+  ```
+- Повторный вызов `add-steps` (план правили ещё раз) — безопасен и НЕ no-op: сверяет план с mapping `.forge/.github-substeps-<slug>`, создаёт sub-issues для новых шагов, закрывает для убранных, переименовывает изменённые.
+
 ## Внутренние артефакты (runtime, в `.forge/`)
 
 - `.forge/.github-pinned-id` — номер закреплённого Issue карты
-- `.forge/.github-issue-<slug>` — номер Issue для каждой задачи
+- `.forge/.github-issue-<slug>` — номер Issue для каждой задачи (`<slug>` — без даты, см. Slug-контракт)
 - `.forge/.github-substeps-<slug>` — mapping `step_num:issue_num` для close-step
 
 Эти файлы НЕ коммитятся (см. `.forge/.gitignore`).

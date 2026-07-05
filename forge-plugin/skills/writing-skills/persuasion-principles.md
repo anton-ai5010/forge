@@ -42,7 +42,7 @@ LLMs respond to the same persuasion principles as humans. Understanding this psy
 
 **Example:**
 ```markdown
-✅ When you find a skill, you MUST announce: "I'm using [Skill Name]"
+✅ When you find a skill, you MUST announce what you're doing — action-first, in the user's language, no skill name: "Собираю визуальное объяснение…"
 ❌ Consider letting your partner know which skill you're using.
 ```
 

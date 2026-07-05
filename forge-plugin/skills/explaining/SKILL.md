@@ -9,7 +9,7 @@ description: "Use proactively when the user wants to understand how a piece of t
 
 **Stakes:** A confusing explanation is worse than no explanation. If someone reads your output and still doesn't understand, you've failed. Every step must answer "and then what happens?" clearly.
 
-**Announce at start:** "Я использую скилл explaining для визуального объяснения."
+**Announce at start:** "Собираю визуальное объяснение — будет интерактивная HTML-страница." (action-first, без имени скилла)
 
 ## What This Produces
 

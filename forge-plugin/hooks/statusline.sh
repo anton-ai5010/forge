@@ -21,14 +21,16 @@ if [ -f ".forge/state.yml" ]; then
     task=$(grep "^task:" .forge/state.yml 2>/dev/null | cut -d: -f2- | xargs | cut -c1-35)
 fi
 
-# Маппинг фаз → эмодзи
+# Маппинг фаз → эмодзи (подписи по-русски — их видит пользователь)
 phase_icon=""
 case "$phase" in
-    new-task|"Phase 1"|1) phase_icon="🎯 Phase 1: Understanding" ;;
-    refine-idea|"Phase 1.5"|1.5) phase_icon="🔬 Phase 1.5: Idea Check" ;;
-    plan|"Phase 2"|2) phase_icon="📋 Phase 2: Planning" ;;
-    critique|"Phase 3"|3) phase_icon="🔍 Phase 3: Critique" ;;
-    execute|"Phase 4"|4) phase_icon="🚀 Phase 4: Implementation" ;;
+    unblocker|"Phase 0"|0) phase_icon="🧭 Фаза 0: Направление" ;;
+    new-task|"Phase 1"|1) phase_icon="🎯 Фаза 1: Понимание задачи" ;;
+    refine-idea|"Phase 1.5"|1.5) phase_icon="🔬 Фаза 1.5: Проверка идеи" ;;
+    plan|"Phase 2"|2) phase_icon="📋 Фаза 2: План" ;;
+    critique|"Phase 3"|3) phase_icon="🔍 Фаза 3: Критика плана" ;;
+    execute|"Phase 4"|4) phase_icon="🚀 Фаза 4: Реализация" ;;
+    idle) phase_icon="✅ Задача завершена" ;;
     "") phase_icon="" ;;
     *) phase_icon="📌 $phase" ;;
 esac
