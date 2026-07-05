@@ -1,5 +1,7 @@
 # Forge Plugin — Proposals for New Skills & Agents
 
+> ⚠️ **Исторический документ** (эпоха 4-фазного пайплайна, ≤v7.0). Статусы предложений протухли — часть «pending» давно реализована. Актуальное состояние — CLAUDE.md и README.
+>
 > Date: 2026-04-05
 > Last review: 2026-05-13 — re-evaluated against new 4-phase pipeline (`/forge:new-task` → `/forge:plan` → `/forge:critique` → `/forge:execute`)
 > Status: Draft — awaiting prioritization

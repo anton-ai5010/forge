@@ -1,19 +1,19 @@
 {
   "name": "forge-dev",
-  "description": "Development marketplace for Forge core skills library",
+  "description": "Local development marketplace for the forge plugin (install as forge@forge-dev for testing)",
   "owner": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "Anton",
+    "email": "anton-ai5010@users.noreply.github.com"
   },
   "plugins": [
     {
       "name": "forge",
-      "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
+      "description": "6-phase development pipeline for Claude Code (unblocker → new-task → refine-idea → plan → critique → execute) with tiered L0/L1/L2 project memory, bash-safety hooks, GitHub sync and the Forge Concise output style. Russian-language triggers, built for non-coders.",
       "version": "7.4.0",
       "source": "./",
       "author": {
-        "name": "Jesse Vincent",
-        "email": "jesse@fsck.com"
+        "name": "Anton",
+        "email": "anton-ai5010@users.noreply.github.com"
       }
     }
   ]

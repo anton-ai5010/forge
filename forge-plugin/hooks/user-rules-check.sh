@@ -21,7 +21,12 @@ rules=$(find .forge/hookrules -name "*.md" -type f 2>/dev/null)
 # python3 вместо sed: sed-регэксп обрывался на первой экранированной кавычке,
 # и контент с кавычкой обходил все правила.
 hook_input=$(cat)
-tool_name=$(printf '%s' "$hook_input" | python3 -c "import json,sys; print(json.load(sys.stdin).get('tool_name',''))" 2>/dev/null || true)
+if ! tool_name=$(printf '%s' "$hook_input" | python3 -c "import json,sys; print(json.load(sys.stdin).get('tool_name',''))" 2>/dev/null); then
+    # python3 отсутствует/сломан — fail-open как в bash-safety.sh (fail-closed
+    # заблокировал бы все инструменты). Предупреждаем громко в stderr.
+    echo "forge user-rules: python3 недоступен — правила hookify ОТКЛЮЧЕНЫ (fail-open)" >&2
+    exit 0
+fi
 # Для Bash — берём команду. Для Edit/Write — содержимое.
 tool_input_field() {
     printf '%s' "$hook_input" | python3 -c "import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('$1',''))" 2>/dev/null || true
@@ -29,6 +34,7 @@ tool_input_field() {
 tool_content=$(tool_input_field command)
 [ -z "$tool_content" ] && tool_content=$(tool_input_field new_string)
 [ -z "$tool_content" ] && tool_content=$(tool_input_field content)
+[ -z "$tool_content" ] && tool_content=$(tool_input_field new_source)  # NotebookEdit
 
 [ -z "$tool_content" ] && exit 0
 
@@ -36,10 +42,12 @@ tool_content=$(tool_input_field command)
 warn_msgs=""
 for rule_file in $rules; do
     # Парсим YAML frontmatter (упрощённо — построчно)
-    matcher=$(grep -E "^matcher:" "$rule_file" 2>/dev/null | head -1 | sed 's/^matcher:[[:space:]]*//' | tr -d '"')
-    action=$(grep -E "^action:" "$rule_file" 2>/dev/null | head -1 | sed 's/^action:[[:space:]]*//' | tr -d '"' | xargs)
-    pattern=$(grep -E "^pattern:" "$rule_file" 2>/dev/null | head -1 | sed "s/^pattern:[[:space:]]*//" | sed "s/^'//;s/'$//;s/^\"//;s/\"$//")
-    message=$(grep -E "^message:" "$rule_file" 2>/dev/null | head -1 | sed 's/^message:[[:space:]]*//' | sed 's/^"//;s/"$//')
+    # `|| true` обязателен: без него отсутствующая строка (grep exit 1) под
+    # set -euo pipefail молча убивает весь хук — и все правила отключаются.
+    matcher=$(grep -E "^matcher:" "$rule_file" 2>/dev/null | head -1 | sed 's/^matcher:[[:space:]]*//' | tr -d '"' || true)
+    action=$(grep -E "^action:" "$rule_file" 2>/dev/null | head -1 | sed 's/^action:[[:space:]]*//' | tr -d '"' | xargs || true)
+    pattern=$(grep -E "^pattern:" "$rule_file" 2>/dev/null | head -1 | sed "s/^pattern:[[:space:]]*//" | sed "s/^'//;s/'$//;s/^\"//;s/\"$//" || true)
+    message=$(grep -E "^message:" "$rule_file" 2>/dev/null | head -1 | sed 's/^message:[[:space:]]*//' | sed 's/^"//;s/"$//' || true)
 
     # Пропускаем если matcher не совпадает с tool
     [ -n "$matcher" ] && ! printf '%s' "$tool_name" | grep -qE "$matcher" && continue

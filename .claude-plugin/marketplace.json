@@ -1,19 +1,19 @@
 {
   "name": "forge-marketplace",
-  "description": "Forge — project knowledge layer and workflow automation for Claude Code",
+  "description": "Forge — 6-phase development pipeline and project memory for Claude Code",
   "owner": {
     "name": "Anton",
-    "email": "noreply@forge.dev"
+    "email": "anton-ai5010@users.noreply.github.com"
   },
   "plugins": [
     {
       "name": "forge",
-      "description": "Project knowledge layer and workflow automation for Claude Code — systematic development practices, context management, and intelligent documentation",
-      "version": "6.2.0",
+      "description": "6-phase development pipeline for Claude Code (unblocker → new-task → refine-idea → plan → critique → execute) with tiered L0/L1/L2 project memory, bash-safety hooks, GitHub sync and the Forge Concise output style. Russian-language triggers, built for non-coders.",
+      "version": "7.4.0",
       "source": "./forge-plugin",
       "author": {
         "name": "Anton",
-        "email": "noreply@forge.dev"
+        "email": "anton-ai5010@users.noreply.github.com"
       }
     }
   ]

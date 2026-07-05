@@ -52,7 +52,7 @@
           {
             "type": "command",
             "command": "f=$(ls ${CLAUDE_PLUGIN_ROOT}/sounds/stop/*.mp3 2>/dev/null | sort -R | head -1) && { afplay -v 0.12 \"$f\" 2>/dev/null || paplay --volume 7864 \"$f\" 2>/dev/null || true; }",
-            "timeout": 5,
+            "timeout": 10,
             "async": true
           }
         ]

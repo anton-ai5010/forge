@@ -1,15 +1,15 @@
 project: forge-plugin
 github_sync: true
-goal: "Плагин для Claude Code, автоматизирующий рабочие процессы разработки через 4-фазный pipeline (new-task → plan → critique → execute) + систему скиллов + L0/L1/L2 контекст"
+goal: "Плагин для Claude Code, автоматизирующий рабочие процессы разработки через 6-фазный pipeline (0 unblocker → 1 new-task → 1.5 refine-idea → 2 plan → 3 critique → 4 execute) + систему скиллов + L0/L1/L2 контекст"
 stage: maintenance
 progress: 100%
 blocked: нет
-version: "7.1.2"
+version: "7.4.0"
 stack: [javascript, python, bash, markdown, claude-code-plugin]
 
 now:
-  task: "Готово к мерджу feat/github-project-map (GitHub-sync + roadmap)"
-  branch: feat/github-project-map
+  task: "Правки по глубокому ревью 2026-07-03 (62 находки, волна 1)"
+  branch: fix/deep-review-wave1
 
 catalog:
   map:
@@ -46,13 +46,12 @@ catalog:
     note: "Strategic layer — project map (parts by step + honest status), directions/hypotheses toward the goal, deferred backlog, goal-shift history. Read + written by the project-unblocker navigator."
 
 session:
-  started: "2026-05-14"
-  goal: "Sync документации под v7.1.0 — 4-фазный pipeline заменил brainstorm/write-plan/execute-plan"
+  started: "2026-07-03"
+  goal: "Правки по глубокому ревью 2026-07-03 — 62 находки, волна 1"
   done:
-    - "CLAUDE.md синхронизирован с v7.1.0 (4-фазный pipeline)"
-    - ".forge/* обновлены под v7.1.2"
-  now: "Sync завершён"
+    - "index.yml актуализирован под v7.4.0 (6-фазный pipeline, текущая ветка/сессия)"
+  now: "Правки по находкам ревью в рабочем дереве fix/deep-review-wave1"
   next: ""
   errors: []
 
-last_session: "2026-05-14 — Sync: обновление .forge/* под v7.1.0 pipeline (new-task → plan → critique → execute)"
+last_session: "2026-05-14 — Sync документации под v7.1.0/v7.1.2: CLAUDE.md и .forge/* обновлены под 4-фазный pipeline (new-task → plan → critique → execute)"

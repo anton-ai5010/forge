@@ -561,7 +561,10 @@ L2 (load rarely): `.forge/library/*/spec.yml`, `.forge/dead-ends/*.md`
 DO NOT load all L1 files. Match catalog tags to current task.
 DO NOT read source code before checking .forge/library/spec.yml.
 
-## Development Workflow (5-phase pipeline)
+## Development Workflow (6-фазный pipeline: 0 → 1 → 1.5 → 2 → 3 → 4)
+
+### Phase 0 — Direction
+0. `/forge:unblocker` — навигатор направления, когда непонятно КУДА двигать проект или застрял: карта проекта + все направления + рекомендация, первый шаг → `/forge:new-task`
 
 ### Phase 1 — Understanding
 1. `/forge:new-task` — превратить сырой промпт в чистую задачу + критерий готовности
@@ -613,9 +616,11 @@ DO NOT read source code before checking .forge/library/spec.yml.
 | Command | When |
 |---------|------|
 | `/forge:start` | Session start |
+| `/forge:unblocker` | **Phase 0** — навигатор направления: куда двигать проект |
 | `/forge:new-task` | **Phase 1** — раскрутить сырую задачу |
+| `/forge:refine-idea` | **Phase 1.5** — реалити-чек идеи до плана |
 | `/forge:plan` | **Phase 2** — построить план |
-| `/forge:critique` | **Phase 3** — 4 персоны рвут план (confidence ≥80%) |
+| `/forge:critique` | **Phase 3** — 4 персоны рвут план |
 | `/forge:execute` | **Phase 4** — реализация |
 | `/forge:hookify` | Превратить повторение в правило |
 | `/forge:evolve` | Кластеризация сквозных болей |
@@ -624,9 +629,9 @@ DO NOT read source code before checking .forge/library/spec.yml.
 | `/forge:validate` | Before merge — verify code vs plan |
 | `/forge:cleanup` | Code quality audit |
 | `/forge:investigate` | Problem diagnosis before fixing |
-| `/forge:unblocker` | When stuck |
 | `/forge:product-map` | Project navigator (HTML) |
 | `/forge:explain` | Visual "how does X work?" (HTML) |
+| `/forge:roadmap` | Карта целей (milestones) на GitHub — при включённом GitHub sync |
 
 Полезные **встроенные** команды Claude Code:
 - `/btw <вопрос>` — side-вопрос, ответ в overlay, не попадает в историю
@@ -641,6 +646,8 @@ DO NOT read source code before checking .forge/library/spec.yml.
 - One clarifying question at a time
 ```
 
+Строку `/forge:roadmap` включай только если у проекта есть GitHub remote (`git remote -v`) — команда осмысленна лишь при GitHub sync (Step 16). Иначе убери её из таблицы.
+
 ### 14e: Self-Check CLAUDE.md (built-in validation)
 
 Before showing to user, verify the generated CLAUDE.md:
@@ -650,7 +657,7 @@ Before showing to user, verify the generated CLAUDE.md:
 3. **Consistency:** Stack in CLAUDE.md matches `stack:` in index.yml. Red zones match Step 2 list.
 4. **Size:** Total < 300 lines (~4000 tokens). If larger — trim verbose sections, keep only essentials.
 5. **Correct paths:** All doc references use `.forge/` (not `docs/`)
-6. **Commands table complete:** At minimum: start, new-task, plan, critique, execute, sync, validate, cleanup
+6. **Commands table complete:** At minimum: start, unblocker (Phase 0), new-task, refine-idea (Phase 1.5), plan, critique, execute, sync, validate, cleanup
 7. **No empty sections:** Every section has content. If nothing to put — remove the section entirely.
 
 If any check fails — fix before showing to user. Do not ask about validation — just fix silently.

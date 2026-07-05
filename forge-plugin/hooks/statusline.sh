@@ -17,8 +17,8 @@ branch=$(git branch --show-current 2>/dev/null)
 phase=""
 task=""
 if [ -f ".forge/state.yml" ]; then
-    phase=$(grep "^phase:" .forge/state.yml 2>/dev/null | cut -d: -f2- | xargs | head -c 30)
-    task=$(grep "^task:" .forge/state.yml 2>/dev/null | cut -d: -f2- | xargs | head -c 35)
+    phase=$(grep "^phase:" .forge/state.yml 2>/dev/null | cut -d: -f2- | xargs | cut -c1-30)
+    task=$(grep "^task:" .forge/state.yml 2>/dev/null | cut -d: -f2- | xargs | cut -c1-35)
 fi
 
 # Маппинг фаз → эмодзи
@@ -41,6 +41,7 @@ parts=()
 [ -n "$branch" ] && parts+=("🌿$branch")
 [ "$pct" -gt 0 ] && parts+=("${pct}%")
 
-# Соединяем через " | "
-IFS=" | "
-printf "%s\n" "${parts[*]}"
+# Соединяем через " | " (явный join — IFS-трюк брал только первый символ)
+out=""
+for p in "${parts[@]}"; do out="${out:+$out | }$p"; done
+printf '%s\n' "$out"

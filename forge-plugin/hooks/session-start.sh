@@ -9,7 +9,7 @@ set -euo pipefail
 legacy_skills_dir="${HOME}/.config/forge/skills"
 warning=""
 if [ -d "$legacy_skills_dir" ]; then
-    warning="\n\n⚠️ Найдена legacy папка ~/.config/forge/skills — Claude Code её НЕ читает. Перенеси скиллы в ~/.claude/skills, а потом удали legacy."
+    warning=$'\n\n'"⚠️ Найдена legacy папка ~/.config/forge/skills — Claude Code её НЕ читает. Перенеси скиллы в ~/.claude/skills, а потом удали legacy."
 fi
 
 # Версия плагина из manifest (fallback — просто без версии)
