@@ -75,7 +75,7 @@ If no `.forge/infrastructure.yml` — skip.
 If `.forge/structure.md` exists — dispatch structure enforcer agent:
 
 ```
-Agent tool (general-purpose):
+Agent tool (subagent_type: forge:structure-enforcer):
   model: sonnet
   description: "Enforce project structure conventions"
   prompt: |
@@ -106,7 +106,7 @@ If graphify not installed or no graph — skip silently.
 ## Step 2: Launch Documentation Updater Subagent
 
 ```
-Agent tool (general-purpose):
+Agent tool (subagent_type: forge:forge-documenter):
   model: sonnet
   description: "Update FORGE documentation for recent changes"
   prompt: |

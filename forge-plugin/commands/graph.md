@@ -1,5 +1,6 @@
 ---
 description: Build or update code knowledge graph for the project — stores in .forge/graph.json. Use --query, --path, --explain for navigation.
+argument-hint: '[пусто — построить граф | --query "вопрос" | --path "A" "B" | --explain "узел"]'
 ---
 
 # FORGE Graph — Code Knowledge Map

@@ -73,7 +73,6 @@ created: 2026-05-14
 ## Когда правило НЕ применяется
 - README.md (там emoji норм)
 - HTML с эмодзи как фичей UI
-EOF
 ```
 
 ### 5. Подтвердить и сохранить
@@ -93,4 +92,4 @@ EOF
 
 ## Выход
 
-Файл `.forge/hookrules/<slug>.md` создан. PreToolUse-хук `bash-safety.sh` (или новый `hooks/user-rules-check.sh` если будет создан) подхватит правило при следующем tool use.
+Файл `.forge/hookrules/<slug>.md` создан. PreToolUse-хук `hooks/user-rules-check.sh` (зарегистрирован в `hooks/hooks.json`) применит правило живьём при следующем вызове Bash/Edit/Write/NotebookEdit — restart не нужен.

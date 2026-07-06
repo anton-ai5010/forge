@@ -1,0 +1,25 @@
+phase: refine-idea
+checks:
+  - id: idea_mirrored_before_critique
+    question: "Claude сначала зеркалит как понял идею, и только потом оспаривает?"
+    type: binary
+
+  - id: challenge_uses_project_facts
+    question: "Критика опирается на факты проекта (decisions, dead-ends, status, существующий код), а не на общие рассуждения?"
+    type: binary
+
+  - id: every_weakness_has_alternative
+    question: "На каждую найденную слабость предложена конкретная альтернатива, а не приговор?"
+    type: binary
+
+  - id: dialogue_not_report
+    question: "Формат — живой диалог с пользователем, а не одноразовый отчёт (не 4 персоны)?"
+    type: binary
+
+  - id: task_file_updated
+    question: "Файл задачи в .forge/tasks/ доработан по итогам разбора (опц. секция '## Доработано на разборе')?"
+    type: binary
+
+  - id: handoff_to_plan
+    question: "После 'ОК' пользователя — авто-переход к /plan состоялся?"
+    type: binary

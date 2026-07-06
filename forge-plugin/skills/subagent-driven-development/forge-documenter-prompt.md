@@ -7,7 +7,7 @@ Use this template when dispatching the forge-documenter subagent after task comp
 **When to dispatch:** After both spec compliance review AND code quality review pass.
 
 ```
-Task tool (general-purpose):
+Agent tool (subagent_type: forge:forge-documenter):
   model: sonnet
   description: "Update documentation for Task N changes"
   prompt: |
@@ -172,7 +172,7 @@ Task tool (general-purpose):
 ```markdown
 From controller session, after both reviews pass:
 
-Task tool (general-purpose):
+Agent tool (subagent_type: forge:forge-documenter):
   model: sonnet
   description: "Update documentation for Task 3 changes"
   prompt: |

@@ -1,5 +1,6 @@
 ---
 description: "Generate interactive HTML visualization answering 'how does X work?' for any part of the project. Opens in browser."
+argument-hint: "вопрос — как работает X?"
 disable-model-invocation: true
 ---
 

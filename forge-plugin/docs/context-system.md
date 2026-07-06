@@ -79,10 +79,6 @@ catalog:
     path: .forge/infrastructure.yml
     tags: [docker, server, database, deploy, nginx, ssh, containers, ports, services, api, infra]
 
-  skills:
-    path: .forge/skills-catalog.yml
-    tags: [skill, workflow, how-to, process, tool]
-
 # Сессия (live) — обновляется session-awareness
 session:
   started: {time}
@@ -205,44 +201,6 @@ entries:
     next: "Интеграция ui-ux-design"
 ```
 
-### .forge/skills-catalog.yml (L1)
-
-```yaml
-entries:
-  - name: new-task
-    trigger: "Phase 1 — раскрутить сырой промпт пользователя"
-    gives: "понимание задачи, контекст, цель"
-
-  - name: plan
-    trigger: "Phase 2 — после понимания задачи"
-    gives: "план реализации с чекпоинтами"
-
-  - name: critique
-    trigger: "Phase 3 — критика плана перед реализацией"
-    gives: "ревью плана через 4 персоны"
-
-  - name: execute
-    trigger: "Phase 4 — реализация по утверждённому плану"
-    gives: "выполнение через субагентов, остановки на чекпоинтах"
-
-  - name: ui-ux-design
-    trigger: "WHEN building UI, choosing colors/fonts/layout"
-    gives: "design system with palette, typography, UX rules"
-    has_tools: true
-
-  - name: systematic-debugging
-    trigger: "WHEN bug, test failure, unexpected behavior"
-    gives: "4-phase root cause analysis"
-
-  - name: test-driven-development
-    trigger: "WHEN implementing features or fixes"
-    gives: "red-green-refactor cycle"
-
-  - name: code-cleanup
-    trigger: "WHEN code quality issues, dead code, naming"
-    gives: "refactoring with quality checks"
-```
-
 ## Уровень L2 — полные документы
 
 Формат: Markdown (для prose) или YAML (для данных).
@@ -306,4 +264,3 @@ Hook проверяет оба формата:
 | docs/dead-ends/*.md | .forge/dead-ends.yml (L1) + *.md (L2) | Добавлен L1 индекс |
 | docs/decisions.md | .forge/decisions.yml (L1) + null (L2 optional) | YAML summaries |
 | docs/journal.md | .forge/journal.yml | MD → YAML |
-| (не было) | .forge/skills-catalog.yml | Новый: каталог скиллов |

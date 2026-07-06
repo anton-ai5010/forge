@@ -27,7 +27,7 @@ If no matching hint exists, omit the section entirely.
 ## Prompt Template
 
 ```
-Task tool (general-purpose):
+Agent tool (general-purpose):
   description: "Implement Task N: [task name]"
   prompt: |
     You are implementing Task N: [task name]

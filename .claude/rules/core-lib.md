@@ -1,6 +1,5 @@
 ---
 paths:
-  - "forge-plugin/lib/**"
   - "forge-plugin/hooks/**"
 ---
 

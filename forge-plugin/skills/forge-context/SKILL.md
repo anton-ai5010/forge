@@ -48,7 +48,6 @@ Match the user's request against `catalog[].tags`:
 | Resume previous work | history, last-session | `.forge/journal.yml` |
 | Apply past lessons | lesson, learning, insight | `.forge/learnings.yml` |
 | Check infra/Docker/DB/server | docker, server, database, infra | `.forge/infrastructure.yml` |
-| Find right skill | skill, workflow | `.forge/skills-catalog.yml` |
 
 **Load ONLY files whose tags match.** Typical: 1-2 L1 files per task.
 

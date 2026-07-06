@@ -1,5 +1,7 @@
-from_phase	to_new-task	to_plan	to_critique	to_execute	to_END
-new-task	-	0	0	0	0
-plan	0	-	0	0	0
-critique	0	0	-	0	0
-execute	0	0	0	-	0
+from_phase	to_unblocker	to_new-task	to_refine-idea	to_plan	to_critique	to_execute	to_END
+unblocker	-	0	0	0	0	0	0
+new-task	0	-	0	0	0	0	0
+refine-idea	0	0	-	0	0	0	0
+plan	0	0	0	-	0	0	0
+critique	0	0	0	0	-	0	0
+execute	0	0	0	0	0	-	0

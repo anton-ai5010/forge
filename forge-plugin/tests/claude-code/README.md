@@ -9,7 +9,8 @@ This test suite verifies that skills are loaded correctly and Claude follows the
 ## Requirements
 
 - Claude Code CLI installed and in PATH (`claude --version` should work)
-- Local forge plugin installed (see main README for installation)
+
+Tests load the plugin from the working copy via `--plugin-dir` (see `test-helpers.sh`) — no installation needed, uncommitted changes are tested.
 
 ## Running Tests
 

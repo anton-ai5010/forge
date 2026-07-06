@@ -4,7 +4,6 @@
 
 ## Technical Stack
 
-- **JavaScript (Node.js)** — `lib/skills-core.js` (используется только в OpenCode тестах, в Claude Code — bash хуки)
 - **Bash** — хуки (`hooks/*.sh`)
 - **Python** — BM25 поиск для UI/UX дизайна
 - **Markdown** — скиллы, команды, документация, output styles
@@ -15,16 +14,15 @@
 ```
 forge-plugin/              — корневая директория плагина
   .claude-plugin/          — manifest (plugin.json, marketplace.json)
-  lib/                     — JS утилиты (legacy, для OpenCode)
   hooks/                   — bash хуки (session-start, context-inject, bash-safety, statusline)
   agents/                  — промпт-шаблоны субагентов
   commands/                — slash-команды (MD файлы)
   skills/                  — 33 скилла (SKILL.md + поддержка)
   output-styles/           — нативный Output Style "Forge Concise" (auto-activated)
-  evals/                   — каркас Hamel-style eval-сетапа (корпус пуст, критерии под старый 4-фазный pipeline)
+  evals/                   — каркас Hamel-style eval-сетапа (корпус пуст, ни одного прогона)
   sounds/                  — mp3 для Stop / PermissionRequest хуков
   docs/                    — спецификация, архитектура, runtime-flow
-  tests/                   — prompt-based тесты + opencode тесты
+  tests/                   — prompt-based тесты + bash-тесты хуков
 ideas/                     — идеи и прототипы (pipeline-v2.html и др.)
 .forge/                    — FORGE контекст (L0/L1/L2, gitignored)
 ```
@@ -32,7 +30,7 @@ ideas/                     — идеи и прототипы (pipeline-v2.html 
 ## Running
 
 - **Запуск:** плагин загружается автоматически через Claude Code Plugin System
-- **Тесты:** prompt-based в `forge-plugin/tests/skill-triggering/` + bash в `tests/opencode/`
+- **Тесты:** prompt-based в `forge-plugin/tests/skill-triggering/` + bash в `forge-plugin/tests/hooks/`
 - **Линтер:** нет
 
 ## FORGE Context (L0/L1/L2)
@@ -198,8 +196,8 @@ Projects v2 board не используется — Pinned Issue + README пок
 
 `forge-plugin/evals/` — **каркас** Hamel-style error analysis, не рабочая система. `evals/README.md` — инструкция-workflow (план работ), корпус ещё не собран (планируется на базе ~116 сессий Антона). Реальное состояние:
 - `error-analysis.tsv` — только строка заголовка, ни одного трейса
-- `criteria/*.yml` — бинарные критерии, но только под старый 4-фазный пайплайн (new-task/plan/critique/execute + handoff); фаз 0 (unblocker) и 1.5 (refine-idea) нет
-- `transition-matrix.tsv` — пустая матрица на те же 4 фазы, все нули
+- `criteria/*.yml` — бинарные критерии по всем 6 фазам (unblocker и refine-idea добавлены), ни разу не применялись
+- `transition-matrix.tsv` — пустая матрица на 6 фаз, все нули
 - `corpus/raw/*.jsonl` и `taxonomy-v1.md` — описаны в workflow, пока не существуют
 
 ## Communication

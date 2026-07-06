@@ -16,6 +16,6 @@ checks:
     question: "Финальный output содержит чёткую задачу + критерий готовности (наблюдаемый)?"
     type: binary
 
-  - id: handoff_to_plan_on_ok
-    question: "После 'ОК' пользователя — авто-переход к /plan состоялся?"
+  - id: handoff_to_refine_idea_on_ok
+    question: "После 'ОК' пользователя — авто-переход к /refine-idea (Phase 1.5) состоялся?"
     type: binary

@@ -1,6 +1,6 @@
 ---
 name: github-sync
-description: "Internal skill — invoked automatically by forge pipeline skills (new-task, critique, execute, roadmap) to mirror task state to GitHub Issues + Sub-issues + auto-updated README header + Pinned Issue with project map. Enabled by `github_sync: true` in `.forge/index.yml`. NOT for manual use — use /forge:roadmap for goal management. Silently no-ops when no GitHub remote / no gh / no github_sync flag. Loudly warns when flag is on but auth is broken."
+description: "Use when a forge pipeline skill (new-task, critique, execute, roadmap) invokes it automatically to mirror task state to GitHub Issues + Sub-issues + auto-updated README header + Pinned Issue with project map. Internal skill. Enabled by `github_sync: true` in `.forge/index.yml`. NOT for manual use — use /forge:roadmap for goal management. Silently no-ops when no GitHub remote / no gh / no github_sync flag. Loudly warns when flag is on but auth is broken."
 ---
 
 # GitHub Sync — внутренний скилл

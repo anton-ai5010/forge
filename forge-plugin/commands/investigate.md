@@ -1,5 +1,6 @@
 ---
 description: "Collaborative problem diagnosis — discuss and understand a bug, error, or unexpected behavior before jumping to fixes."
+argument-hint: "что непонятно / симптом проблемы"
 disable-model-invocation: true
 ---
 

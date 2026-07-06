@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Helper functions for Claude Code skill tests
 
+# Plugin root (forge-plugin/) — tests must exercise the working copy,
+# not the installed plugin from ~/.claude/plugins
+FORGE_PLUGIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+export FORGE_PLUGIN_DIR
+
 # Run Claude Code with a prompt and capture output
 # Usage: run_claude "prompt text" [timeout_seconds] [allowed_tools]
 run_claude() {
@@ -9,14 +14,14 @@ run_claude() {
     local allowed_tools="${3:-}"
     local output_file=$(mktemp)
 
-    # Build command
-    local cmd="claude -p \"$prompt\""
+    # Build command as an array — no quote-mangling on prompts with "/$/'
+    local cmd=(claude -p "$prompt" --plugin-dir "$FORGE_PLUGIN_DIR")
     if [ -n "$allowed_tools" ]; then
-        cmd="$cmd --allowed-tools=$allowed_tools"
+        cmd+=("--allowed-tools=$allowed_tools")
     fi
 
     # Run Claude in headless mode with timeout
-    if timeout "$timeout" bash -c "$cmd" > "$output_file" 2>&1; then
+    if timeout "$timeout" "${cmd[@]}" > "$output_file" 2>&1; then
         cat "$output_file"
         rm -f "$output_file"
         return 0

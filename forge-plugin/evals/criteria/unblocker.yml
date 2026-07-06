@@ -1,0 +1,25 @@
+phase: unblocker
+checks:
+  - id: map_statuses_honest
+    question: "Карта проекта показывает честные статусы частей (без завышения 'почти готово')?"
+    type: binary
+
+  - id: all_directions_listed
+    question: "Расписаны ВСЕ направления (дыры карты) с 'что делает + зачем', а не только одно рекомендованное?"
+    type: binary
+
+  - id: recommends_but_user_chooses
+    question: "Claude порекомендовал дефолт-движение, но не выбрал молча — финальное решение оставлено за пользователем?"
+    type: binary
+
+  - id: memory_updated
+    question: "Обновлены .forge/direction.yml и ROADMAP.md?"
+    type: binary
+
+  - id: ends_with_one_physical_step
+    question: "Итог — один конкретный физический шаг, поданный в /new-task (не список из 10 задач)?"
+    type: binary
+
+  - id: plain_language_no_jargon
+    question: "Язык простой, без технического жаргона (Антон — не-кодер)?"
+    type: binary
