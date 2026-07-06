@@ -175,7 +175,7 @@ flowchart TB
 - Pinned Issue — карта проекта (задачи по приоритетам/milestones) + авто-шапка README
 - `/forge:roadmap` — управление картой целей на человеческом языке
 
-Runtime-артефакты в проекте пользователя (gitignored): `.forge/.github-pinned-id`, `.forge/.github-issue-<slug>`, `.forge/.github-substeps-<slug>`, `.forge/.github-bootstrapped`.
+Runtime-артефакты в проекте пользователя (в `.forge/.gitignore`): `.forge/.github-pinned-id`, `.forge/.github-issue-<slug>`, `.forge/.github-substeps-<slug>`, `.forge/.github-bootstrapped`.
 
 ---
 
@@ -207,7 +207,7 @@ flowchart TB
         SW6["github-sync → Issues, Pinned Issue, README шапка"]
     end
 
-    subgraph DOCS[".forge/ (персистентная память, gitignored)"]
+    subgraph DOCS[".forge/ (персистентная память — в git, мусор в .forge/.gitignore)"]
         D1["index.yml — L0: goal/stage/task + catalog"]
         D2["L1: map.yml, conventions.yml, status.yml,<br/>decisions.yml, dead-ends.yml, journal.yml,<br/>learnings.yml, direction.yml"]
         D3["L2: library/*/spec.yml, dead-ends/*.md"]

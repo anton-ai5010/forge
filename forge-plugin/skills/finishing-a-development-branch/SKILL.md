@@ -177,8 +177,14 @@ Then: Cleanup worktree (Step 5)
 If confirmed:
 ```bash
 git checkout <base-branch>
+# Спасаем память: на выбрасываемой ветке живут журнал/решения/тупики этой
+# работы — уроки отменённого эксперимента ценнее самого кода
+git checkout <feature-branch> -- .forge 2>/dev/null || true
+bash "$CLAUDE_PLUGIN_ROOT/skills/memory-backup/backup.sh" "память отменённой задачи: <slug>"
 git branch -D <feature-branch>
 ```
+
+Перед выбросом допиши в `.forge/dead-ends.yml` почему задача отменена — это главный урожай отменённой работы.
 
 Then: Cleanup worktree (Step 5)
 
@@ -202,10 +208,10 @@ git worktree remove <worktree-path>
 
 | Option | Merge | Push | Keep Worktree | Cleanup Branch |
 |--------|-------|------|---------------|----------------|
-| 1. Merge locally | ✓ | - | - | ✓ |
+| 1. Merge locally | ✓ | ✓ (base, через memory-backup) | - | ✓ |
 | 2. Create PR | - | ✓ | ✓ | - |
 | 3. Keep as-is | - | - | ✓ | - |
-| 4. Discard | - | - | - | ✓ (force) |
+| 4. Discard | - | ✓ (память, через memory-backup) | - | ✓ (force) |
 
 ## Common Mistakes
 

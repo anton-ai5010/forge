@@ -125,6 +125,60 @@ after=$(git rev-list --count HEAD)
 check "should not force-add ignored .forge and should hint migration (legacy project)" $?
 cd / && rm -rf "$REPO"
 
+# --- (9) вызов из поддиректории проекта работает (cwd ≠ корень) ---
+
+new_repo
+mkdir -p src/deep
+echo 'note: "из глубины"' >> .forge/index.yml
+cd src/deep
+out=$(run_backup "из поддиректории")
+cd "$REPO"
+last_msg=$(git log -1 --format=%s)
+[ "$last_msg" = "[forge] память: из поддиректории" ]
+check "should work from a subdirectory of the project (cd to repo root)" $?
+cd / && rm -rf "$REPO"
+
+# --- (10) detached HEAD → память НЕ коммитится (коммит бы осиротел), честное сообщение ---
+
+new_repo
+git checkout -q --detach
+echo 'note: "detached"' >> .forge/index.yml
+before=$(git rev-list --count HEAD)
+out=$(run_backup)
+after=$(git rev-list --count HEAD)
+[ "$before" -eq "$after" ] && printf '%s' "$out" | grep -q "не на ветке" \
+  && ! printf '%s' "$out" | grep -q "удалёнки нет"
+check "should refuse to commit on detached HEAD with honest message (no orphan commits)" $?
+cd / && rm -rf "$REPO"
+
+# --- (11) провал коммита → индекс очищен, .last-backup НЕ пишется, без лжи «сохранена» ---
+
+new_repo
+mkdir -p .git/hooks
+printf '#!/bin/sh\nexit 1\n' > .git/hooks/pre-commit   # любой коммит падает
+chmod +x .git/hooks/pre-commit
+echo 'note: "провал"' >> .forge/index.yml
+out=$(run_backup)
+git diff --cached --quiet -- .forge \
+  && [ ! -f .forge/.last-backup ] \
+  && printf '%s' "$out" | grep -q "не прошёл" \
+  && ! printf '%s' "$out" | grep -qE "сохранена (на|только)"
+check "should unstage and stay honest when commit fails (no .last-backup, no false success)" $?
+cd / && rm -rf "$REPO"
+
+# --- (12) провал push → коммит есть, но .last-backup НЕ пишется (напоминание не гасится) ---
+
+new_repo
+git remote add origin /nonexistent/forge-test-remote
+echo 'note: "пуш умрёт"' >> .forge/index.yml
+out=$(run_backup "пуш умрёт")
+last_msg=$(git log -1 --format=%s)
+[ "$last_msg" = "[forge] память: пуш умрёт" ] \
+  && [ ! -f .forge/.last-backup ] \
+  && printf '%s' "$out" | grep -q "push не прошёл"
+check "should keep local commit but NOT write .last-backup when push fails (reminder stays armed)" $?
+cd / && rm -rf "$REPO"
+
 # --- (8) не git-репозиторий → тихий exit 0 ---
 
 nodir=$(mktemp -d)

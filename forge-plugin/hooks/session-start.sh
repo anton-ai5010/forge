@@ -16,12 +16,19 @@ fi
 mem_warn=""
 if [ -d ".forge" ] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     if git check-ignore -q .forge 2>/dev/null; then
-        mem_warn=$'\n\n'"💾 Память проекта (.forge) не под git — умрёт вместе с диском. Предложи пользователю одной строкой включить сохранение (скилл memory-backup, процедура миграции)."
+        # .forge/.migration-declined — пользователь уже отказался, не пилим каждую сессию
+        if [ ! -f ".forge/.migration-declined" ]; then
+            mem_warn=$'\n\n'"💾 Память проекта (.forge) не под git — умрёт вместе с диском. Предложи пользователю одной строкой включить сохранение (скилл memory-backup, процедура миграции)."
+        fi
     else
         dirty=$(git status --porcelain .forge 2>/dev/null | head -1 || true)
         unpushed=""
         if git rev-parse --abbrev-ref '@{u}' >/dev/null 2>&1; then
             unpushed=$(git log '@{u}..HEAD' --oneline -- .forge 2>/dev/null | head -1 || true)
+        elif git remote get-url origin >/dev/null 2>&1; then
+            # origin есть, а upstream нет (например, push падал и не поставил его) —
+            # локальные .forge-коммиты считаем неотправленными
+            unpushed=$(git log --oneline -1 -- .forge 2>/dev/null | head -1 || true)
         fi
         if [ -n "$dirty" ] || [ -n "$unpushed" ]; then
             last=$(cat .forge/.last-backup 2>/dev/null || echo 0)

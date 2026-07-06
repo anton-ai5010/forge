@@ -785,9 +785,10 @@ done
 # она должна переживать смерть диска (скилл memory-backup пушит её на удалёнку).
 # Игнорируется только служебный runtime-мусор — внутри .forge/.gitignore:
 mkdir -p .forge
-cat > .forge/.gitignore <<'EOF'
+[ -f .forge/.gitignore ] || cat > .forge/.gitignore <<'EOF'
 .inject-state
 .last-backup
+.migration-declined
 state.yml
 .github-*
 graph.json

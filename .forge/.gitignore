@@ -1,5 +1,6 @@
+.github-*
 .inject-state
 .last-backup
-state.yml
-.github-*
+.migration-declined
 graph.json
+state.yml
