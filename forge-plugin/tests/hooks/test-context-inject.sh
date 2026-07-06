@@ -108,6 +108,23 @@ out=$(cat out2.json)
 is_short "$out"; check "should dedupe via PPID+day fallback when session_id is absent" $?
 rm -f out1.json out2.json
 
+# --- (9а) обрезка большого кириллического index.yml не рвёт букву пополам ---
+
+rm -f .forge/.inject-state
+mv .forge/index.yml .forge/index.yml.bak
+python3 -c "open('.forge/index.yml','w').write('goal: \"' + 'я'*1500 + '\"\n')"  # ~3 КБ кириллицы
+out=$(run_hook "$PAYLOAD")
+printf '%s' "$out" | python3 -c "
+import json,sys
+raw = sys.stdin.buffer.read()
+raw.decode('utf-8')  # strict: упадёт, если буква разрезана по байтам
+ctx = json.loads(raw)['hookSpecificOutput']['additionalContext']
+assert '�' not in ctx, 'битый UTF-8 (U+FFFD) в обрезанном контексте'
+assert 'truncated' in ctx, 'нет пометки об обрезке'
+" 2>/dev/null
+check "should truncate large Cyrillic index.yml at char boundary (no broken UTF-8)" $?
+mv .forge/index.yml.bak .forge/index.yml
+
 # --- (9) битый JSON на входе не роняет хук ---
 
 rm -f .forge/.inject-state

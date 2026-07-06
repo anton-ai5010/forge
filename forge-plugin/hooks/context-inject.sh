@@ -11,7 +11,11 @@ set -euo pipefail
 # Check for FORGE docs (new format first, then legacy)
 truncate_note=""
 if [ -f ".forge/index.yml" ]; then
-    index_content=$(head -c 2500 .forge/index.yml 2>/dev/null || echo "")
+    # Обрезка по границе символа: head -c режет байты и разваливает кириллицу
+    # посередине буквы (битый UTF-8 уезжает в JSON). python3 выкидывает
+    # неполный хвостовой символ; fallback на head -c если python3 сломан.
+    index_content=$(python3 -c "import sys; sys.stdout.write(open('.forge/index.yml','rb').read()[:2500].decode('utf-8','ignore'))" 2>/dev/null \
+        || head -c 2500 .forge/index.yml 2>/dev/null || echo "")
     index_size=$(wc -c < .forge/index.yml 2>/dev/null || echo 0)
     if [ "$index_size" -gt 2500 ]; then
         truncate_note=$'\n'"[index.yml truncated — читай файл целиком при необходимости]"
