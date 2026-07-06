@@ -1,0 +1,7 @@
+purpose: "Конфигурация хуков для автоматического инжекта контекста"
+files:
+  hooks.json:
+    intent: "Определяет SessionStart и UserPromptSubmit хуки для L0 контекст-инжекции"
+    inputs: []
+    outputs: "hook configuration"
+    depends_on: [context-inject.sh, session-start.sh]

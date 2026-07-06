@@ -1,0 +1,32 @@
+purpose: "Описания 15 команд FORGE — промпты для Skill tool"
+files:
+  init.md:
+    intent: "Инициализация .forge/ структуры с L0/L1/L2 контекстом"
+  brainstorm.md:
+    intent: "Прояснение требований через Socratic dialogue перед реализацией"
+  write-plan.md:
+    intent: "Разбивка дизайна на TDD-задачи"
+  sync.md:
+    intent: "Обновление .forge/ документации после изменений кода"
+  validate.md:
+    intent: "Проверка кода против плана и документации"
+  start.md:
+    intent: "Загрузка контекста в начале сессии"
+  cleanup.md:
+    intent: "Анализ качества кода — мёртвый код, дублирование, нейминг"
+  security-review.md:
+    intent: "Ревью безопасности — auth, payments, user data"
+  api-design.md:
+    intent: "Проектирование REST API эндпоинтов"
+  design.md:
+    intent: "UI/UX дизайн с BM25 поиском по гайдлайнам"
+  deploy.md:
+    intent: "CI/CD пайплайны, Docker, деплой"
+  discover.md:
+    intent: "Поиск скиллов и плагинов в маркетплейсе"
+  execute-plan.md:
+    intent: "Батч-выполнение плана с чекпоинтами"
+  migrate.md:
+    intent: "Миграция между версиями FORGE"
+  unblocker.md:
+    intent: "Диагностика блокеров, понимание кодовой базы"

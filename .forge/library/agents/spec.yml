@@ -1,0 +1,19 @@
+purpose: "Промпт-шаблоны для специализированных субагентов"
+files:
+  code-reviewer.md:
+    intent: "Промпт для код-ревью агента — баги, безопасность, качество"
+    inputs: [code diff, project context]
+    outputs: "review report with confidence levels"
+    depends_on: []
+
+  forge-documenter.md:
+    intent: "Промпт для агента обновления .forge/ документации"
+    inputs: [code changes, current docs]
+    outputs: "updated spec.yml, README.md"
+    depends_on: []
+
+  structure-enforcer.md:
+    intent: "Промпт для агента проверки структуры проекта"
+    inputs: [project structure, conventions]
+    outputs: "violations list, fixes"
+    depends_on: []

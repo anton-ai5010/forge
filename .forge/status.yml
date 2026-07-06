@@ -1,0 +1,13 @@
+working:
+  - "4-фазный pipeline: /forge:new-task → /forge:plan → /forge:critique → /forge:execute"
+  - "~30 скиллов — все активны, с авто-инвокацией по триггерам"
+  - "L0/L1/L2 контекстная система (auto-injection через context-inject.sh)"
+  - "Хуки: SessionStart, UserPromptSubmit, PreToolUse (bash-safety), PermissionRequest, Stop"
+  - "Output Style 'Forge Concise' — нативный, force-for-plugin: true"
+  - "Statusline — фаза pipeline / ветка / % контекста"
+  - "Bash-safety хук блокирует rm -rf /, git push --force main и т.п."
+  - "BM25 поиск для UI/UX дизайна (16 фреймворков CSV)"
+  - "Звуковые уведомления (7 permission + 7 stop MP3)"
+  - "Evals — Hamel-style error analysis на реальных трейсах"
+broken: []
+blocked: []

@@ -1,0 +1,90 @@
+directories:
+  forge-plugin/:
+    files: "manifest + README + COMMANDS"
+    about: "Корневая директория плагина"
+
+  forge-plugin/.claude-plugin/:
+    files: 2
+    about: "Plugin manifest (plugin.json, marketplace.json)"
+
+  forge-plugin/lib/:
+    files: 1
+    about: "skills-core.js — legacy JS-ядро (используется только OpenCode тестами)"
+
+  forge-plugin/hooks/:
+    files: "session-start.sh, context-inject.sh, bash-safety.sh, statusline.sh, hooks.json"
+    about: "Bash-хуки для SessionStart, UserPromptSubmit, PreToolUse, PermissionRequest, Stop"
+
+  forge-plugin/agents/:
+    files: 3
+    about: "Промпт-шаблоны субагентов (reviewer, documenter, enforcer)"
+
+  forge-plugin/commands/:
+    files: 24
+    about: "Slash-команды (MD): forge:new-task, plan, critique, execute, sync, validate, cleanup, roadmap, и др."
+
+  forge-plugin/skills/:
+    files: 32
+    about: "~32 скилла pipeline и поддерживающих процессов (SKILL.md + поддержка)"
+
+  forge-plugin/skills/github-sync/:
+    files: "SKILL.md, sync.sh, scripts/, templates/"
+    about: "Синхронизация пайплайна с GitHub (Issues, Sub-issues, README шапка, Pinned Issue карта проекта)"
+
+  forge-plugin/skills/github-sync/scripts/:
+    files: 2
+    about: "Python рендереры: render_pinned.py (карта в Pinned Issue), render_readme_header.py (шапка README)"
+
+  forge-plugin/skills/github-sync/templates/:
+    files: 1
+    about: "project-map.md — шаблон карты проекта для Pinned Issue"
+
+  forge-plugin/skills/roadmap/:
+    files: 1
+    about: "Управление картой целей проекта (milestones) через человеческий язык"
+
+  forge-plugin/output-styles/:
+    files: 1
+    about: "Forge Concise — нативный Output Style, force-for-plugin: true"
+
+  forge-plugin/evals/:
+    files: "README, criteria/, error-analysis.tsv, transition-matrix.tsv"
+    about: "Hamel-style error analysis на реальных трейсах Антона"
+
+  forge-plugin/skills/ui-ux-design/scripts/:
+    files: 3
+    about: "Python BM25 поиск по дизайн-гайдлайнам"
+
+  forge-plugin/skills/ui-ux-design/data/stacks/:
+    files: 16
+    about: "CSV датасеты дизайн-гайдлайнов для 16 фреймворков"
+
+  forge-plugin/skills/subagent-driven-development/:
+    files: 5
+    about: "Промпты субагентов SDD + stack-hints для 7 стеков"
+
+  forge-plugin/docs/:
+    files: 6
+    about: "Спецификация, архитектура контекста, runtime-flow"
+
+  forge-plugin/tests/:
+    files: 25
+    about: "Prompt-based тесты скиллов + bash-тесты OpenCode"
+
+  forge-plugin/sounds/:
+    files: 1
+    about: "README — описание структуры звуковых уведомлений"
+
+  forge-plugin/sounds/permission/:
+    files: 7
+    about: "MP3 голоса для PermissionRequest хука"
+
+  forge-plugin/sounds/stop/:
+    files: 7
+    about: "MP3 голоса для Stop хука"
+
+  ideas/:
+    files: 12
+    about: "Идеи, прототипы (pipeline-v2.html и др.)"
+
+red_zones: []

@@ -1,0 +1,10 @@
+purpose: "Тестовые промпты для скиллов и воркфлоу"
+files:
+  explicit-skill-requests/:
+    intent: "Сценарии явного запроса скиллов (9 промптов)"
+  skill-triggering/:
+    intent: "Тесты авто-триггеринга скиллов (6 промптов)"
+  subagent-driven-dev/:
+    intent: "Полные воркфлоу примеры (Go fractals, Svelte todo)"
+  claude-code/:
+    intent: "Анализ токенов и утилиты"

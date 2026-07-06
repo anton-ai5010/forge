@@ -12,6 +12,27 @@ if [ -d "$legacy_skills_dir" ]; then
     warning=$'\n\n'"⚠️ Найдена legacy папка ~/.config/forge/skills — Claude Code её НЕ читает. Перенеси скиллы в ~/.claude/skills, а потом удали legacy."
 fi
 
+# Напоминание о несохранённой памяти проекта (дёшево: пара git-команд, один раз за сессию)
+mem_warn=""
+if [ -d ".forge" ] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    if git check-ignore -q .forge 2>/dev/null; then
+        mem_warn=$'\n\n'"💾 Память проекта (.forge) не под git — умрёт вместе с диском. Предложи пользователю одной строкой включить сохранение (скилл memory-backup, процедура миграции)."
+    else
+        dirty=$(git status --porcelain .forge 2>/dev/null | head -1 || true)
+        unpushed=""
+        if git rev-parse --abbrev-ref '@{u}' >/dev/null 2>&1; then
+            unpushed=$(git log '@{u}..HEAD' --oneline -- .forge 2>/dev/null | head -1 || true)
+        fi
+        if [ -n "$dirty" ] || [ -n "$unpushed" ]; then
+            last=$(cat .forge/.last-backup 2>/dev/null || echo 0)
+            case "$last" in ''|*[!0-9]*) last=0 ;; esac
+            if [ $(( $(date +%s) - last )) -gt 86400 ]; then
+                mem_warn=$'\n\n'"💾 В памяти проекта есть несохранённое, а бэкапа не было больше суток. Скажи пользователю одной строкой: «скажи \"сохрани\" — уберу память проекта в сохранность» (скилл memory-backup)."
+            fi
+        fi
+    fi
+fi
+
 # Версия плагина из manifest (fallback — просто без версии)
 plugin_root="${CLAUDE_PLUGIN_ROOT:-$(dirname "$0")/..}"
 version=$(grep -m1 '"version"' "$plugin_root/.claude-plugin/plugin.json" 2>/dev/null | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || true)
@@ -40,7 +61,7 @@ ROUTING: Match .forge/index.yml catalog[].tags with current task to decide which
 DOC DISCIPLINE: If you just made a technical decision — record in .forge/decisions.yml. If an approach failed — record in .forge/dead-ends.yml. If you learned something non-obvious — record in .forge/learnings.yml. Do it NOW, not later.
 
 Для глубокого введения — Skill tool: forge:using-forge.
-$warning
+$warning$mem_warn
 </forge-plugin-loaded>"
 
 # Escape для JSON

@@ -1,0 +1,62 @@
+# Технические решения проекта
+# Формат: id, date, decision, why, tags
+entries:
+  - id: four-phase-pipeline
+    date: "2026-05-14"
+    decision: "4-фазный pipeline: new-task → plan → critique → execute (заменил brainstorm/write-plan/execute-plan)"
+    why: "Старая схема смешивала понимание задачи и планирование в одну фазу, и не имела отдельного шага критики. Новая разводит: (1) понимание + критерий готовности, (2) план с чекпоинтами, (3) 4 персоны рвут план, (4) реализация по чекпоинтам. Каждая фаза имеет чёткий вход/выход и артефакт в .forge/"
+    tags: [pipeline, architecture, workflow]
+
+  - id: native-output-style
+    date: "2026-05-14"
+    decision: "Output Style 'Forge Concise' — нативный механизм Claude Code, force-for-plugin: true"
+    why: "Раньше STYLE правила инжектились в каждый промпт через хук — лишние токены. Нативный Output Style активируется один раз при включении плагина, не жжёт контекст"
+    tags: [output-style, performance, native-features]
+
+  - id: bash-safety-hook
+    date: "2026-05-14"
+    decision: "PreToolUse bash-safety хук блокирует деструктивные паттерны до выполнения"
+    why: "rm -rf /, git push --force main, и пр. — должны блокироваться раньше чем дойдут до shell. Хук работает на уровне tool-call, до того как команда отправится в bash"
+    tags: [safety, hooks, destructive]
+
+  - id: permission-request-hook
+    date: "2026-04-08"
+    decision: "PermissionRequest хук вместо Notification для звуков разрешений"
+    why: "Notification хук вызывал дублирование звуков — PermissionRequest срабатывает ровно один раз"
+    tags: [hooks, sounds, architecture]
+
+  - id: stakes-based-skill-roles
+    date: "2026-04-08"
+    decision: "Enhanced skill roles с expertise depth и stakes-based pressure"
+    why: "Повышает качество выполнения — скилл осознаёт последствия ошибок и действует как эксперт, а не как generic assistant"
+    tags: [skills, roles, quality]
+
+  - id: github-sync-via-skill-not-hook
+    date: "2026-05-26"
+    decision: "Sync вызовы через инструкции в SKILL.md фаз, а не через PostToolUse хук"
+    why: "Фаза пайплайна — это серия tool calls (Read+Write+диалог), PostToolUse триггерится на каждый отдельно. SKILL.md инструкция выполняется в нужный момент после полного завершения фазы."
+    tags: [github-sync, hooks, architecture]
+
+  - id: gh-cli-not-mcp-from-bash
+    date: "2026-05-26"
+    decision: "github-sync использует gh CLI а не MCP github tools"
+    why: "Логика инкапсулирована в bash-скрипте sync.sh — оттуда MCP недоступен (только из Claude tool_use). gh CLI даёт единое место с проверяемым синтаксисом."
+    tags: [github-sync, gh-cli, mcp]
+
+  - id: forge-memory-in-git
+    date: "2026-07-06"
+    decision: "ОТМЕНА прежнего правила «.forge/ в .gitignore»: память проекта (задачи, планы, идеи, решения, журнал) — часть репозитория; в .forge/.gitignore только runtime-мусор (.inject-state, .last-backup, state.yml, .github-*, graph.json). Автосохранение через skills/memory-backup/backup.sh (session-awareness + finishing + слово «сохрани»/forge:save), напоминание в session-start при несохранённом >24ч, для проектов без удалёнки — предложение приватного репозитория"
+    why: "Запрос пользователя: память должна переживать смерть диска и VPS во ВСЕХ проектах. Локальная .forge = единая точка отказа. Git-история памяти — бесплатный бонус (когда и почему менялись решения). Секреты в .forge не пишутся — только названия записей Bitwarden"
+    tags: [memory, git, backup, durability, architecture]
+
+  - id: tarik-unknowns-features
+    date: "2026-07-05"
+    decision: "Забраны 4 приёма из гайда Тарика (Anthropic, 'Finding Your Unknowns'): blindspot pass в new-task (шаг 2.5), вопрос-референс в интервью new-task, секция 'Что увидишь ты' первой в плане и в сводке, обязательный HTML-макет до кода для UI-задач, файл отклонений от плана в execute. Квиз перед мержем — отвергнут пользователем"
+    why: "У не-кодера максимум unknown unknowns — blindspot pass закрывает самый опасный квадрант. Реакция на картинку/референс работает у него лучше текста. Отклонения сейчас растворяются молча — файл делает их видимыми на чекпоинтах. Квиз — 'такое себе' (Антон), риск раздражения на каждом мерже"
+    tags: [pipeline, new-task, plan, execute, ux]
+
+  - id: no-projects-v2-board
+    date: "2026-05-26"
+    decision: "Не делаем Projects v2 board, оставляем только README шапку + Pinned Issue"
+    why: "Дублирует Pinned Issue по группировке по приоритетам. Требует non-default scope project в gh auth, который отсутствует у большинства пользователей. Pinned Issue + README шапка покрывают боль 'теряю контекст' без этой сложности."
+    tags: [github-sync, projects-v2, scope]

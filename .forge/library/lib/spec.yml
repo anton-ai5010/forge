@@ -1,0 +1,13 @@
+purpose: "Ядро плагина — discovery, загрузка и резолв скиллов"
+files:
+  skills-core.js:
+    intent: "Обнаружение SKILL.md, парсинг frontmatter, резолв путей, проверка обновлений"
+    inputs: [filePath, dir, skillName, superpowersDir, personalDir, repoDir]
+    outputs: "frontmatter object, skill list, resolved path, boolean, cleaned content"
+    depends_on: [fs, path, child_process, js-yaml]
+    exports:
+      - extractFrontmatter(filePath)
+      - findSkillsInDir(dir, sourceType, maxDepth)
+      - resolveSkillPath(skillName, superpowersDir, personalDir)
+      - checkForUpdates(repoDir)
+      - stripFrontmatter(content)

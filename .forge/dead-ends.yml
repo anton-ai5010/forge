@@ -1,0 +1,9 @@
+# Провальные подходы — чтобы не повторять ошибки
+# L1 summary достаточно для большинства случаев
+# L2 detail файл создаётся только если нужен полный анализ
+entries:
+  - id: notification-hook-for-permissions
+    date: "2026-04-08"
+    summary: "Notification хук для звуков разрешений — вызывал дублирование. PermissionRequest хук работает корректно"
+    tags: [hooks, sounds, notification, permission]
+    detail: null

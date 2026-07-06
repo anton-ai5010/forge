@@ -1,0 +1,25 @@
+language: javascript, python, markdown
+naming:
+  files: kebab-case
+  directories: kebab-case
+  js_functions: camelCase
+  js_variables: camelCase
+  python_functions: snake_case
+  python_variables: snake_case
+  constants: UPPER_SNAKE_CASE
+  skills: kebab-case (директория + SKILL.md внутри)
+  commands: kebab-case (init.md, brainstorm.md)
+structure:
+  forge-plugin/lib/: "JS утилиты (ядро плагина)"
+  forge-plugin/hooks/: "Конфигурация хуков"
+  forge-plugin/agents/: "Промпт-шаблоны субагентов"
+  forge-plugin/commands/: "Описания команд (MD)"
+  forge-plugin/skills/: "Скиллы (SKILL.md + поддержка)"
+  forge-plugin/docs/: "Документация проекта"
+  forge-plugin/tests/: "Тестовые промпты"
+  ideas/: "Идеи и предложения"
+patterns:
+  skill_structure: "директория/{SKILL.md, support-files}"
+  frontmatter: "YAML frontmatter с name и description в SKILL.md"
+  stack_hints: "skills/*/stack-hints/{language}.md"
+  hook_format: "hooks.json с matcher и command"

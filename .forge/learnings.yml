@@ -1,0 +1,31 @@
+# Уроки и инсайты проекта
+# Формат: id, date, learning, context, tags
+entries:
+  - id: git-tests-must-isolate-cwd
+    date: "2026-07-06"
+    summary: "Тесты с git-командами обязаны ГАРАНТИРОВАТЬ изоляцию: cd внутри $(command substitution) не переживает подстановку — кейсы молча гонялись в реальном репозитории (испачкан README, затёрт .gitignore, 4 мусорных коммита улетели в origin). Правило: new_repo — обычная функция без $(), в начале сьюта cd в mktemp, плюс assert что cwd ≠ репозиторий плагина перед любой git-командой"
+    tags: [testing, bash, git, isolation, cwd]
+    source: "test-memory-backup.sh v1 — прогон в реальном репо, пришлось чистить origin"
+  - id: separate-understanding-from-planning
+    date: "2026-05-14"
+    summary: "Понимание задачи и планирование — это разные фазы. Смешивать = планировать не то. Phase 1 (new-task) производит критерий готовности ДО Phase 2 (plan), иначе план дрейфует"
+    tags: [pipeline, workflow, phases]
+    source: "Анализ evals/error-analysis.tsv — половина провалов начиналась с того что задача не была понята до начала планирования"
+
+  - id: critique-before-execute
+    date: "2026-05-14"
+    summary: "Критика плана 4 параллельными персонами (Skeptic / Pragmatist / Architect / User Advocate) ловит дыры дешевле чем разбираться с ними в Phase 4. Планер влюблён в свой план — свежие глаза нужны"
+    tags: [pipeline, critique, quality]
+    source: "Pipeline v7.1.0 — добавление Phase 3 (critique) между планом и реализацией"
+
+  - id: native-features-over-hooks
+    date: "2026-05-14"
+    summary: "Если в Claude Code есть нативный механизм (Output Style, Statusline, PreToolUse) — использовать его, а не дублировать в хуке. Меньше токенов, чище код, проще debug"
+    tags: [native, performance, architecture]
+    source: "Перенос STYLE-правил из context-inject.sh в нативный Output Style"
+
+  - id: notification-vs-permission-hook
+    date: "2026-04-08"
+    summary: "Для звуков при запросе разрешений использовать PermissionRequest хук, а не Notification — Notification дублируется"
+    tags: [hooks, claude-code, sounds]
+    source: "Баг с дублированием звуков в v5.3-v5.4"

@@ -9,7 +9,7 @@
     {
       "name": "forge",
       "description": "6-phase development pipeline for Claude Code (unblocker → new-task → refine-idea → plan → critique → execute) with tiered L0/L1/L2 project memory, bash-safety hooks, GitHub sync and the Forge Concise output style. Russian-language triggers, built for non-coders.",
-      "version": "7.5.0",
+      "version": "7.6.0",
       "source": "./",
       "author": {
         "name": "Anton",

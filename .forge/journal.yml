@@ -1,0 +1,29 @@
+entries:
+  - date: "2026-07-06"
+    summary: "v7.5.0 — глубокое ревью (62 находки, 71 агент с адверсариальной верификацией) → 4 волны правок + 4 приёма из гайда Тарика + экономия токенов"
+    result: "Установка починена (README/манифесты/LICENSE), bash-safety закрыл все найденные обходы (33 теста), github-sync получил единый slug-контракт и обновляемые sub-issues, весь видимый UX — русский, мёртвый груз (~1.5 МБ) удалён, L0-инжекция похудела на ~90% (полный блок только при изменениях). Полный отчёт ревью: .forge/reviews/2026-07-03-deep-review.md"
+    next: "Мерж fix/deep-review-wave1 в master; отдельные задачи: промпты тестов для unblocker/refine-idea, gtimeout для tests/claude-code"
+
+  - date: "2026-05-26"
+    summary: "Закрыта задача: GitHub Project Map — синхронизация пайплайна и карты проекта с GitHub"
+    milestone: "—"
+    slug: "2026-05-26-github-project-map"
+    result: "Done"
+
+  - date: "2026-05-14"
+    summary: "Sync под v7.1.0: 4-фазный pipeline (new-task → plan → critique → execute) заменил brainstorm/write-plan/execute-plan"
+    result: ".forge/index.yml, status.yml, map.yml, decisions.yml обновлены. CLAUDE.md уже актуальный — только мелкий фикс счётчика скиллов (~27 → ~30)"
+    next: "Прогнать pipeline на реальной задаче, обновить evals/transition-matrix"
+    files: [.forge/, CLAUDE.md]
+
+  - date: "2026-04-09"
+    summary: "Sync после v5.4.0-v5.5.0: sounds, enhanced roles, PermissionRequest hook"
+    result: "Документация обновлена — map.yml, spec.yml для sounds/, status.yml, README"
+    next: "Рассмотреть переименование stop/ файлов в kebab-case"
+    files: [forge-plugin/sounds/, forge-plugin/hooks/hooks.json, forge-plugin/skills/*/SKILL.md]
+
+  - date: "2026-04-06"
+    summary: "Инициализация FORGE"
+    result: ".forge/ структура создана, все L0/L1 файлы сгенерированы"
+    next: "Начать разработку"
+    files: [.forge/]

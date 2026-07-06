@@ -1,0 +1,16 @@
+purpose: "Идеи, предложения, шаблоны для развития проекта"
+files:
+  ideas.md:
+    intent: "Основной список идей и задач"
+  SKILL.md:
+    intent: "Шаблон структуры скилла"
+  MEMORY-template.md:
+    intent: "Шаблон системы памяти"
+  ads-plugin-architecture.md:
+    intent: "Архитектура рекламного плагина"
+  claude-code-agents-catalog.md:
+    intent: "Каталог агентов Claude Code"
+  claude-code-agents-guide.md:
+    intent: "Гайд по агентам"
+  claude-code-recommendations.md:
+    intent: "Рекомендации по Claude Code"

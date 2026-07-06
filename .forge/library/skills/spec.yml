@@ -1,0 +1,48 @@
+purpose: "23 скилла рабочего процесса — SKILL.md + поддержка"
+files:
+  brainstorming/SKILL.md:
+    intent: "Socratic dialogue для прояснения требований"
+  writing-plans/SKILL.md:
+    intent: "Разбивка дизайна на bite-sized TDD задачи"
+  test-driven-development/SKILL.md:
+    intent: "RED-GREEN-REFACTOR цикл"
+  subagent-driven-development/SKILL.md:
+    intent: "Dispatch субагентов + 2-stage review"
+  executing-plans/SKILL.md:
+    intent: "Батч по 3 задачи с чекпоинтами"
+  using-git-worktrees/SKILL.md:
+    intent: "Изоляция workspace через git worktree"
+  finishing-a-development-branch/SKILL.md:
+    intent: "Завершение ветки — merge/PR/keep/discard"
+  systematic-debugging/SKILL.md:
+    intent: "4-фазная диагностика root cause"
+  verification-before-completion/SKILL.md:
+    intent: "Evidence before claims"
+  requesting-code-review/SKILL.md:
+    intent: "Чеклист пре-мерж ревью"
+  code-cleanup/SKILL.md:
+    intent: "Чистка архитектуры, нейминга, дублирования"
+  receiving-code-review/SKILL.md:
+    intent: "Работа с фидбеком без defensive responses"
+  security-review/SKILL.md:
+    intent: "Ревью auth, payment, user-data, file-upload"
+  api-design/SKILL.md:
+    intent: "REST API контракты, версионирование"
+  ui-ux-design/SKILL.md:
+    intent: "Компоненты, палитры, типографика (16 стеков)"
+  database-migrations/SKILL.md:
+    intent: "Схема, constraints, миграции"
+  deployment/SKILL.md:
+    intent: "CI/CD, Docker, стратегии деплоя"
+  dispatching-parallel-agents/SKILL.md:
+    intent: "Параллельные субагенты для независимых задач"
+  session-awareness/SKILL.md:
+    intent: "Поддержка контекста между сессиями"
+  project-unblocker/SKILL.md:
+    intent: "Диагностика блокеров"
+  using-forge/SKILL.md:
+    intent: "Введение в систему FORGE"
+  writing-skills/SKILL.md:
+    intent: "TDD для документации, создание скиллов"
+  forge-context/SKILL.md:
+    intent: "Загрузка L0/L1/L2 контекста"

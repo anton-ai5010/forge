@@ -1,0 +1,99 @@
+purpose: "MP3 звуки для уведомлений — воспроизводятся хуками Stop и PermissionRequest"
+files:
+  permission/razreshenie1.mp3:
+    intent: "Voice notification played on PermissionRequest hook — asks user for permission"
+    inputs: []
+    outputs: "Audio playback via paplay (random selection from permission/ dir)"
+    depends_on: []
+    red_zone: false
+
+  permission/razreshenie2.mp3:
+    intent: "Voice notification played on PermissionRequest hook — asks user for permission"
+    inputs: []
+    outputs: "Audio playback via paplay (random selection from permission/ dir)"
+    depends_on: []
+    red_zone: false
+
+  permission/razreshenie3.mp3:
+    intent: "Voice notification played on PermissionRequest hook — asks user for permission"
+    inputs: []
+    outputs: "Audio playback via paplay (random selection from permission/ dir)"
+    depends_on: []
+    red_zone: false
+
+  permission/razreshenie4.mp3:
+    intent: "Voice notification played on PermissionRequest hook — asks user for permission"
+    inputs: []
+    outputs: "Audio playback via paplay (random selection from permission/ dir)"
+    depends_on: []
+    red_zone: false
+
+  permission/razreshenie5.mp3:
+    intent: "Voice notification played on PermissionRequest hook — asks user for permission"
+    inputs: []
+    outputs: "Audio playback via paplay (random selection from permission/ dir)"
+    depends_on: []
+    red_zone: false
+
+  permission/razreshenie6.mp3:
+    intent: "Voice notification played on PermissionRequest hook — asks user for permission"
+    inputs: []
+    outputs: "Audio playback via paplay (random selection from permission/ dir)"
+    depends_on: []
+    red_zone: false
+
+  permission/razreshenie7.mp3:
+    intent: "Voice notification played on PermissionRequest hook — asks user for permission"
+    inputs: []
+    outputs: "Audio playback via paplay (random selection from permission/ dir)"
+    depends_on: []
+    red_zone: false
+
+  "stop/ElevenLabs_2026-04-08T11_56_20_Roger - Laid-Back, Casual, Resonant_pre_sp92_s50_sb75_se0_b_m2.mp3":
+    intent: "Voice notification played on Stop hook — signals Claude has finished responding"
+    inputs: []
+    outputs: "Audio playback via paplay (random selection from stop/ dir)"
+    depends_on: []
+    red_zone: false
+
+  "stop/ElevenLabs_2026-04-08T12_04_00_VASKO - Deep, Warm and Pleasant_pvc_s50_m2.mp3":
+    intent: "Voice notification played on Stop hook — signals Claude has finished responding"
+    inputs: []
+    outputs: "Audio playback via paplay (random selection from stop/ dir)"
+    depends_on: []
+    red_zone: false
+
+  "stop/ElevenLabs_2026-04-08T12_04_17_VASKO - Deep, Warm and Pleasant_pvc_s50_m2.mp3":
+    intent: "Voice notification played on Stop hook — signals Claude has finished responding"
+    inputs: []
+    outputs: "Audio playback via paplay (random selection from stop/ dir)"
+    depends_on: []
+    red_zone: false
+
+  "stop/ElevenLabs_2026-04-08T12_04_34_VASKO - Deep, Warm and Pleasant_pvc_sp100_s75_sb70_se0_b_m2.mp3":
+    intent: "Voice notification played on Stop hook — signals Claude has finished responding"
+    inputs: []
+    outputs: "Audio playback via paplay (random selection from stop/ dir)"
+    depends_on: []
+    red_zone: false
+
+  "stop/ElevenLabs_2026-04-08T12_04_52_VASKO - Deep, Warm and Pleasant_pvc_sp100_s75_sb70_se0_b_m2.mp3":
+    intent: "Voice notification played on Stop hook — signals Claude has finished responding"
+    inputs: []
+    outputs: "Audio playback via paplay (random selection from stop/ dir)"
+    depends_on: []
+    red_zone: false
+
+  "stop/ElevenLabs_2026-04-08T12_05_08_VASKO - Deep, Warm and Pleasant_pvc_sp100_s75_sb70_se0_b_m2.mp3":
+    intent: "Voice notification played on Stop hook — signals Claude has finished responding"
+    inputs: []
+    outputs: "Audio playback via paplay (random selection from stop/ dir)"
+    depends_on: []
+    red_zone: false
+
+  "stop/ElevenLabs_2026-04-08T12_05_24_VASKO - Deep, Warm and Pleasant_pvc_sp100_s75_sb70_se0_b_m2.mp3":
+    intent: "Voice notification played on Stop hook — signals Claude has finished responding"
+    inputs: []
+    outputs: "Audio playback via paplay (random selection from stop/ dir)"
+    depends_on: []
+    red_zone: false

@@ -1,0 +1,213 @@
+# Карта бизнес-логики Forge Plugin
+# Сгенерировано: 2026-04-14
+
+entities:
+
+  Skill:
+    description: "Воркфлоу-паттерн, направляющий Claude через процесс разработки"
+    attributes:
+      - name: kebab-case идентификатор
+      - description: когда активировать (max 1024 символов)
+      - trigger_keywords: фразы для автодетекта
+      - type: rigid (TDD, debug) | flexible (patterns)
+      - stage: pre-implementation | execution | verification
+    relations:
+      - содержится в: Skill Catalog
+      - вызывается из: Session
+      - управляется: Hard Gate
+    status: implemented (23 скилла)
+
+  Session:
+    description: "Рабочая сессия Claude с пользователем"
+    attributes:
+      - started: timestamp
+      - goal: цель сессии
+      - done: выполненные шаги
+      - now: текущая работа
+      - next: следующий шаг
+      - errors: возникшие проблемы
+    relations:
+      - загружает: Context (L0/L1/L2)
+      - активирует: Skill
+      - записывает в: Journal
+    status: implemented
+
+  Context Layer:
+    description: "Уровень контекста проекта (L0/L1/L2)"
+    attributes:
+      - level: L0 (~200 токенов, всегда) | L1 (по тегам) | L2 (редко)
+      - tags: ключевые слова для маппинга
+      - token_budget: лимит токенов
+    relations:
+      - L0 содержит: Project Metadata, Catalog
+      - L1 содержит: Map, Conventions, Status, Decisions, Dead Ends, Journal, Learnings
+      - L2 содержит: Specs, Plans, Dead End Details
+    status: implemented
+
+  Plan:
+    description: "Детальный план реализации фичи"
+    attributes:
+      - goal: что делаем
+      - architecture: как устроено
+      - tasks: список задач (2-5 мин каждая)
+      - tech_stack: используемые технологии
+    relations:
+      - создаётся после: Brainstorm
+      - содержит: Task
+      - выполняется через: Subagent | Manual
+    status: implemented
+
+  Task:
+    description: "Атомарная единица работы внутри плана"
+    attributes:
+      - files: какие файлы трогать
+      - failing_test: что тестировать
+      - minimal_code: что реализовать
+      - verification: как проверить
+    relations:
+      - принадлежит: Plan
+      - выполняется: Subagent
+      - проходит: Review Gate
+    status: implemented
+
+  Dead End:
+    description: "Провальный подход — что пробовали и почему не сработало"
+    attributes:
+      - date: когда
+      - summary: что пробовали
+      - why_failed: почему не сработало
+      - tags: для поиска
+    relations:
+      - предотвращает повтор в: Session
+      - записывается при: Debugging
+    status: implemented
+
+  Decision:
+    description: "Архитектурное решение с обоснованием"
+    attributes:
+      - date: когда
+      - decision: что решили
+      - why: почему именно так
+      - alternatives: что отвергли
+    relations:
+      - влияет на: Plan, Convention
+      - записывается при: Brainstorm, Implementation
+    status: implemented
+
+  Subagent:
+    description: "Свежая сессия Claude для изолированной задачи"
+    attributes:
+      - role: implementer | spec-reviewer | quality-reviewer | documenter
+      - brief: полный контекст задачи
+      - stack_hints: подсказки по языку/фреймворку
+    relations:
+      - выполняет: Task
+      - проверяется: Review Gate
+      - оркестрируется: Controller (главный Claude)
+    status: implemented
+
+  Review Gate:
+    description: "Обязательная проверка перед следующим шагом"
+    attributes:
+      - type: spec-compliance | code-quality | test-passing | design-approved
+      - blocking: true (нельзя пропустить)
+    relations:
+      - блокирует: Task completion, Branch merge, Plan execution
+      - выполняется: Subagent (reviewer)
+    status: implemented
+
+  Hook:
+    description: "Скрипт, автоматически срабатывающий на событие Claude Code"
+    attributes:
+      - event: SessionStart | UserPromptSubmit | Stop | PermissionRequest
+      - script: shell-скрипт
+      - async: синхронный или фоновый
+    relations:
+      - инжектирует: Context Layer (L0)
+      - подсказывает: Skill (по ключевым словам)
+      - оповещает: Sound (при Stop/Permission)
+    status: implemented
+
+  Marketplace:
+    description: "Каталог плагинов и скиллов для установки"
+    attributes:
+      - name: идентификатор маркетплейса
+      - source: github repo
+      - plugins: список доступных плагинов
+    relations:
+      - содержит: Plugin
+      - ищется через: /forge:discover
+    status: stub (API не реализован)
+
+processes:
+
+  Session Start:
+    trigger: "Пользователь открывает Claude Code"
+    steps:
+      - "[✓] Hook session-start.sh загружает using-forge скилл"
+      - "[✓] Hook context-inject.sh инжектирует L0 из .forge/index.yml"
+      - "[✓] Keyword matching подсказывает релевантный скилл"
+      - "[—] Автоматическая загрузка L1 по контексту задачи"
+    connects: [Hook, Context Layer, Skill, Session]
+
+  New-Task → Plan → Critique → Execute:
+    trigger: "Новая задача / фича / изменение"
+    steps:
+      - "[✓] /forge:new-task (Phase 1) — сырой промпт в чистую задачу + критерий"
+      - "[✓] GATE: пользователь подтверждает формулировку"
+      - "[✓] /forge:plan (Phase 2) — план с чекпоинтами, рекурсия на дальние блокеры"
+      - "[✓] /forge:critique (Phase 3) — 4 параллельных персоны + Execution Strategy"
+      - "[✓] GATE: пользователь подтверждает финальный план"
+      - "[✓] /forge:execute (Phase 4) — реализация через субагентов, стоп на чекпоинтах"
+      - "[—] Автопилот (связь фаз без явных вызовов команд)"
+    connects: [Task, Plan, Subagent, Checkpoint, Skill, Persona]
+
+  Debug Flow:
+    trigger: "Баг, ошибка, неожиданное поведение"
+    steps:
+      - "[✓] Phase 1: Расследование (обязательно до фикса)"
+      - "[✓] Phase 2: Гипотеза"
+      - "[✓] Phase 3: Верификация гипотезы"
+      - "[✓] Phase 4: Фикс"
+      - "[✓] GATE: нет фикса без Phase 1"
+      - "[✓] Запись Dead End если подход провалился"
+    connects: [Skill, Dead End, Session]
+
+  Documentation Sync:
+    trigger: "После завершения работы"
+    steps:
+      - "[✓] Git diff определяет изменения"
+      - "[✓] Субагент обновляет library/spec.yml"
+      - "[✓] Обновление map.yml, status.yml"
+      - "[✓] Запись decisions, dead-ends, learnings"
+      - "[✓] Запись в journal.yml"
+      - "[—] Автоизвлечение dead-ends из логов ошибок"
+      - "[—] Извлечение learnings из коммитов"
+    connects: [Context Layer, Decision, Dead End, Subagent]
+
+  Subagent Orchestration:
+    trigger: "Выполнение плана"
+    steps:
+      - "[✓] Controller читает план один раз"
+      - "[✓] На каждую задачу — свежий субагент"
+      - "[✓] Implementer: TDD + коммит + self-review"
+      - "[✓] Spec reviewer: соответствие спецификации"
+      - "[✓] Quality reviewer: качество кода"
+      - "[✓] Documenter: обновление .forge/"
+      - "[✓] Финальный code review всей реализации"
+    connects: [Subagent, Task, Review Gate, Plan]
+
+  Skill Discovery:
+    trigger: "/forge:discover"
+    steps:
+      - "[✓] Поиск по локальным маркетплейсам"
+      - "[—] Поиск по удалённым маркетплейсам (API)"
+      - "[—] Автоустановка найденных скиллов"
+    connects: [Marketplace, Skill]
+
+gaps:
+  - "Marketplace API — discover ищет только локально"
+  - "Skill auto-detection — сейчас только keyword matching в хуке, нет семантического понимания"
+  - "Skill chaining — пользователь вручную вызывает следующий скилл"
+  - "Learning extraction — не извлекает инсайты автоматически"
+  - "Cross-project patterns — нет переноса learnings между проектами"

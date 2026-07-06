@@ -776,15 +776,28 @@ for frameworks the project doesn't use.
 ### 15d: Configure .gitignore
 
 ```bash
-# FORGE internal docs + personal Claude files — never commit
-for pattern in '.forge/' '.claude/settings.local.json' '.claude/agent-memory-local/' 'CLAUDE.local.md'; do
+# Personal Claude files — never commit
+for pattern in '.claude/settings.local.json' '.claude/agent-memory-local/' 'CLAUDE.local.md'; do
   grep -qF "$pattern" .gitignore 2>/dev/null || echo "$pattern" >> .gitignore
 done
+
+# .forge/ (память проекта: задачи, планы, решения, журнал) ИДЁТ в git —
+# она должна переживать смерть диска (скилл memory-backup пушит её на удалёнку).
+# Игнорируется только служебный runtime-мусор — внутри .forge/.gitignore:
+mkdir -p .forge
+cat > .forge/.gitignore <<'EOF'
+.inject-state
+.last-backup
+state.yml
+.github-*
+graph.json
+EOF
 ```
 
-Note: `.forge/` is machine-readable context for Claude — no value in git.
-`.claude/settings.json` SHOULD be committed (team hooks/permissions).
-Only `.claude/settings.local.json` is personal.
+Note: `.forge/` — память проекта, её ценность именно в истории и сохранности;
+runtime-мусор отсечён через `.forge/.gitignore`. Секреты в `.forge` не пишутся
+никогда — только названия записей Bitwarden. `.claude/settings.json` SHOULD be
+committed (team hooks/permissions). Only `.claude/settings.local.json` is personal.
 
 ### 15e: Verify hook works
 

@@ -1,0 +1,12 @@
+purpose: "Документация проекта — спецификация, архитектура, планы"
+files:
+  Forge spec v2.md:
+    intent: "Спецификация FORGE v2"
+  forge-runtime-flow.md:
+    intent: "Диаграммы потока выполнения"
+  context-system.md:
+    intent: "Архитектура L0/L1/L2 контекстной системы"
+  testing.md:
+    intent: "Методология тестирования скиллов"
+  plugin-improvement-proposals.md:
+    intent: "Предложения по улучшению плагина"

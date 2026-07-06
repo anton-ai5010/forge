@@ -47,7 +47,10 @@
 - `/forge:critique` → комментарий с результатом критики + Sub-issues под каждый шаг финального плана (черновик из `/forge:plan` на GitHub не попадает)
 - `/forge:execute` → закрытие Sub-issues по мере прохождения шагов
 
-Pinned Issue (карта целей со счётчиками) и шапка `README.md` пересобираются механически внутри sync.sh (create-task, add-steps) и в финале execute. Projects v2 board не используется (см. `.forge/decisions.yml: no-projects-v2-board`).
+Pinned Issue (карта целей со счётчиками) и шапка `README.md` пересобираются механически внутри sync.sh (create-task, add-steps) и в финале execute.
+
+**Память проекта в git (всегда, независимо от github_sync):**
+`.forge/` (задачи, планы, идеи, решения, журнал) — часть репозитория, а не только локальная папка. Итог сессии и мерж автоматически коммитят память и пушат ветку (скилл `memory-backup`); служебный мусор отсечён через `.forge/.gitignore`. Ручной запуск — `/forge:save` или слово «сохрани». Если память не сохранялась больше суток — плагин напомнит при старте сессии. У проекта без удалёнки плагин предложит создать приватный репозиторий (только с явного «да»). Секреты в `.forge` не пишутся — только названия записей Bitwarden. Projects v2 board не используется (см. `.forge/decisions.yml: no-projects-v2-board`).
 
 Управление картой целей — через `/forge:roadmap`.
 
@@ -1011,6 +1014,9 @@ Health check: /api/health
 
 # Реализовать план
 /forge:execute          # Phase 4: Implementation
+
+# Сохранить память проекта (.forge) в git и на GitHub
+/forge:save             # или просто слово «сохрани»
 
 # Спроектировать API
 /forge:api-design
