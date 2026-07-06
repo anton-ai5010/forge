@@ -35,7 +35,7 @@ ideas/                     — идеи и прототипы (pipeline-v2.html 
 
 ## FORGE Context (L0/L1/L2)
 
-Context auto-injected via `hooks/context-inject.sh` (~250 tokens per prompt — только L0 + branch + git log + graph hint).
+Context auto-injected via `hooks/context-inject.sh` — умная инжекция: полный блок (~700 tokens по замеру — L0 + branch + git log + graph hint) только при изменении `.forge`-контекста, в новой сессии или каждые 15 промптов; в остальных промптах — короткая строка-напоминание (~20 tokens).
 
 ROUTING и DOC DISCIPLINE инжектятся **один раз** через `session-start.sh`. STYLE правил больше нет в хуке — они в нативном Output Style.
 
