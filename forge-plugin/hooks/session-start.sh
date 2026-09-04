@@ -49,6 +49,16 @@ else
     header="Forge plugin активен."
 fi
 
+# Напоминание про отчёт «Что дальше» (Фаза 5): одна строка и только когда есть что напомнить
+# (render.py summary молчит, если открытых решений нет и отчёт не устарел). Без PyYAML — JSON.
+report_warn=""
+if [ -f ".forge/status-report.json" ]; then
+    line=$(python3 "$plugin_root/skills/status-report/render.py" summary 2>/dev/null || true)
+    if [ -n "$line" ]; then
+        report_warn=$'\n\n'"$line — напомни пользователю одной строкой; вопросы по решениям задавай по одному и только по его слову. Если владелец в любой форме отвечает на открытое решение из отчёта — запиши его в .forge/decisions.yml, поставь этой карточке \"status\": \"done\" в .forge/status-report.json (через Edit) и пересобери: python3 $plugin_root/skills/status-report/render.py render"
+    fi
+fi
+
 # Короткое введение — что есть forge и как им пользоваться
 intro="<forge-plugin-loaded>
 ${header}
@@ -60,6 +70,7 @@ ${header}
   Phase 2   /forge:plan        — план с чекпоинтами
   Phase 3   /forge:critique    — 4 персоны рвут план
   Phase 4   /forge:execute     — реализация
+  Phase 5   /forge:status-report — отчёт «что дальше»: что чиню, что решаешь
 
 И 30+ поддерживающих скиллов (debugging, design, deployment, etc.) — триггерятся автоматически по описанию или вызываются явно через /forge:<name>.
 
@@ -68,7 +79,7 @@ ROUTING: Match .forge/index.yml catalog[].tags with current task to decide which
 DOC DISCIPLINE: If you just made a technical decision — record in .forge/decisions.yml. If an approach failed — record in .forge/dead-ends.yml. If you learned something non-obvious — record in .forge/learnings.yml. Do it NOW, not later.
 
 Для глубокого введения — Skill tool: forge:using-forge.
-$warning$mem_warn
+$warning$mem_warn$report_warn
 </forge-plugin-loaded>"
 
 # Escape для JSON

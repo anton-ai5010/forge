@@ -1,15 +1,15 @@
 project: forge-plugin
 github_sync: true
-goal: "Плагин для Claude Code, автоматизирующий рабочие процессы разработки через 6-фазный pipeline (0 unblocker → 1 new-task → 1.5 refine-idea → 2 plan → 3 critique → 4 execute) + систему скиллов + L0/L1/L2 контекст"
+goal: "Плагин для Claude Code, автоматизирующий рабочие процессы разработки через 7-фазный pipeline (0 unblocker → 1 new-task → 1.5 refine-idea → 2 plan → 3 critique → 4 execute → 5 status-report) + систему скиллов + L0/L1/L2 контекст"
 stage: maintenance
 progress: 100%
 blocked: нет
-version: "7.6.0"
+version: "7.7.0"
 stack: [python, bash, markdown, claude-code-plugin]
 
 now:
-  task: "v7.6.0 на GitHub, плагин у пользователя обновлён"
-  branch: master
+  task: "v7.7.0 — отчёт «Что дальше» (фаза 5), готово к мержу"
+  branch: feat/status-report
 
 catalog:
   map:
@@ -43,15 +43,18 @@ catalog:
   direction:
     path: .forge/direction.yml
     tags: [direction, goal, strategy, hypotheses, backlog, navigate, where-to-go]
-    note: "Strategic layer: project map + directions/hypotheses + backlog + goal-shift history; read/written by project-unblocker."
+
+  status-report:
+    path: .forge/status-report.json
+    tags: [report, what-next, findings, decisions-pending, owner, effort]
 
 session:
-  started: "2026-07-03"
-  goal: "Глубокое ревью (62 находки) → 4 волны правок + фичи Тарика + экономия + память в git"
+  started: "2026-09-04"
+  goal: "Отчёт «Что дальше» — фаза 5 (status-report), v7.7.0"
   done:
-    - "v7.5.0 (правки ревью, фичи Тарика, экономия) + v7.6.0 (память в git) — в master"
-  now: "Сессия закрыта, обе версии на GitHub"
-  next: "Проверить пайплайн v7.6.0 на живой задаче"
+    - "Фаза 5 status-report: render.py + скилл + точки вызова + документация (в ветке)"
+  now: "Ветка feat/status-report — тесты зелёные, ждём прогон на живом проекте и мерж"
+  next: "Собрать первый отчёт на живом проекте"
   errors: []
 
-last_session: "2026-07-06 — Глубокое ревью (62 находки) → v7.5.0 (4 волны правок, фичи Тарика, экономия токенов) + v7.6.0 (память проекта в git); обе влиты и запушены"
+last_session: "2026-09-04 — v7.7.0: отчёт «Что дальше» (фаза 5): render.py из JSON, аудит агентами, лёгкое обновление после мержа, напоминание при старте"

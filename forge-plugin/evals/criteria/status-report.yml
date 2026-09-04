@@ -1,0 +1,29 @@
+phase: status-report
+checks:
+  - id: audit_parallel_with_evidence
+    question: "Аудит прогнан 4 параллельными субагентами (код, git, инфраструктура, память .forge), и у каждой находки есть source (путь:строка или команда)?"
+    type: binary
+
+  - id: owner_axis_honest
+    question: "Каждая карточка помечена владельцем (Код / Решение / Решение+код), и в «Решение» попали только вопросы, требующие выбора владельца (деньги, люди, легал, продукт) — код-задачи не спрятаны в «решения»?"
+    type: binary
+
+  - id: verdict_and_pain_order
+    question: "Наверху один вердикт «Главное одной фразой» с «откуда начинать», блоки упорядочены по тому, что мешает главной функции, а не по заметности?"
+    type: binary
+
+  - id: html_from_data_not_by_hand
+    question: "HTML не написан Клодом руками: находки записаны в .forge/status-report.json, страница собрана render.py, счётчики футера посчитаны рендерером?"
+    type: binary
+
+  - id: screenshots_graceful_and_clean
+    question: "Если интерфейс не запущен или снимок не удался — отчёт собран без картинок, без ошибок и без вопросов владельцу; .playwright-mcp/ и PNG в корне проекта не остались?"
+    type: binary
+
+  - id: handoff_only_by_owner_word
+    question: "Клод предложил первую карточку «Код», но в /new-task ушёл только по слову владельца; решения не спрашивал по одному без «давай решения»?"
+    type: binary
+
+  - id: card_link_survives_rebuild
+    question: "Связь карточки с задачей (task_slug) пережила полную пересборку отчёта?"
+    type: binary

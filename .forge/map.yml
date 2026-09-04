@@ -20,12 +20,12 @@ directories:
     about: "Промпт-шаблоны субагентов (reviewer, documenter, enforcer)"
 
   forge-plugin/commands/:
-    files: 24
+    files: 27
     about: "Slash-команды (MD): forge:new-task, plan, critique, execute, sync, validate, cleanup, roadmap, и др."
 
   forge-plugin/skills/:
-    files: 32
-    about: "~32 скилла pipeline и поддерживающих процессов (SKILL.md + поддержка)"
+    files: 35
+    about: "~35 скиллов pipeline и поддерживающих процессов (SKILL.md + поддержка)"
 
   forge-plugin/skills/github-sync/:
     files: "SKILL.md, sync.sh, scripts/, templates/"
@@ -42,6 +42,10 @@ directories:
   forge-plugin/skills/roadmap/:
     files: 1
     about: "Управление картой целей проекта (milestones) через человеческий язык"
+
+  forge-plugin/skills/status-report/:
+    files: "SKILL.md, render.py"
+    about: "Фаза 5 — отчёт «Что дальше» (что чинит Клод / что решает владелец). render.py: render / merged <slug> / link <id> <slug> / summary; данные .forge/status-report.json → .forge/status-report.html"
 
   forge-plugin/output-styles/:
     files: 1
@@ -68,8 +72,8 @@ directories:
     about: "Спецификация, архитектура контекста, runtime-flow"
 
   forge-plugin/tests/:
-    files: 25
-    about: "Prompt-based тесты скиллов + bash-тесты OpenCode"
+    files: 47
+    about: "Prompt-based тесты скиллов + bash-тесты хуков (bash-safety, context-inject, memory-backup, session-start, status-report, user-rules-check) + фикстуры"
 
   forge-plugin/sounds/:
     files: 1

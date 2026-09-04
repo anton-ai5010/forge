@@ -83,8 +83,10 @@ run_backup >/dev/null
 files=$(git show --name-only --format= HEAD)
 printf '%s' "$files" | grep -q "index.yml" \
   && ! printf '%s' "$files" | grep -qE "inject-state|state.yml|github-issue" \
-  && [ -f .forge/.gitignore ]
-check "should auto-create .forge/.gitignore and never commit runtime junk" $?
+  && [ -f .forge/.gitignore ] \
+  && grep -qx "status-report.html" .forge/.gitignore \
+  && grep -qx "reports/shots/" .forge/.gitignore
+check "should auto-create .forge/.gitignore (incl. report HTML/shots lines) and never commit runtime junk" $?
 cd / && rm -rf "$REPO"
 
 # --- (4) нет удалёнки → сохраняет локально + просит предложить приватный репо ---

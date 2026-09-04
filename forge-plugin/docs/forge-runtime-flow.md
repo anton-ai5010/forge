@@ -9,7 +9,7 @@
 
 | Событие | Matcher | Скрипт / команда | Что делает |
 |---------|---------|------------------|------------|
-| `SessionStart` | `startup\|resume\|clear\|compact` | `session-start.sh` | Короткое интро: версия, пайплайн, ROUTING + DOC DISCIPLINE |
+| `SessionStart` | `startup\|resume\|clear\|compact` | `session-start.sh` | Короткое интро: версия, пайплайн, ROUTING + DOC DISCIPLINE; напоминания: память не сохранена >24ч, отчёт «Что дальше» (ждут N решений владельца, устарел на M задач) |
 | `UserPromptSubmit` | — (каждый промпт) | `context-inject.sh` | Инжектит L0 контекст: index.yml + branch + git log + graph hint |
 | `PreToolUse` | `Bash` | `bash-safety.sh` | Блокирует опасные bash-команды до выполнения |
 | `PreToolUse` | `Bash\|Edit\|Write\|NotebookEdit` | `user-rules-check.sh` | Применяет пользовательские правила из `.forge/hookrules/*.md` |
@@ -27,7 +27,7 @@ flowchart TB
     subgraph SESSION_START["🟢 Session Start (startup/resume/clear/compact)"]
         A[Claude Code запускается] --> B{SessionStart hook}
         B --> C[session-start.sh]
-        C --> D["Короткое интро (НЕ полный using-forge):<br/>• версия плагина из plugin.json<br/>• таблица 6 фаз пайплайна<br/>• ROUTING: как выбирать L1 файлы по тегам<br/>• DOC DISCIPLINE: писать decisions/dead-ends/learnings сразу"]
+        C --> D["Короткое интро (НЕ полный using-forge):<br/>• версия плагина из plugin.json<br/>• таблица 7 фаз пайплайна<br/>• ROUTING: как выбирать L1 файлы по тегам<br/>• DOC DISCIPLINE: писать decisions/dead-ends/learnings сразу"]
         D --> E["using-forge — lazy-load:<br/>Claude подгружает через Skill tool,<br/>когда реально нужно"]
     end
 
@@ -114,7 +114,7 @@ message: "..."             # объяснение Claude, почему сраб�
 
 ---
 
-## 4. The 6-Phase Pipeline (0 → 1 → 1.5 → 2 → 3 → 4)
+## 4. The 7-Phase Pipeline (0 → 1 → 1.5 → 2 → 3 → 4 → 5)
 
 Хуки пайплайн не ведут — его ведут скиллы/команды с auto-handoff (после «ОК» пользователя Claude сам инвокает следующую фазу).
 
@@ -125,6 +125,9 @@ flowchart TB
     B -- "Новая задача / фича" --> P1["/forge:new-task<br/>Phase 1: Understanding"]
     B -- "Баг или проблема" --> DBG["/forge:investigate или<br/>systematic-debugging"]
     B -- "Простой read-only вопрос" --> ANS["Прямой ответ"]
+    B -- "«собери отчёт» / граница этапа" --> P5["/forge:status-report<br/>Phase 5: Итог — что дальше"]
+
+    P5 --> P5A["Аудит субагентами + память .forge →<br/>status-report.json → render.py → status-report.html"]
 
     P0 --> P0A["Карта проекта + все направления<br/>+ рекомендация (выбор за пользователем)"]
     P0A --> P1
@@ -154,18 +157,20 @@ flowchart TB
     P4CHK -- Да --> P4STOP["СТОП: ждём пользователя"]
     P4STOP --> P4LOOP
     P4CHK -- "Всё сделано" --> SYNC["/forge:sync → .forge/*.yml<br/>«мержим» → finishing-a-development-branch"]
+    SYNC --> P5U["finishing после мержа:<br/>render.py merged slug → карточка «сделано»,<br/>HTML пересобран (без аудита)"]
 ```
 
 ### Phase contracts
 
 | Phase | Command | Outputs | Gate to next phase |
 |-------|---------|---------|--------------------|
-| 0. Direction | `/forge:unblocker` | `direction.yml` + `ROADMAP.md`, первый шаг → new-task | Пользователь выбрал направление |
+| 0. Direction | `/forge:unblocker` | `direction.yml`, первый шаг → new-task | Пользователь выбрал направление |
 | 1. Understanding | `/forge:new-task` | `.forge/tasks/*.md`: задача + критерий готовности | Задача подтверждена пользователем |
 | 1.5. Idea Check | `/forge:refine-idea` | Доработанный task-файл (опц. `## Доработано на разборе`) | Идея выдержала реалити-чек |
 | 2. Planning | `/forge:plan` | `.forge/plans/*.md`: шаги + чекпоинты | План полный, блокеры покрыты |
 | 3. Critique | `/forge:critique` | Правки в плане + Execution Strategy | Critical issues закрыты |
 | 4. Implementation | `/forge:execute` | Код, тесты, обновлённый `.forge/` | Чекпоинты пройдены, критерий готовности проверен |
+| 5. Итог — что дальше | `/forge:status-report` | `.forge/status-report.json` + `.forge/status-report.html` | Полная сборка — по слову; в цепочку auto-handoff не входит, после мержа обновляется сам |
 
 ### GitHub Sync (опционально)
 
@@ -184,7 +189,7 @@ Runtime-артефакты в проекте пользователя (в `.forg
 ```mermaid
 flowchart TB
     subgraph HOOKS["Hooks (автоматические)"]
-        H1["session-start.sh<br/>ЧИТАЕТ: .claude-plugin/plugin.json (версия)"]
+        H1["session-start.sh<br/>ЧИТАЕТ: .claude-plugin/plugin.json (версия),<br/>.forge/.last-backup,<br/>.forge/status-report.json (через render.py summary)"]
         H2["context-inject.sh<br/>ЧИТАЕТ: .forge/index.yml<br/>.forge/graph.json (счётчик нод)<br/>git log, git branch"]
         H3["bash-safety.sh<br/>ЧИТАЕТ: tool_input команды"]
         H4["user-rules-check.sh<br/>ЧИТАЕТ: .forge/hookrules/*.md"]
@@ -196,11 +201,12 @@ flowchart TB
         SR2["forge-context<br/>← index.yml catalog → L1 файлы по тегам"]
         SR3["critique / execute<br/>← .forge/plans/*.md"]
         SR4["unblocker<br/>← вся .forge память + код"]
+        SR5["status-report<br/>← status.yml, direction.yml, decisions.yml,<br/>dead-ends.yml, journal.yml, learnings.yml,<br/>tasks/ + код (субагенты)"]
     end
 
     subgraph SKILLS_WRITE["Скиллы ПИШУТ"]
         SW1["new-task → .forge/tasks/*.md<br/>plan → .forge/plans/*.md"]
-        SW2["unblocker → .forge/direction.yml + ROADMAP.md"]
+        SW2["unblocker → .forge/direction.yml<br/>status-report → .forge/status-report.json (+ .html)"]
         SW3["session-awareness → index.yml (session state),<br/>decisions.yml, dead-ends.yml, journal.yml, status.yml"]
         SW4["/forge:sync → .forge/*.yml по факту изменений<br/>/forge:init → ВСЮ структуру .forge/"]
         SW5["hookify → .forge/hookrules/*.md"]
@@ -209,7 +215,7 @@ flowchart TB
 
     subgraph DOCS[".forge/ (персистентная память — в git, мусор в .forge/.gitignore)"]
         D1["index.yml — L0: goal/stage/task + catalog"]
-        D2["L1: map.yml, conventions.yml, status.yml,<br/>decisions.yml, dead-ends.yml, journal.yml,<br/>learnings.yml, direction.yml"]
+        D2["L1: map.yml, conventions.yml, status.yml,<br/>decisions.yml, dead-ends.yml, journal.yml,<br/>learnings.yml, direction.yml,<br/>status-report.json"]
         D3["L2: library/*/spec.yml, dead-ends/*.md"]
         D4["tasks/ · plans/ · blockers/ · hookrules/"]
         D5["graph.json — knowledge graph (/forge:graph)"]
@@ -300,4 +306,9 @@ t=16    User: /forge:validate
 
 t=17    User: "мержим"
         ↓ finishing-a-development-branch       тесты → merge в master → ветка удалена
+        ↓ render.py merged <slug>              карточка задачи → «сделано» в отчёте
+
+t=18    User: "собери отчёт"
+        ↓ Claude → /forge:status-report       Phase 5: аудит субагентами → status-report.json
+        ↓ render.py → status-report.html      открыт в браузере
 ```

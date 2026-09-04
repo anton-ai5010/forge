@@ -1,6 +1,7 @@
 working:
-  - "4-фазный pipeline: /forge:new-task → /forge:plan → /forge:critique → /forge:execute"
-  - "~30 скиллов — все активны, с авто-инвокацией по триггерам"
+  - "7-фазный pipeline: /forge:unblocker → new-task → refine-idea → plan → critique → execute → status-report"
+  - "Отчёт «Что дальше» (фаза 5): .forge/status-report.json → HTML через skills/status-report/render.py; обновляется после мержа, напоминает при старте сессии"
+  - "~35 скиллов — все активны, с авто-инвокацией по триггерам"
   - "L0/L1/L2 контекстная система (auto-injection через context-inject.sh)"
   - "Хуки: SessionStart, UserPromptSubmit, PreToolUse (bash-safety), PermissionRequest, Stop"
   - "Output Style 'Forge Concise' — нативный, force-for-plugin: true"

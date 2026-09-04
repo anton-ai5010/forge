@@ -118,6 +118,7 @@ If `.forge/graph.json` exists — the project has a code knowledge graph built b
 | forge:plan | Bite-sized implementation plans from spec |
 | forge:critique | Phase 3 — 4 персоны рвут план |
 | forge:execute | Run plans with review checkpoints |
+| forge:status-report | Phase 5 — отчёт «Что дальше»: что чинит Клод, что решает владелец (HTML из .forge/status-report.json) |
 | forge:dispatching-parallel-agents | Parallel dispatch of 2+ independent tasks |
 | forge:subagent-driven-development | Execute plans via fresh subagent per task with two-stage review |
 | forge:systematic-debugging | 4-phase root cause investigation |

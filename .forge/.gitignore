@@ -4,3 +4,5 @@
 .migration-declined
 graph.json
 state.yml
+status-report.html
+reports/shots/

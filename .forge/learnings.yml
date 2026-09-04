@@ -1,6 +1,11 @@
 # Уроки и инсайты проекта
 # Формат: id, date, learning, context, tags
 entries:
+  - id: gh-milestone-by-title-not-number
+    date: "2026-07-10"
+    summary: "github-sync create-task передаёт номер milestone в `gh issue create --milestone`, но gh там принимает ИМЯ цели, не число — привязка молча падает ('could not add to milestone 20: not found'), Issue создаётся без цели. Обход: передать title цели вместо номера. Корневой фикс: в sync.sh create-task конвертировать номер→title перед --milestone (или сразу принимать title). Процедура new-task в github-sync SKILL.md тоже учит передавать <milestone-num> — тоже под правку"
+    tags: [github-sync, gh-cli, milestone, bug]
+    source: "Прогон create-task .forge/tasks/2026-07-07-confidence-in-memory.md 20 → ошибка; повтор с именем 'Надёжность памяти проекта' → Issue #18 привязался. Проверено: gh issue view 18 → milestone: Надёжность памяти проекта"
   - id: git-tests-must-isolate-cwd
     date: "2026-07-06"
     summary: "Тесты с git-командами обязаны ГАРАНТИРОВАТЬ изоляцию: cd внутри $(command substitution) не переживает подстановку — кейсы молча гонялись в реальном репозитории (испачкан README, затёрт .gitignore, 4 мусорных коммита улетели в origin). Правило: new_repo — обычная функция без $(), в начале сьюта cd в mktemp, плюс assert что cwd ≠ репозиторий плагина перед любой git-командой"
