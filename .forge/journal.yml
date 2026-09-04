@@ -1,5 +1,11 @@
 entries:
   - date: "2026-09-04"
+    summary: "Закрыта задача: Отчёт «Что дальше» — Фаза 5 плагина (status-report)"
+    milestone: "—"
+    slug: "status-report"
+    result: "Done"
+
+  - date: "2026-09-04"
     summary: "v7.7.0 — фаза 5 «Что дальше»: отчёт по проекту для владельца (что чиню в коде / что решаешь ты)"
     slug: "status-report"
     result: "skills/status-report (SKILL.md + render.py, 16 тестов TDD), команда /forge:status-report, фикстура-образец; точки вызова: new-task 9.5 (link), finishing после мержа (merged), session-start (summary, 5 тестов), statusline «Фаза 5»; ROADMAP.md убран из навигатора; 7 фаз в CLAUDE.md/README/COMMANDS/init/runtime-flow/GUIDE; evals criteria/status-report.yml. Критика плана: 32 агента, 1 блокер (утечка HTML со снимками в git — закрыт игнором внутри render.py) + 13 важных правок"

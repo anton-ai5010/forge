@@ -9,21 +9,23 @@ import subprocess
 import rumps
 import AppKit
 
-VERSION = "7.1.3"
+VERSION = "7.7.0"
 
 COMMANDS = [
     # Инициализация и старт
     ("forge:init", "Инициализация проекта"),
     ("forge:start", "Начало сессии"),
     ("forge:sync", "Синхронизация документации"),
-    # 5-фазный pipeline
+    ("forge:save", "Сохранить память проекта в git"),
+    # 7-фазный pipeline
+    ("forge:unblocker", "Phase 0 — куда двигать проект"),
     ("forge:new-task", "Phase 1 — понять задачу"),
     ("forge:refine-idea", "Phase 1.5 — разбор идеи до плана"),
     ("forge:plan", "Phase 2 — построить план"),
     ("forge:critique", "Phase 3 — критика плана (4 персоны)"),
     ("forge:execute", "Phase 4 — реализация"),
+    ("forge:status-report", "Phase 5 — отчёт «Что дальше»"),
     # Разблокировка и качество
-    ("forge:unblocker", "Разблокировка (когда застрял)"),
     ("forge:investigate", "Разбор проблемы (до фикса)"),
     ("forge:cleanup", "Качество кода"),
     ("forge:validate", "Проверка перед мержем"),
@@ -56,6 +58,7 @@ SKILLS = [
     ("forge:plan", "Phase 2 — план с чеклистами"),
     ("forge:critique", "Phase 3 — 4 персоны + confidence"),
     ("forge:execute", "Phase 4 — реализация через субагентов"),
+    ("forge:status-report", "Phase 5 — отчёт «Что дальше» (что чиню / что решаешь)"),
     # Разработка
     ("forge:test-driven-development", "TDD (RED-GREEN-REFACTOR)"),
     ("forge:problem-investigation", "Разобраться до фикса"),
@@ -83,9 +86,10 @@ SKILLS = [
     # Визуализация
     ("forge:product-mapping", "Карта проекта (HTML)"),
     ("forge:explaining", "Визуальное объяснение"),
-    # GitHub
+    # GitHub и память
     ("forge:github-sync", "Синхронизация с GitHub"),
     ("forge:roadmap", "Редактирование карты целей"),
+    ("forge:memory-backup", "Сохранить .forge в git"),
 ]
 
 
