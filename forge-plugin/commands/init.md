@@ -561,7 +561,7 @@ L2 (load rarely): `.forge/library/*/spec.yml`, `.forge/dead-ends/*.md`
 DO NOT load all L1 files. Match catalog tags to current task.
 DO NOT read source code before checking .forge/library/spec.yml.
 
-## Development Workflow (6-фазный pipeline: 0 → 1 → 1.5 → 2 → 3 → 4)
+## Development Workflow (7-фазный pipeline: 0 → 1 → 1.5 → 2 → 3 → 4 → 5)
 
 ### Phase 0 — Direction
 0. `/forge:unblocker` — навигатор направления, когда непонятно КУДА двигать проект или застрял: карта проекта + все направления + рекомендация, первый шаг → `/forge:new-task`
@@ -581,12 +581,15 @@ DO NOT read source code before checking .forge/library/spec.yml.
 ### Phase 4 — Implementation
 4. `/forge:execute` — реализация, грязная работа делегируется субагентам, стоп на чекпоинтах плана
 
+### Phase 5 — Итог: что дальше
+5. `/forge:status-report` — отчёт «Что дальше» по всему проекту: что чинит Клод в коде, какие решения нужны от владельца, в каком порядке; полная сборка — по слову «собери отчёт», «открой отчёт» показывает готовый, после мержа отчёт обновляется сам
+
 ### After completing work
-5. `/forge:sync` — update docs
-6. `/forge:validate` — verify code vs plan
+6. `/forge:sync` — update docs
+7. `/forge:validate` — verify code vs plan
 
 ### Auto-handoff между фазами
-По "ОК" пользователя — Claude автоматически переходит в следующую фазу. "Стоп" / "пауза" — останавливает. Между Phase 3 и Phase 4 — если контекст уже большой, рекомендуется открыть свежий чат для `/execute`.
+По "ОК" пользователя — Claude автоматически переходит в следующую фазу. "Стоп" / "пауза" — останавливает. Между Phase 3 и Phase 4 — если контекст уже большой, рекомендуется открыть свежий чат для `/execute`. Phase 5 в цепочку не входит: отчёт собирается только по слову, а после мержа обновляется сам.
 
 ### Эволюция плагина под проект
 - `/forge:hookify` — превратить повторное исправление в постоянное правило (`.forge/hookrules/`)
@@ -622,6 +625,7 @@ DO NOT read source code before checking .forge/library/spec.yml.
 | `/forge:plan` | **Phase 2** — построить план |
 | `/forge:critique` | **Phase 3** — 4 персоны рвут план |
 | `/forge:execute` | **Phase 4** — реализация |
+| `/forge:status-report` | **Phase 5** — отчёт «Что дальше»: что чинить, что решать |
 | `/forge:hookify` | Превратить повторение в правило |
 | `/forge:evolve` | Кластеризация сквозных болей |
 | `/forge:design` | UI/UX design system |
@@ -657,7 +661,7 @@ Before showing to user, verify the generated CLAUDE.md:
 3. **Consistency:** Stack in CLAUDE.md matches `stack:` in index.yml. Red zones match Step 2 list.
 4. **Size:** Total < 300 lines (~4000 tokens). If larger — trim verbose sections, keep only essentials.
 5. **Correct paths:** All doc references use `.forge/` (not `docs/`)
-6. **Commands table complete:** At minimum: start, unblocker (Phase 0), new-task, refine-idea (Phase 1.5), plan, critique, execute, sync, validate, cleanup
+6. **Commands table complete:** At minimum: start, unblocker (Phase 0), new-task, refine-idea (Phase 1.5), plan, critique, execute, status-report (Phase 5), sync, validate, cleanup
 7. **No empty sections:** Every section has content. If nothing to put — remove the section entirely.
 
 If any check fails — fix before showing to user. Do not ask about validation — just fix silently.
@@ -792,6 +796,8 @@ mkdir -p .forge
 state.yml
 .github-*
 graph.json
+status-report.html
+reports/shots/
 EOF
 ```
 
@@ -852,7 +858,7 @@ bash "$SYNC" ensure-pinned-map # создать/найти Pinned Issue «🗺 �
 If `diagnose` prints warnings (auth expired, no scope) — surface them verbatim and tell the user
 to run `gh auth login`, then re-run `/forge:init` or just `/forge:roadmap`. Don't silently continue.
 
-After this, the pipeline (new-task → plan → critique → execute) mirrors to GitHub automatically.
+After this, the pipeline (new-task → plan → critique → execute) mirrors to GitHub automatically. Отчёт «Что дальше» (Phase 5, `/forge:status-report`) на GitHub не отражается — он живёт в `.forge/` и уезжает туда с памятью.
 
 ## Step 17: Confirm Completion
 

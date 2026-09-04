@@ -1,4 +1,10 @@
 entries:
+  - date: "2026-09-04"
+    summary: "v7.7.0 — фаза 5 «Что дальше»: отчёт по проекту для владельца (что чиню в коде / что решаешь ты)"
+    slug: "status-report"
+    result: "skills/status-report (SKILL.md + render.py, 16 тестов TDD), команда /forge:status-report, фикстура-образец; точки вызова: new-task 9.5 (link), finishing после мержа (merged), session-start (summary, 5 тестов), statusline «Фаза 5»; ROADMAP.md убран из навигатора; 7 фаз в CLAUDE.md/README/COMMANDS/init/runtime-flow/GUIDE; evals criteria/status-report.yml. Критика плана: 32 агента, 1 блокер (утечка HTML со снимками в git — закрыт игнором внутри render.py) + 13 важных правок"
+    next: "Прогон на живом проекте (снимки экрана), мерж в master, обновление плагина у владельца"
+
   - date: "2026-07-06"
     summary: "v7.6.0 — память проекта в git: .forge/ коммитится и пушится (переживает смерть диска/VPS), во всех проектах"
     result: "skills/memory-backup (backup.sh, 12 тестов TDD), /forge:save + слово «сохрани», автосохранение в session-awareness/finishing, напоминание >24ч в session-start, init.md для новых проектов, миграция легаси с памятью отказа. Адверсариальное ревью нашло 9 дыр (худшая: тихий no-op из поддиректории) — все закрыты тестами. Память этого репо мигрирована (40+ файлов)"

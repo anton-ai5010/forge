@@ -1,6 +1,12 @@
 # Технические решения проекта
 # Формат: id, date, decision, why, tags
 entries:
+  - id: status-report-phase-5
+    date: "2026-09-04"
+    decision: "Фаза 5 «Итог: что дальше» — скилл status-report: данные в .forge/status-report.json, HTML собирает skills/status-report/render.py (только stdlib; режимы render / merged <slug> / link <id> <slug> / summary), Клод HTML руками не пишет. Полная сборка — по слову («собери отчёт»), 4 агента-аналитика; «открой отчёт» — показ без аудита; после мержа finishing зовёт merged <slug>; session-start напоминает через summary. Игнор status-report.html и reports/shots/ гарантирует сам render.py при записи боевого HTML. ROADMAP.md навигатором больше не пишется — витрина для глаз теперь отчёт"
+    why: "JSON, а не YAML — на маке владельца нет PyYAML (python3 -c 'import yaml' падает), а json в stdlib. Рендерер вместо HTML руками — урок product-mapping: данные + шаблон не дают сломанной вёрстки, и обновление после мержа становится механическим шагом. Игнор в render.py, а не только в backup.sh — finishing делает git add -A ДО backup.sh, иначе HTML со встроенными снимками (до МБ) уехал бы в историю навсегда. Два документа «где мы» (ROADMAP.md и отчёт) для одного человека — путаница: у них разные оси (знание vs владелец×срочность), витрина оставлена одна"
+    tags: [pipeline, status-report, phase-5, render, memory]
+
   - id: four-phase-pipeline
     date: "2026-05-14"
     decision: "4-фазный pipeline: new-task → plan → critique → execute (заменил brainstorm/write-plan/execute-plan)"

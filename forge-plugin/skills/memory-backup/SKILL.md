@@ -43,4 +43,4 @@ description: "Use when пользователь просит сохранить 
 
 ## Что не попадает в git
 
-`backup.sh` сам создаёт `.forge/.gitignore` со служебным мусором: `.inject-state`, `.last-backup`, `state.yml`, `.github-*`, `graph.json`. Всё остальное в `.forge/` — ценность, коммитится.
+`backup.sh` сам создаёт `.forge/.gitignore` со служебным мусором: `.inject-state`, `.last-backup`, `state.yml`, `.github-*`, `graph.json`, а также регенерируемые из JSON `status-report.html` и `reports/shots/` (отчёт «Что дальше», Фаза 5). Всё остальное в `.forge/` — ценность, коммитится.

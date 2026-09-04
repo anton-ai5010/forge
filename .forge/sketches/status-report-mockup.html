@@ -1,0 +1,90 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lumen · Что дальше</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#F4F5F8;--panel:#fff;--panel-2:#F9FAFC;--ink:#171B24;--ink-2:#4A5163;--ink-3:#8A91A3;--line:#E2E5EC;--accent:#3D5AFE;--shadow:0 1px 2px rgba(23,27,36,.04),0 8px 24px rgba(23,27,36,.06);
+--crit:#D93636;--crit-bg:#FDECEC;--biz:#7A3EF0;--biz-bg:#F0EAFE;--imp:#D98A00;--imp-bg:#FFF4DE;--pol:#1E9E5A;--pol-bg:#E6F7EE}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1017;--panel:#171A22;--panel-2:#1D212B;--ink:#EDEFF5;--ink-2:#B4BAC9;--ink-3:#7C8397;--line:#2A2F3B;--accent:#7C93FF;--shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+--crit:#FF6B6B;--crit-bg:#3A1C1C;--biz:#B48CFF;--biz-bg:#2A1F45;--imp:#FFC14D;--imp-bg:#3B2E12;--pol:#5DD69A;--pol-bg:#173225}}
+:root[data-theme="dark"]{--bg:#0E1017;--panel:#171A22;--panel-2:#1D212B;--ink:#EDEFF5;--ink-2:#B4BAC9;--ink-3:#7C8397;--line:#2A2F3B;--accent:#7C93FF;--shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+--crit:#FF6B6B;--crit-bg:#3A1C1C;--biz:#B48CFF;--biz-bg:#2A1F45;--imp:#FFC14D;--imp-bg:#3B2E12;--pol:#5DD69A;--pol-bg:#173225}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;font-size:16px;line-height:1.55}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+.wrap{max-width:1080px;margin:0 auto;padding:40px 24px 64px}
+.head .eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.head h1{font-family:Archivo,system-ui,sans-serif;font-weight:800;font-size:clamp(28px,5vw,44px);letter-spacing:-.02em;line-height:1.1;margin:10px 0 14px}
+.head p{max-width:66ch;color:var(--ink-2);margin:0 0 16px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:13px;color:var(--ink-3)}
+.verdict{margin:28px 0 36px;padding:20px 24px;background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--crit);border-radius:14px;box-shadow:var(--shadow)}
+.verdict h2{font-family:Archivo,system-ui,sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;text-transform:uppercase;color:var(--crit);margin:0 0 8px}
+.verdict p{margin:0;font-size:17px}
+.phase{margin:0 0 40px}
+.phase-head{display:flex;align-items:center;gap:12px;margin:0 0 6px}
+.phase-head h2{font-family:Archivo,system-ui,sans-serif;font-weight:700;font-size:24px;letter-spacing:-.01em;margin:0}
+.tag{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.tag.crit{color:var(--crit);background:var(--crit-bg)}.tag.biz{color:var(--biz);background:var(--biz-bg)}.tag.imp{color:var(--imp);background:var(--imp-bg)}.tag.pol{color:var(--pol);background:var(--pol-bg)}
+.phase-sub{color:var(--ink-2);margin:0 0 18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow)}
+.card-top{display:flex;align-items:flex-start;gap:10px;margin:0 0 10px}
+.card-top h3{font-family:Archivo,system-ui,sans-serif;font-weight:600;font-size:17px;line-height:1.3;margin:0;flex:1}
+.chip{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap;margin-top:2px}
+.chip.code{color:#fff;background:var(--crit)}.chip.biz{color:#fff;background:var(--biz)}.chip.both{color:var(--biz);background:var(--biz-bg);border:1px solid var(--biz)}.chip.done{color:#fff;background:var(--pol)}
+.eff{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;font-weight:600;color:var(--ink-2);background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:3px 8px;margin-top:2px}
+.card p{margin:0 0 8px;font-size:15px}.card p:last-child{margin-bottom:0}
+.card .why{color:var(--ink-2)}
+.card .src{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;color:var(--ink-3);margin-top:10px}
+.card .slug{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;color:var(--accent);margin-top:6px}
+.card.done{opacity:.6}.card.done h3{text-decoration:line-through}
+.shot{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:10px;margin:10px 0 4px}
+.foot{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:13px;line-height:1.6;color:var(--ink-3);border-top:1px solid var(--line);padding-top:20px}
+.foot p{margin:0 0 8px;max-width:80ch}
+</style></head><body><div class="wrap">
+<header class="head">
+<div class="eyebrow">Дорожная карта · перед запуском на второй салон</div>
+<h1>Lumen: что доделать, прежде чем подключать второй салон</h1>
+<p>4 аналитика прошли по коду и памяти проекта и нашли 8 пробелов. Свёл в приоритеты: <b>что чиню я в коде</b> и <b>что решаешь ты</b>. Порядок — по тому, что мешает сервису работать, а не по тому, что заметнее.</p>
+<div class="meta"><span>2026-09-04</span><span class="mono">8 находок → 4 блока, 1 отложена</span><span class="mono">Второй салон — после этого</span></div></header>
+<div class="verdict"><h2>Главное одной фразой</h2><p>Самая опасная дыра — <b>предоплата списывается, а запись не создаётся</b>, если связь оборвалась между оплатой и подтверждением. Клиент видит списание и пустой календарь, пишет в поддержку, салон возвращает деньги руками. Это единственное, что реально теряет клиентов сегодня — начинать надо отсюда.</p></div>
+<section class="phase"><div class="phase-head"><span class="tag crit">Блок 1</span><h2>Кровь из носа — чиню в коде</h2></div><p class="phase-sub">Без этого сервис не выполняет свою главную функцию. Моя работа; где стоит чип «Решение+код» — сначала нужно твоё слово.</p><div class="grid">
+<div class="card">
+<div class="card-top"><span class="chip code">Код</span><h3>Клиент не получает подтверждение, если мастер молчит 10 минут</h3><span class="eff">M</span></div>
+<p><b>Что:</b> Если мастер не нажал «принять» за 10 минут, запись подтверждается автоматически, а клиенту уходит сообщение «вас ждут».</p>
+<p class="why"><b>Зачем:</b> Сейчас клиент смотрит на «ожидает» полчаса, решает, что его не примут, и записывается к соседям — тихий слив.</p>
+<div class="src">src/booking/confirm.py:41</div>
+</div>
+<div class="card">
+<div class="card-top"><span class="chip both">Решение+код</span><h3>Предоплата списана, а записи нет при обрыве связи</h3><span class="eff">L</span></div>
+<p><b>Что:</b> Оплату и создание записи связываю в одну операцию: либо есть и то и другое, либо деньги возвращаются сами в течение минуты.</p>
+<p class="why"><b>Зачем:</b> Без этого каждый обрыв — ручной возврат и злой клиент; от тебя — правило, кто платит комиссию за возврат (см. Блок 2).</p>
+<div class="src">src/payments/webhook.py:77</div>
+</div>
+</div></section>
+<section class="phase"><div class="phase-head"><span class="tag biz">Блок 2</span><h2>Решения — нужны от тебя</h2></div><p class="phase-sub">Деньги, люди, правила. Я не двигаю это сам — жду ответа, потом делаю.</p><div class="grid">
+<div class="card">
+<div class="card-top"><span class="chip biz">Решение</span><h3>Кто платит комиссию за возврат предоплаты</h3><span class="eff">—</span></div>
+<p><b>Что решить:</b> Банк берёт 2,5% с каждого возврата. Варианты: салон, клиент, пополам, или предоплата не возвращается при отмене позже чем за 2 часа.</p>
+<p class="why">Пока правила нет, возвраты делаются вручную и по-разному — клиенты сравнивают и обижаются.</p>
+<div class="src">созвон 2026-08-30</div>
+</div>
+<div class="card">
+<div class="card-top"><span class="chip biz">Решение</span><h3>Запись без регистрации — по одному номеру телефона</h3><span class="eff">—</span></div>
+<p><b>Что решить:</b> Пускать клиента до формы записи без аккаунта: только телефон и код из СМС. Или оставить обязательную регистрацию.</p>
+<p class="why">Половина новых клиентов уходит на шаге «придумайте пароль» — это видно в аналитике за август.</p>
+<div class="src">.forge/direction.yml</div>
+</div>
+</div></section>
+<section class="phase"><div class="phase-head"><span class="tag imp">Блок 3</span><h2>Скоро — усиливает продукт</h2></div><p class="phase-sub">Не горит, но заметно улучшает. Делаю после Блока 1.</p><div class="grid">
+<div class="card">
+<div class="card-top"><span class="chip code">Код</span><h3>Календарь мастера на телефоне показывает занятые часы как свободные</h3><span class="eff">S</span></div>
+<p>На узком экране слоты «занято» и «свободно» одного цвета — мастера записывают клиентов на одно время. Развожу цвета и добавляю подпись.</p>
+<div class="src">src/web/calendar.css:112</div>
+</div>
+<div class="card">
+<div class="card-top"><span class="chip code">Код</span><h3>Напоминание клиенту за 2 часа до визита</h3><span class="eff">M</span></div>
+<p>Сообщение в Telegram с адресом и кнопкой «не приду» — по данным салона треть опозданий из-за того, что клиент забыл.</p>
+<div class="src">src/notify/</div>
+</div>
+</div></section>
+<div class="foot"><p>Блок 4 «Потом» — 1 находка, не срочно (Логотип в письме-подтверждении размытый).</p><p>Отложено — 1 находка (Тёмная тема админки).</p><p>Порядок: сначала <b>Блок 1 (без него сервис не работает)</b>, <b>параллельно собрать ответы Блока 2</b>, <b>затем Блок 3</b>, потом косметика.</div></div></body></html>

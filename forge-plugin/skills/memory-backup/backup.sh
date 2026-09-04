@@ -39,6 +39,8 @@ if [ ! -f .forge/.gitignore ]; then
 state.yml
 .github-*
 graph.json
+status-report.html
+reports/shots/
 EOF
 fi
 

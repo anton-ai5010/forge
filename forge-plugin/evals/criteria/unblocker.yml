@@ -13,7 +13,7 @@ checks:
     type: binary
 
   - id: memory_updated
-    question: "Обновлены .forge/direction.yml и ROADMAP.md?"
+    question: "Обновлён .forge/direction.yml (ROADMAP.md не пишется — витрина для глаз теперь отчёт «Что дальше», /forge:status-report)?"
     type: binary
 
   - id: ends_with_one_physical_step

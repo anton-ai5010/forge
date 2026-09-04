@@ -30,6 +30,7 @@ case "$phase" in
     plan|"Phase 2"|2) phase_icon="📋 Фаза 2: План" ;;
     critique|"Phase 3"|3) phase_icon="🔍 Фаза 3: Критика плана" ;;
     execute|"Phase 4"|4) phase_icon="🚀 Фаза 4: Реализация" ;;
+    status-report|"Phase 5"|5) phase_icon="📊 Фаза 5: Что дальше" ;;
     idle) phase_icon="✅ Задача завершена" ;;
     "") phase_icon="" ;;
     *) phase_icon="📌 $phase" ;;
