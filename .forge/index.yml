@@ -8,8 +8,8 @@ version: "7.7.0"
 stack: [python, bash, markdown, claude-code-plugin]
 
 now:
-  task: "v7.7.0 — отчёт «Что дальше» (фаза 5), готово к мержу"
-  branch: feat/status-report
+  task: "v7.7.0 на GitHub — отчёт «Что дальше» доступен как /forge:status-report"
+  branch: master
 
 catalog:
   map:
@@ -52,8 +52,8 @@ session:
   started: "2026-09-04"
   goal: "Отчёт «Что дальше» — фаза 5 (status-report), v7.7.0"
   done:
-    - "Фаза 5 status-report: render.py + скилл + точки вызова + документация (в ветке)"
-  now: "Ветка feat/status-report — тесты зелёные, ждём прогон на живом проекте и мерж"
+    - "Фаза 5 status-report влита в master, v7.7.0 на GitHub"
+  now: "Влито в master, версия 7.7.0 выложена"
   next: "Собрать первый отчёт на живом проекте"
   errors: []
 
