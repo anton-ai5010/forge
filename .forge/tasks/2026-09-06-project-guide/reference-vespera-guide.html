@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Vespera — гайд по продукту и решения на утверждение</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Golos+Text:wght@400;500;600&display=swap">
+<style>
+@page{size:A4;margin:16mm 14mm}
+:root{
+  --bg:#FFFFFF; --card:#FBF7EF; --border:#E2D5C3;
+  --text:#33291F; --text2:#6E6258; --muted:#8A7A67;
+  --accent:#A9603C; --accent-d:#8C4A2B; --accent-bg:#F4E9DE;
+  --crit:#B0472F; --crit-bg:#F6DFD6; --warn:#9A6B22; --warn-bg:#F3E7CF;
+  --ok:#6B7A52; --ok-bg:#EAEDDF;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Golos Text',system-ui,sans-serif;font-size:10.5pt;line-height:1.5;margin:0}
+h1{font-family:'Playfair Display',serif;font-size:23pt;font-weight:700;line-height:1.15;margin:0 0 6pt}
+h2{font-family:'Playfair Display',serif;font-size:16pt;font-weight:600;margin:22pt 0 6pt;break-after:avoid}
+h2 .no{color:var(--accent);margin-right:6pt}
+h3{font-size:11.5pt;font-weight:600;margin:14pt 0 6pt;break-after:avoid}
+p{margin:6pt 0}
+.brandline{display:flex;align-items:center;gap:10pt;margin-bottom:12pt}
+.logo{width:30pt;height:30pt;border-radius:8pt;background:var(--accent);color:#FFFCF6;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:16pt;font-weight:700}
+.bn{font-family:'Playfair Display',serif;font-size:13pt;font-weight:600}
+.bd{font-size:8.5pt;color:var(--muted)}
+.sub{font-size:11pt;color:var(--text2);margin:0 0 10pt}
+.howto{background:var(--accent-bg);border:1pt solid var(--border);border-radius:10pt;padding:10pt 12pt;margin:12pt 0;break-inside:avoid}
+.howto b{color:var(--accent-d)}
+.howto .ex{font-family:ui-monospace,Menlo,monospace;font-size:9pt;background:var(--bg);border:1pt solid var(--border);border-radius:6pt;padding:6pt 8pt;margin-top:6pt}
+.card{background:var(--card);border:1pt solid var(--border);border-radius:10pt;padding:9pt 11pt;margin:8pt 0;break-inside:avoid}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8pt}
+.svc .t{font-weight:600;font-size:10.5pt}
+.svc .d{font-size:9.5pt;color:var(--text2);margin-top:2pt}
+.svc .cd{font-size:8pt;color:var(--accent-d);font-weight:600}
+/* схема */
+.scheme{display:flex;align-items:stretch;gap:0;margin:12pt 0;break-inside:avoid}
+.sbox{flex:1;background:var(--card);border:1pt solid var(--border);border-radius:10pt;padding:8pt 9pt;text-align:center}
+.sbox .st{font-weight:600;font-size:10pt}
+.sbox .sd{font-size:8.5pt;color:var(--text2);margin-top:2pt}
+.sarr{display:flex;flex-direction:column;justify-content:center;padding:0 4pt;color:var(--accent);font-size:12pt}
+.sarr small{font-size:7pt;color:var(--muted);text-align:center}
+.flow{counter-reset:st;display:flex;flex-direction:column;gap:5pt;margin:10pt 0}
+.fstep{background:var(--card);border:1pt solid var(--border);border-radius:8pt;padding:7pt 10pt 7pt 34pt;position:relative;font-size:9.8pt;break-inside:avoid}
+.fstep::before{counter-increment:st;content:counter(st);position:absolute;left:8pt;top:6pt;width:18pt;height:18pt;border-radius:50%;background:var(--accent-bg);color:var(--accent-d);font-weight:600;font-size:9pt;display:flex;align-items:center;justify-content:center}
+table{border-collapse:collapse;width:100%;font-size:9.5pt;margin:8pt 0;break-inside:avoid}
+th,td{border:1pt solid var(--border);padding:5pt 8pt;text-align:left;vertical-align:top}
+th{background:var(--accent-bg);font-weight:600}
+/* решения */
+.dcs{background:var(--card);border:1pt solid var(--border);border-radius:10pt;padding:9pt 11pt;margin:7pt 0;break-inside:avoid}
+.dcs .dh{display:flex;align-items:baseline;gap:8pt;flex-wrap:wrap}
+.code{font-family:ui-monospace,Menlo,monospace;font-weight:700;font-size:10.5pt;background:var(--accent);color:#FFFCF6;border-radius:6pt;padding:1pt 7pt}
+.code.o{background:var(--warn)}
+.dcs .dt{font-weight:600;font-size:10.5pt}
+.dcs .what{font-size:9.8pt;margin:5pt 0 2pt}
+.dcs .why{font-size:9.3pt;color:var(--text2);margin:2pt 0 0}
+.dcs .why b,.dcs .what b{font-weight:600}
+.gt{font-size:9pt;color:var(--muted);margin:2pt 0 8pt}
+/* риски */
+.risk{border:1pt solid var(--border);border-left:3pt solid var(--muted);border-radius:8pt;padding:7pt 10pt;margin:6pt 0;break-inside:avoid;background:var(--card)}
+.risk.crit{border-left-color:var(--crit)}
+.risk.warn{border-left-color:var(--warn)}
+.risk .rt{font-weight:600;font-size:10pt}
+.risk .rt .rc{font-family:ui-monospace,Menlo,monospace;color:var(--crit);font-weight:700;margin-right:4pt}
+.risk.warn .rt .rc{color:var(--warn)}
+.risk.mid .rt .rc{color:var(--accent-d)}
+.risk p{font-size:9.3pt;color:var(--text2);margin:3pt 0}
+.risk p b{color:var(--ok);font-weight:600}
+ul.clean{padding-left:14pt;margin:6pt 0}
+ul.clean li{margin:3pt 0}
+.gl{font-size:9.5pt;columns:2;column-gap:16pt}
+.gl dt{font-weight:600;margin-top:6pt}
+.gl dd{margin:1pt 0 0;color:var(--text2)}
+footer{margin-top:24pt;padding-top:8pt;border-top:1pt solid var(--border);font-size:8.5pt;color:var(--muted)}
+.pagebreak{break-before:page}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:6pt;margin:8pt 0}
+.fact{background:var(--ok-bg);border-radius:8pt;padding:6pt 9pt;font-size:9.3pt}
+.fact b{color:var(--ok)}
+.fire{font-size:8pt;font-weight:700;letter-spacing:.03em;background:var(--crit-bg);color:var(--crit);border-radius:5pt;padding:1pt 6pt;text-transform:uppercase}
+.dflt{font-size:8pt;font-weight:600;background:var(--ok-bg);color:var(--ok);border-radius:5pt;padding:1pt 6pt}
+.week{background:var(--crit-bg);border-radius:10pt;padding:10pt 12pt;margin:10pt 0;break-inside:avoid}
+.week .wt{font-weight:700;font-size:10.5pt;color:var(--crit)}
+.week ul{margin:4pt 0 0;padding-left:14pt;font-size:9.8pt}
+.week li{margin:3pt 0}
+.shots{display:grid;grid-template-columns:repeat(4,1fr);gap:8pt;margin:10pt 0;break-inside:avoid}
+.shot{margin:0}
+.shot img{width:100%;border:1pt solid var(--border);border-radius:8pt;display:block}
+.shot figcaption{font-size:8.3pt;color:var(--muted);text-align:center;margin-top:3pt}
+.rmap{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8pt;margin:10pt 0}
+.rcol{background:var(--card);border:1pt solid var(--border);border-radius:10pt;padding:9pt 11pt;break-inside:avoid}
+.rcol .rh{font-weight:700;font-size:10pt;margin-bottom:4pt}
+.rcol.now .rh{color:var(--crit)} .rcol.next .rh{color:var(--warn)} .rcol.later .rh{color:var(--ok)}
+.rcol ul{margin:0;padding-left:12pt;font-size:9pt}
+.rcol li{margin:3pt 0}
+/* мокап телеграм-чата партнёра */
+.tgmock{background:var(--accent-bg);border:1pt solid var(--border);border-radius:12pt;padding:10pt 12pt;display:flex;flex-direction:column;gap:5pt;max-width:340pt;break-inside:avoid}
+.tgb{border-radius:10pt;padding:6pt 9pt;font-size:8.8pt;line-height:1.45;white-space:pre-line;max-width:85%}
+.tgb.bot{background:var(--card);border:1pt solid var(--border);align-self:flex-start}
+.tgb.me{background:var(--accent);color:#FFFCF6;align-self:flex-end}
+.tgb.sysnote{background:none;border:none;color:var(--muted);font-size:8pt;align-self:flex-start;padding:0 4pt}
+.tgbtns{display:flex;gap:4pt;margin-top:3pt}
+.tgbtn{background:var(--accent-bg);border:1pt solid var(--border);border-radius:6pt;padding:2pt 8pt;font-size:8pt;color:var(--accent-d);font-weight:600}
+.shots3{display:grid;grid-template-columns:repeat(3,1fr);gap:8pt;margin:10pt 0;break-inside:avoid}
+.shots2{display:grid;grid-template-columns:1fr 1fr;gap:10pt;margin:10pt 0;break-inside:avoid}
+.shots3 .shot img,.shots2 .shot img{width:100%;border:1pt solid var(--border);border-radius:8pt;display:block}
+.shotwide{margin:8pt 0;break-inside:avoid}
+.shotwide img{width:100%;border:1pt solid var(--border);border-radius:8pt;display:block}
+.shotwide figcaption{font-size:8.3pt;color:var(--muted);margin-top:3pt}
+</style>
+</head>
+<body>
+
+<div class="brandline"><div class="logo">V</div><div><div class="bn">Vespera Concierge</div><div class="bd">рабочий документ для управляющей · сентябрь 2026 · название сервиса временное, меняем (решение созвона 03.09)</div></div></div>
+<h1>Гайд по продукту и решения на утверждение</h1>
+<p class="sub">Как устроен сервис, какие решения заложены в прототип и чего мы опасаемся. Все бизнес-решения здесь — <b>рабочие гипотезы Антона</b>, сделанные, чтобы прототип поехал. Ни одно не окончательное: каждое ждёт вашего вердикта.</p>
+
+<h2><span class="no">00</span>Где мы сейчас — за 30 секунд</h2>
+<div class="facts">
+  <div class="fact"><b>Продукт работает</b> — не макет: бот, приложение и сайт живут на своём сервере, заявки реально ходят.</div>
+  <div class="fact"><b>Петля замкнута</b> — клиентка получает ответы, статусы и уведомления прямо в Telegram; менеджер отвечает одним reply.</div>
+  <div class="fact"><b>Операционка есть</b> — кабинет исполнителя, автосигналы о зависших заявках, ежедневные бэкапы, автоперезапуск при сбоях.</div>
+  <div class="fact"><b>Осталось до пилота</b> — ваши решения по деньгам и рамке, дежурный юрист, дизайн по референсам.</div>
+</div>
+<div class="week"><div class="wt">🔥 Три решения, без которых стоим (нужны на этой неделе)</div>
+<ul>
+  <li><b>O1</b> — дежурный SOS-юрист: кто и как. Без него нельзя пиарить главную кнопку продукта.</li>
+  <li><b>D2</b> — модель денег: с чего сервис зарабатывает. Без неё пилот ничего не докажет.</li>
+  <li><b>C2</b> — «приём оплаты QR»: скрываем до юриста или нет. Самый горячий пункт юридически.</li>
+</ul></div>
+
+<div class="howto"><b>Как работать с документом.</b> Каждое решение и риск имеет код: <b>P*</b> — процесс, <b>A*</b> — рамка и позиционирование, <b>B*</b> — механика сервиса, <b>C*</b> — услуги, <b>D*</b> — деньги, <b>O*</b> — открытые вопросы (наших предложений нет), <b>R*</b> — риски. Метка 🔥 — нужно на этой неделе; метка «дефолт» — если возражений нет, действуем как написано (передумать можно позже, но не стоим). Отвечайте просто списком кодов — так / не так / как переделать:
+<div class="ex">A2 — ок.&nbsp;&nbsp;B2 — переделать: контакт раскрываем только после согласия клиентки.&nbsp;&nbsp;D2 — обсудить голосом.&nbsp;&nbsp;R4 — приоритет выше, делаем сразу.</div>
+После ваших ответов Антон сводит протокол решений (что решили, кто, когда) и публикует план с датами — дальше работаем по нему.</div>
+
+<h2><span class="no">01</span>Что это — одной схемой</h2>
+<p><b>Vespera — личный консьерж в Telegram для женской аудитории adult-сферы</b> (эскорт, вебкам, OnlyFans и смежные). Девушка оставляет короткую заявку — сервис доводит вопрос до результата через проверенных исполнителей. Всё уже работает на сервере, это не макет.</p>
+<div class="scheme">
+  <div class="sbox"><div class="st">🤍 Клиентка</div><div class="sd">мини-приложение в Telegram: заявки, SOS, ИИ-помощник, «Мои заявки»</div></div>
+  <div class="sarr">→<small>заявка</small></div>
+  <div class="sbox"><div class="st">Бот</div><div class="sd">принимает, подтверждает, доставляет ответы, шлёт статусы</div></div>
+  <div class="sarr">→<small>карточка</small></div>
+  <div class="sbox"><div class="st">Группа менеджеров</div><div class="sd">все заявки; ответ клиентке = обычный reply на карточку</div></div>
+  <div class="sarr">→<small>задача</small></div>
+  <div class="sbox"><div class="st">Партнёры</div><div class="sd">исполнители по направлениям: берут задачу, ведут, закрывают или возвращают</div></div>
+</div>
+<p style="font-size:9.5pt;color:var(--text2)">Переписка ходит в обе стороны через бота; если заявка висит без реакции 30 минут (SOS — 10), владелец получает автоматический сигнал. Клиентка видит статус каждой заявки у себя в кабинете.</p>
+<h3>Клиентка · приложение (реальные экраны с прода)</h3>
+<div class="shots">
+  <figure class="shot"><img src="DATA_URI" alt="Онбординг"><figcaption>Вход: просим только номер</figcaption></figure>
+  <figure class="shot"><img src="DATA_URI" alt="Главная"><figcaption>Главная: помощник, SOS, разделы</figcaption></figure>
+  <figure class="shot"><img src="DATA_URI" alt="Форма Деньги"><figcaption>Заявка: короткая форма</figcaption></figure>
+  <figure class="shot"><img src="DATA_URI" alt="Экран SOS"><figcaption>SOS: один тап — сигнал ушёл</figcaption></figure>
+</div>
+<h3>Клиентка · чат с ботом после отправки заявки</h3>
+<div class="shots2">
+  <figure class="shot"><img src="DATA_URI" alt="Чат клиентки"><figcaption>Подтверждение → ответ менеджера → её ответ → статусы. Внизу — постоянные кнопки.</figcaption></figure>
+  <div style="font-size:9.8pt;align-self:center"><p>Вся жизнь заявки — в одном чате: сервис подтверждает приём, менеджер отвечает прямо сюда, статусы приходят сами, клиентка просто пишет в ответ.</p><p class="gt">Экраны переписки здесь и ниже — точное воспроизведение сообщений бота с вымышленными данными: реальную переписку клиенток не публикуем принципиально.</p></div>
+</div>
+
+<h2><span class="no">02</span>Услуги</h2>
+<div class="grid2">
+  <div class="card svc"><div class="t">💳 Деньги и крипта <span class="cd">→ C1, C2</span></div><div class="d">Обмен, покупка крипты, вывод в наличные за границей, переводы, приём оплаты в крипте (QR). Посредничество к проверенному обменнику.</div></div>
+  <div class="card svc"><div class="t">🛍️ Байеры / покупки <span class="cd">→ C1</span></div><div class="d">Привезти вещь из любой точки мира: что, бренд, бюджет, срок.</div></div>
+  <div class="card svc"><div class="t">📄 Документы и визы <span class="cd">→ C1</span></div><div class="d">Визы, ВНЖ, загранпаспорт, права, апостиль — только официальные пути.</div></div>
+  <div class="card svc"><div class="t">🆘 SOS — срочная юрпомощь <span class="cd">→ A3, O1</span></div><div class="d">Один тап — сигнал дежурному с геолокацией; контакты уже есть в системе.</div></div>
+  <div class="card svc"><div class="t">💬 ИИ-помощник <span class="cd">→ C4</span></div><div class="d">Отвечает на типовые вопросы; «Позвать менеджера» подключает человека с контекстом.</div></div>
+  <div class="card svc"><div class="t">✨ Клуб и «Полезное» <span class="cd">→ C3, O5</span></div><div class="d">Закрытый клуб по подписке + база знаний из 7 статей, читается анонимно.</div></div>
+</div>
+
+<h2><span class="no">03</span>Путь заявки — по шагам</h2>
+<div class="flow">
+  <div class="fstep"><b>Заявка.</b> /start → поделилась номером → мини-апка → форма раздела или один тап SOS. В личку приходит подтверждение.</div>
+  <div class="fstep"><b>Карточка в группе менеджеров:</b> контакт, раздел, поля формы, время. SOS — срочным выделенным сообщением.</div>
+  <div class="fstep"><b>Ответ клиентке</b> — менеджер делает reply на карточку, бот доставляет в личку. Её ответы (текст, фото, голос) возвращаются в группу. «#» в начале — внутренняя заметка.</div>
+  <div class="fstep"><b>Партнёр</b> берёт задачу своего направления, видит контакт, отвечает клиентке с карточки — или возвращает задачу в пул.</div>
+  <div class="fstep"><b>Статусы</b> Новая → В работе → Выполнена; клиентка получает уведомления и видит историю в кабинете.</div>
+  <div class="fstep"><b>Страховка:</b> без реакции 30 мин (SOS — 10) или «в работе» 48 ч → автоматический сигнал владельцу.</div>
+  <div class="fstep"><b>Честность:</b> недоставленный SOS показывает «не ушло, звоните напрямую», а не ложное «всё хорошо».</div>
+</div>
+
+<h2><span class="no">04</span>Роли</h2>
+<table>
+  <tr><th>Роль</th><th>Что видит и делает</th></tr>
+  <tr><td><b>Клиентка</b></td><td>Заявки, SOS, помощник, кабинет со статусами, удаление своих данных одной кнопкой. Других клиенток не видит никогда.</td></tr>
+  <tr><td><b>Менеджер</b></td><td>Все карточки в группе, статусы, переписка с клиентками, внутренние заметки.</td></tr>
+  <tr><td><b>Партнёр</b></td><td>Задачи только своего направления; после взятия видит контакт клиентки (решение B2).</td></tr>
+  <tr><td><b>Владелец</b></td><td>Назначает партнёров и управляющих, получает сигналы о зависших, смотрит статистику.</td></tr>
+</table>
+
+<h3>Партнёр · кабинет в боте</h3>
+<p style="font-size:9.8pt">Партнёру не нужно ничего устанавливать: задачи приходят в тот же Telegram. Постоянные кнопки внизу чата: <b>📥 Новые задачи · 🔧 В работе · 📊 Моя статистика</b>.</p>
+<div class="shots3">
+  <figure class="shot"><img src="DATA_URI" alt="Меню партнёра"><figcaption>1. Назначение и уведомления о новых задачах его направлений</figcaption></figure>
+  <figure class="shot"><img src="DATA_URI" alt="Новые задачи"><figcaption>2. «Новые задачи»: карточки без контакта, кнопка «Взять в работу»</figcaption></figure>
+  <figure class="shot"><img src="DATA_URI" alt="Работа с задачей"><figcaption>3. После взятия: контакт клиентки, ответ ей reply'ем, после «Выполнено» — вопрос о деньгах</figcaption></figure>
+</div>
+
+<h3>Менеджер · группа заявок</h3>
+<div class="shots2">
+  <figure class="shot"><img src="DATA_URI" alt="Группа заявок"><figcaption>Карточки заявок с кнопками статуса; reply на карточку уходит клиентке (бот ставит 👌); «#» — внутренняя заметка.</figcaption></figure>
+  <div style="font-size:9.8pt;align-self:center"><p>Рабочее место менеджера — обычная Telegram-группа: сюда падают все заявки и сообщения клиенток. Ответить клиентке = ответить на карточку. Ничему учиться не нужно.</p><p>Кнопки под карточкой меняют статус — клиентка сразу видит его у себя и получает уведомление.</p></div>
+</div>
+
+<h3>Владелец и управляющая · сигналы в боте</h3>
+<div class="shots2">
+  <figure class="shot"><img src="DATA_URI" alt="Эскалация и сводка"><figcaption>Автосигнал о зависшей заявке; /digest — сводка цифр; /admin — ссылка в админку.</figcaption></figure>
+  <div style="font-size:9.8pt;align-self:center"><p>Владельцу и управляющей бот сам сообщает о проблемах (заявка без реакции, зависшая работа) и раз в неделю присылает сводку: заявки, оборот, комиссия, скорость реакции.</p></div>
+</div>
+
+<h3>Управляющая · веб-админка (уже работает)</h3>
+<p style="font-size:9.8pt">Веб-админка для Дарьи и владельцев — вход по личной ссылке из бота (команда /admin), без паролей. Менеджеры продолжают работать в группе заявок; раз в неделю бот присылает управляющей и владельцам сводку цифр в Telegram.</p>
+<figure class="shotwide"><img src="DATA_URI" alt="Дашборд админки"><figcaption>Дашборд: комиссия, заявки, скорость реакции, «выполнено без записи денег», SOS, повторные клиентки. Все цифры на скриншотах — демонстрационные.</figcaption></figure>
+<figure class="shotwide"><img src="DATA_URI" alt="Заявки в админке"><figcaption>Заявки: фильтры по разделу/статусу/SOS, поиск, суммы и комиссии, имена партнёров.</figcaption></figure>
+<figure class="shotwide"><img src="DATA_URI" alt="Карточка заявки"><figcaption>Карточка заявки: статус, запись денег или причины «без сделки», заметки и полная история действий.</figcaption></figure>
+<figure class="shotwide"><img src="DATA_URI" alt="Клиентки"><figcaption>Клиентки: заявки, SOS-история, комиссия с каждой, последняя активность, достижимость ботом.</figcaption></figure>
+<figure class="shotwide"><img src="DATA_URI" alt="Партнёры"><figcaption>Партнёры: направления, нагрузка, взято/закрыто/возвращено и принесённая комиссия.</figcaption></figure>
+
+<h2><span class="no">05</span>Решения на утверждение</h2>
+<p class="gt">Каждое — как заложено сейчас и почему. Ждём по каждому: ок / переделать / обсудить.</p>
+
+<h3>P — Процесс (как принимаем решения)</h3>
+<div class="dcs"><div class="dh"><span class="code">P1</span><span class="dt">Правило дефолта</span> <span class="dflt">дефолт</span></div>
+<div class="what">По каждому пункту с меткой «дефолт» есть наша рекомендация. Если возражений нет до оговорённого срока — действуем по ней и не стоим; передумать можно позже. Спорное — обсуждаем голосом, решение фиксируется в протоколе.</div>
+<div class="why"><b>Почему:</b> стандартная практика продуктовых команд (RFC / decision log): двигает вперёд без бесконечных согласований, и всегда видно, что и когда решили.</div></div>
+<div class="dcs"><div class="dh"><span class="code">P2</span><span class="dt">Кто утверждает что (предложение)</span></div>
+<div class="what">Продукт, тексты, клиентский опыт — <b>Дарья</b>. Деньги, партнёры, юридическое — <b>Влад</b> (с юристом). Техника и сроки реализации — <b>Антон</b>. Конфликты — голосом втроём.</div>
+<div class="why"><b>Почему:</b> без зон утверждения комментарии остаются мнениями, а решения — ничьими.</div></div>
+
+<h3>A — Рамка и позиционирование</h3>
+<div class="dcs"><div class="dh"><span class="code">A1</span><span class="dt">Подача — премиальная и не вульгарная</span> <span class="dflt">дефолт</span></div>
+<div class="what">Аудитория прямо не называется: сервис «для решения женских вопросов», тон тёплый, на «вы», атмосфера тихого приватного клуба. Никакого «взрослого» подтекста в текстах.</div>
+<div class="why"><b>Почему:</b> аудитория чувствительна к приватности; прямая подача и отпугнёт, и создаст юридические риски.</div></div>
+<div class="dcs"><div class="dh"><span class="code">A2</span><span class="dt">Сервис — информационный посредник, деньги через себя не держит</span> <span class="dflt">дефолт</span></div>
+<div class="what">Сводим клиентку с исполнителем; оплата идёт исполнителю напрямую, не через нас.</div>
+<div class="why"><b>Почему:</b> держать чужие деньги в этой нише — уголовный риск (незаконная банковская деятельность, легализация). Идея «весь поток через нас» отвергнута в первый день.</div></div>
+<div class="dcs"><div class="dh"><span class="code">A3</span><span class="dt">SOS — это законный адвокат</span> <span class="dflt">дефолт</span></div>
+<div class="what">Кнопка вызывает легальную юрпомощь. Никаких «решал» и «по связям».</div>
+<div class="why"><b>Почему:</b> всё «по связям» — статья; настоящий адвокат в 3 ночи ценнее.</div></div>
+<div class="dcs"><div class="dh"><span class="code">A4</span><span class="dt">Инвестиции «под процент» исключены</span> <span class="dflt">дефолт</span></div>
+<div class="what">Инвест-вкладки нет и не планируется.</div>
+<div class="why"><b>Почему:</b> нелицензированная финансовая деятельность.</div></div>
+<div class="dcs"><div class="dh"><span class="code">A5</span><span class="dt">Интим и клиенты девушек — вежливый отказ</span> <span class="dflt">дефолт</span></div>
+<div class="what">Любые заявки, связанные с интимом или клиентами девушек, сервис не берёт. У ИИ-помощника это правило уже зашито; менеджерам нужна письменная инструкция.</div>
+<div class="why"><b>Почему:</b> граница между «сервисом для аудитории» и «обслуживанием деятельности» — это граница уголовного состава.</div></div>
+
+<h3>B — Механика сервиса</h3>
+<div class="dcs"><div class="dh"><span class="code">B1</span><span class="dt">Верификация — только номер телефона</span></div>
+<div class="what">Ни паспорта, ни фото. Возраст формально не проверяется.</div>
+<div class="why"><b>Почему:</b> паспорт отпугнёт аудиторию мгновенно. Обратная сторона — риск R6 (18+); предлагаем добавить хотя бы галочку «мне есть 18».</div></div>
+<div class="dcs"><div class="dh"><span class="code">B2</span><span class="dt">Партнёр видит контакт клиентки после взятия задачи</span></div>
+<div class="what">Имя, ник и телефон открываются исполнителю, чтобы он вёл клиентку полноценно.</div>
+<div class="why"><b>Почему:</b> без контакта исполнитель не может работать. Обратная сторона — риски R3 (тексты апки обещают обратное) и R4 (увод клиентки). Альтернатива для обсуждения: до сделки общение только через бота, контакт — при реальной необходимости.</div></div>
+<div class="dcs"><div class="dh"><span class="code">B3</span><span class="dt">Гарант сделок — сам сервис, без эскроу</span></div>
+<div class="what">Отдельного механизма удержания денег нет; доверие строится на репутации и личных рекомендациях.</div>
+<div class="why"><b>Почему:</b> эскроу = снова «держим чужие деньги» (конфликт с A2). Обратная сторона — претензии приходят сервису (R10, R15).</div></div>
+<div class="dcs"><div class="dh"><span class="code">B4</span><span class="dt">Вся коммуникация — через бота</span> <span class="dflt">дефолт</span></div>
+<div class="what">Переписка клиентка↔менеджер/партнёр живёт в Telegram через reply-канал; отдельного чата/почты/звонков в продукте нет.</div>
+<div class="why"><b>Почему:</b> один канал = вся история в одном месте, видимость для сервиса, меньше утечек в личные переписки.</div></div>
+<div class="dcs"><div class="dh"><span class="code">B5</span><span class="dt">Нормативы скорости</span></div>
+<div class="what">Клиентке обещаем ответ «обычно в течение 15 минут». Автосигнал владельцу: заявка без реакции 30 мин, SOS — 10 мин, «в работе» дольше 48 ч.</div>
+<div class="why"><b>Почему:</b> цифры выставлены на глаз — нужны ваши. Рабочие часы сервиса не объявлены (риск R14).</div></div>
+<div class="dcs"><div class="dh"><span class="code">B6</span><span class="fire">🔥 эта неделя</span><span class="dt">Переписать обещание приватности (предложение)</span> <span class="dflt">дефолт</span></div>
+<div class="what">Сейчас апка обещает «исполнители не получают ваш номер» — это противоречит B2. Предлагаем честную формулировку: «контакт видит только исполнитель вашей заявки, работающий по соглашению о конфиденциальности».</div>
+<div class="why"><b>Почему:</b> одно вскрытие противоречия — и главное обещание бренда становится ложью (риск R3).</div></div>
+
+<h3>C — Услуги</h3>
+<div class="dcs"><div class="dh"><span class="code">C1</span><span class="dt">Состав услуг MVP</span></div>
+<div class="what">Деньги/крипта · байеры · документы · свой вопрос · клуб · SOS · ИИ-помощник · база знаний. Что убрать, что добавить?</div></div>
+<div class="dcs"><div class="dh"><span class="code">C2</span><span class="fire">🔥 эта неделя</span><span class="dt">«Приём оплаты в крипте (QR)» — скрыть до одобрения юристом (предложение)</span> <span class="dflt">дефолт</span></div>
+<div class="what">Пункт формы, где клиент девушки платит через сервис, а не ей на карту. Юридически самый горячий элемент продукта (риск R2). Предлагаем убрать из формы до консультации юриста — остальные операции закрывают 90% пользы.</div></div>
+<div class="dcs"><div class="dh"><span class="code">C3</span><span class="dt">Клуб — платная подписка</span></div>
+<div class="what">Закрытый женский клуб, на созвонах звучало 5–20 тыс ₽/мес. Участницы анонимны друг для друга. Цена и наполнение не решены (D3, O5). Предлагаем запускать как бесплатный лист ожидания, пока нет календаря событий.</div></div>
+<div class="dcs"><div class="dh"><span class="code">C4</span><span class="dt">ИИ-помощник включён</span></div>
+<div class="what">Чат-ассистент на внешней ИИ-модели, с жёсткими границами (задержания → SOS, нелегальное → отказ). Переписка уходит внешнему сервису — предупреждение «не пишите личное» показано (риск R17).</div></div>
+
+<h3>D — Деньги (ничего не решено; наши предложения)</h3>
+<div class="dcs"><div class="dh"><span class="code">D1</span><span class="dt">Зарабатываем с партнёра, не с клиентки</span> <span class="dflt">дефолт</span></div>
+<div class="what">Для клиентки цена как напрямую; доход сервиса — с исполнителя за поток заявок.</div>
+<div class="why"><b>Почему:</b> клиентка сравнит цену с соседним чатом за минуту; удержать её можно только сервисом, не наценкой.</div></div>
+<div class="dcs"><div class="dh"><span class="code">D2</span><span class="fire">🔥 эта неделя</span><span class="dt">Модель монетизации — выбрать из трёх</span></div>
+<div class="what">Варианты, совместимые с A2: (а) фиксированная подписка партнёра за доступ к заявкам; (б) плата за лид; (в) процент по самоотчёту с выборочной сверкой. Можно комбинировать по направлениям.</div></div>
+<div class="dcs"><div class="dh"><span class="code">D3</span><span class="dt">Цена клуба</span></div>
+<div class="what">Вилка 5–20 тыс ₽/мес слишком широкая. Клуб — единственный прямой доход, который сервис контролирует сам.</div></div>
+<div class="dcs"><div class="dh"><span class="code">D4</span><span class="dt">Фиксация суммы сделки при закрытии</span> <span class="dflt">уже работает</span></div>
+<div class="what">После «Выполнено» бот сам спрашивает сумму и комиссию (или причину «без сделки») — у партнёра в ЛС и у менеджера в группе. Эти цифры питают дашборд админки и еженедельную сводку. Реализовано 03.09 вместе с админкой.</div></div>
+
+<h3>O — Открытые вопросы (наших предложений нет)</h3>
+<div class="dcs"><div class="dh"><span class="code o">O1</span><span class="fire">🔥 эта неделя</span><span class="dt">Дежурный SOS-юрист</span></div><div class="what">Кто дежурит, круглосуточно ли, как будим ночью. Без этого обещание SOS частично пустое (риск R1).</div></div>
+<div class="dcs"><div class="dh"><span class="code o">O2</span><span class="fire">🔥 эта неделя</span><span class="dt">Первый менеджер заявок</span></div><div class="what">Кто разбирает заявки каждый день и кто его подменяет.</div></div>
+<div class="dcs"><div class="dh"><span class="code o">O3</span><span class="dt">Новое название и домен</span></div><div class="what">Vespera решили менять (03.09). Ждём вариантов; смена домена ~20$ и день работы.</div></div>
+<div class="dcs"><div class="dh"><span class="code o">O4</span><span class="dt">Юридическая форма</span></div><div class="what">ИП / самозанятость / юрлицо (возможно не в РФ), оферта, политика конфиденциальности, чеки за клуб.</div></div>
+<div class="dcs"><div class="dh"><span class="code o">O5</span><span class="dt">Владелец контента клуба и базы знаний</span></div><div class="what">Кто наполняет события и статьи, с какой нормой.</div></div>
+
+<h2><span class="no">06</span>Карта рисков</h2>
+<p class="gt">Отсортировано по срочности. Меры — наши предложения, комментируйте по кодам. Это карта для приоритизации, не юридическое заключение; пометка «юрист» = нужна живая консультация.</p>
+
+<h3>🔴 Критичные — закрыть до работы с живой аудиторией</h3>
+<div class="risk crit"><div class="rt"><span class="rc">R1</span>SOS обещает юриста, которого пока нет (→ O1)</div>
+<p>Девушка при задержании в 3 ночи будет ждать звонка, который не придёт, — вред человеку и репутационная катастрофа.</p>
+<p><b>Предлагаем:</b> смягчить тексты + запасной телефон круглосуточной юрпомощи на экране SOS; не пиарить SOS до договорённости с дежурным; еженедельный тестовый ночной сигнал.</p></div>
+<div class="risk crit"><div class="rt"><span class="rc">R2</span>Приём оплаты QR — самый горячий пункт юридически (→ C2, юрист)</div>
+<p>Канал приёма денег за услуги adult-сферы даже через внешний шлюз может трактоваться как легализация.</p>
+<p><b>Предлагаем:</b> скрыть пункт до одобрения конкретной схемы юристом.</p></div>
+<div class="risk crit"><div class="rt"><span class="rc">R3</span>Обещание приватности противоречит реальности (→ B2, B6)</div>
+<p>Апка обещает «исполнители не получают ваш номер», а партнёр его видит. Один скриншот — и главное обещание бренда ложь.</p>
+<p><b>Предлагаем:</b> честные тексты (B6) + NDA с партнёрами + раскрывать контакт только при необходимости.</p></div>
+<div class="risk crit"><div class="rt"><span class="rc">R4</span>Увод клиентки партнёром после первой сделки (→ B2, D1)</div>
+<p>Контакт у партнёра, деньги мимо платформы — возвращаться через нас нет причин. Платформа рискует стать бесплатным генератором лидов.</p>
+<p><b>Предлагаем:</b> запрет прямых сделок в партнёрском соглашении с отключением за нарушение; старт на «своих» исполнителях; мониторинг обрыва повторных заявок по каждому партнёру.</p></div>
+<div class="risk crit"><div class="rt"><span class="rc">R5</span>Крипта: грань «посредник vs организатор» не подтверждена (юрист)</div>
+<p>Схема задумана как чистое посредничество, но живой юрист её не смотрел.</p>
+<p><b>Предлагаем:</b> часовая консультация профильного юриста письменно; не хранить реквизиты; не называть курс и не гарантировать сделку.</p></div>
+<div class="risk crit"><div class="rt"><span class="rc">R6</span>Adult-ниша: риск трактовки «организация» + возраст не проверяется (→ B1, юрист)</div>
+<p>Пакет целиком (аудитория+оплаты+клуб+статьи) недоброжелательный взгляд может прочитать как обслуживание деятельности; несовершеннолетняя в базе — катастрофа.</p>
+<p><b>Предлагаем:</b> вычитка всех текстов юристом «глазами обвинения»; галочка 18+; письменное правило A5 для менеджеров.</p></div>
+
+<h3>🟠 Высокие — первый месяц</h3>
+<div class="risk warn"><div class="rt"><span class="rc">R7</span>Платформа вне денежного потока — не с чего собирать комиссию (→ D1–D4)</div>
+<p>Сервис не видит ни сумму, ни факт сделки; модель денег не определена. <b>Предлагаем:</b> решить D2 письменно до масштабирования; фиксация сумм (D4); запустить клуб как прямой доход.</p></div>
+<div class="risk warn"><div class="rt"><span class="rc">R8</span>База — компромат, защищена слабо</div>
+<p>Телефоны и заявки девушек лежат открытым текстом, бэкап улетает в Telegram нешифрованным. <b>Предлагаем:</b> шифрование бэкапа (уже в плане работ), доступ только по ключам, минимизация хранимого.</p></div>
+<div class="risk warn"><div class="rt"><span class="rc">R9</span>Bus-factor: один менеджер, связи в головах, один разработчик (→ O2)</div>
+<p>Отпуск любого из троих останавливает сервис. <b>Предлагаем:</b> второй человек в группе заявок; справочник исполнителей внутри платформы, а не в телефоне Влада; runbook на одну страницу.</p></div>
+<div class="risk warn"><div class="rt"><span class="rc">R10</span>«Проверенные исполнители» без проверки (→ B3)</div>
+<p>Сеть — контакты по знакомству, без отбора и договоров, а гарантом назвался сервис. <b>Предлагаем:</b> старт с 1–2 лично гарантированных на направление; чеклист онбординга + NDA; малые первые сделки.</p></div>
+<div class="risk warn"><div class="rt"><span class="rc">R11</span>Бан Telegram-бота = потеря канала в один день</div>
+<p>Тематика — типичный повод для жалоб. <b>Предлагаем:</b> нейтральные тексты (уже так); беречь базу телефонов вне Telegram; резервный бот и процедура переезда.</p></div>
+<div class="risk warn"><div class="rt"><span class="rc">R12</span>Юридической оболочки нет (→ O4, юрист)</div>
+<p>Нет ИП/юрлица, оферты, политики; платный клуб физлицом без чеков — проблема. <b>Предлагаем:</b> один разговор с бухгалтером до платного клуба; оферта «знакомим с исполнителем, услугу оказывает он».</p></div>
+
+<h3>🟡 Средние — держать в поле зрения</h3>
+<div class="risk mid"><div class="rt"><span class="rc">R13</span>Нечем удерживать между заявками (→ C3, O5)</div>
+<p>Частая операция (обмен) легче всего уводится, редкие — раз в год; клуб и база знаний без владельца. <b>Предлагаем:</b> владелец контента с нормой «1 событие + 1 статья в месяц»; курс через платформу не хуже прямого.</p></div>
+<div class="risk mid"><div class="rt"><span class="rc">R14</span>Обещание «15 минут» ничем не подкреплено (→ B5)</div>
+<p>Рабочие часы не объявлены, ночью отвечать некому. <b>Предлагаем:</b> объявить часы; авто-ответ вне их; еженедельно сверять обещание с фактом.</p></div>
+<div class="risk mid"><div class="rt"><span class="rc">R15</span>Споры и возвраты без правил</div>
+<p>Претензия за пропавшего байера придёт сервису. <b>Предлагаем:</b> правила на один экран: лимиты предоплат, когда компенсируем; предоплата этапами.</p></div>
+<div class="risk mid"><div class="rt"><span class="rc">R16</span>Один сервер без внешнего присмотра</div>
+<p>Если сервер умрёт целиком — никто не узнает; бэкап раз в сутки. <b>Предлагаем:</b> внешний бесплатный мониторинг + автопродление; бэкап чаще (в плане работ).</p></div>
+<div class="risk mid"><div class="rt"><span class="rc">R17</span>ИИ-помощник: переписка у третьей стороны (→ C4)</div>
+<p>Даже невинный вопрос раскрывает нишу. <b>Предлагаем:</b> не передавать модели имя/телефон; ежемесячная выборочная вычитка диалогов.</p></div>
+<div class="risk mid"><div class="rt"><span class="rc">R18</span>Полировка вместо запуска</div>
+<p>Продукт ещё не видел живых клиенток, а впереди редизайн, ребрендинг и CRM — легко застрять во внутреннем идеале. <b>Предлагаем:</b> пилот на 20–30 реальных клиентках до больших переделок; единый бэклог с еженедельным пересмотром вместо потока правок.</p></div>
+
+<h2><span class="no">07</span>План: сейчас → дальше → позже</h2>
+<div class="rmap">
+  <div class="rcol now"><div class="rh">Сейчас · эта неделя</div><ul>
+    <li>Ответы команды по 🔥-решениям (O1, D2, C2) и остальным кодам</li>
+    <li>Фидбэк Дарьи документом (к понедельнику, договорённость 03.09)</li>
+    <li>Референсы по дизайну от всех в общую группу</li>
+    <li>Живой прогон всей цепочки заявки руками</li>
+  </ul></div>
+  <div class="rcol next"><div class="rh">Дальше · 2–4 недели</div><ul>
+    <li>Правки продукта по фидбэку + новое название и домен (O3)</li>
+    <li>Дизайн по сведённым референсам</li>
+    <li>CRM v0: суммы сделок, журнал, еженедельный дайджест</li>
+    <li>Пилот на 20–30 реальных клиентках через тёплые контакты</li>
+  </ul></div>
+  <div class="rcol later"><div class="rh">Позже · по результатам пилота</div><ul>
+    <li>CRM v1: веб-админка с дашбордом</li>
+    <li>Платный клуб с календарём событий</li>
+    <li>Расширение сети исполнителей</li>
+    <li>Юридическая оболочка целиком (O4)</li>
+  </ul></div>
+</div>
+
+<h2><span class="no">08</span>Словарик</h2>
+<dl class="gl">
+  <dt>Мини-апка</dt><dd>Приложение внутри Telegram — открывается кнопкой в боте, устанавливать не нужно.</dd>
+  <dt>Карточка заявки</dt><dd>Сообщение с деталями заявки в группе менеджеров; на нём отвечают и меняют статус.</dd>
+  <dt>Reply-канал</dt><dd>Ответ на карточку в группе автоматически доставляется клиентке в личку бота — и наоборот.</dd>
+  <dt>Партнёр</dt><dd>Исполнитель, подключённый по направлениям (обменник, байер, агентство…).</dd>
+  <dt>Пул задач</dt><dd>Заявки, которые ещё никто не взял; взятую задачу можно вернуть в пул.</dd>
+  <dt>Эскалация</dt><dd>Автоматический сигнал владельцу о заявке, которая слишком долго без движения.</dd>
+</dl>
+
+<footer>Vespera Concierge · собрано из спецификации, памяти проекта и созвонов 31.08–03.09 · вердикты по кодам A/B/C/D/O/R — Антону в любом виде · вопросы — Антону</footer>
+</body>
+</html>

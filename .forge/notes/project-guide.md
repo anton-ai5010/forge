@@ -1,0 +1,1 @@
+- Шаг про SKILL.md: писать через skill-creator (skill-creator:skill-creator) + правила forge:writing-skills; не руками. Требование владельца 2026-09-06.
