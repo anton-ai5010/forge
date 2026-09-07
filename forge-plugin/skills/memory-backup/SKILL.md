@@ -43,4 +43,4 @@ description: "Use when пользователь просит сохранить 
 
 ## Что не попадает в git
 
-`backup.sh` сам создаёт `.forge/.gitignore` со служебным мусором: `.inject-state`, `.last-backup`, `state.yml`, `.github-*`, `graph.json`, а также регенерируемые из JSON `status-report.html` и `reports/shots/` (отчёт «Что дальше», Фаза 5). Всё остальное в `.forge/` — ценность, коммитится.
+`backup.sh` сам создаёт `.forge/.gitignore` со служебным мусором: `.inject-state`, `.last-backup`, `.migration-declined`, `state.yml`, `.github-*`, `graph.json`, а также `guide/shots/` (снимки экрана для гайда по проекту, Фаза 5 — они встроены в HTML и регенерируются). Всё остальное в `.forge/` — ценность, коммитится, включая `.forge/guide/vX.Y.json` (данные версий гайда). В тот же коммит памяти попадают и видимые версии гайда из `docs/guide/` — только `guide-v*.html`, `guide-v*.pdf`, `guide-latest.html`; посторонние файлы в `docs/guide/` скрипт не трогает. Иначе история гайда умрёт вместе с диском.

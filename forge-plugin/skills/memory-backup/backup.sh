@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Сохранение памяти проекта: коммитит .forge/ (задачи, планы, решения, журнал)
-# и пушит текущую ветку на удалёнку. Вызывается скиллом memory-backup,
+# и видимые версии гайда по проекту docs/guide/ (guide-v*.html, guide-v*.pdf,
+# guide-latest.html — только свои файлы, чужой docs/guide/ не трогаем),
+# затем пушит текущую ветку на удалёнку. Вызывается скиллом memory-backup,
 # session-awareness (итог сессии) и finishing (после мержа).
 #
 # $1 — короткое описание для сообщения коммита (опционально).
@@ -39,22 +41,29 @@ if [ ! -f .forge/.gitignore ]; then
 state.yml
 .github-*
 graph.json
-status-report.html
-reports/shots/
+guide/shots/
 EOF
 fi
 
 git add .forge >/dev/null 2>&1 || true
+# Видимые версии гайда по проекту — тоже память: тот же коммит. Только свои файлы
+# по маскам; посторонние файлы в docs/guide/ (и вся папка) не трогаются.
+paths=(.forge)
+shopt -s nullglob
+for p in docs/guide/guide-v*.html docs/guide/guide-v*.pdf docs/guide/guide-latest.html; do
+    git add -- "$p" >/dev/null 2>&1 && paths+=("$p")
+done
+shopt -u nullglob
 # Исторически-трекнутый мусор .forge/.gitignore не спасает — снимаем со стейджа
 git reset -q .forge/state.yml .forge/.inject-state .forge/.last-backup .forge/graph.json >/dev/null 2>&1 || true
 git reset -q -- '.forge/.github-*' >/dev/null 2>&1 || true
 
-if ! git diff --cached --quiet -- .forge 2>/dev/null; then
+if ! git diff --cached --quiet -- "${paths[@]}" 2>/dev/null; then
     msg="${1:-обновление памяти проекта}"
-    if ! git commit -q -m "[forge] память: ${msg}" -- .forge >/dev/null 2>&1; then
-        # Коммит не прошёл: чистим стейдж (иначе .forge уедет в следующий чужой
-        # коммит), .last-backup НЕ пишем, push не пытаемся.
-        git reset -q -- .forge >/dev/null 2>&1 || true
+    if ! git commit -q -m "[forge] память: ${msg}" -- "${paths[@]}" >/dev/null 2>&1; then
+        # Коммит не прошёл: чистим стейдж (иначе .forge и docs/guide уедут в следующий
+        # чужой коммит), .last-backup НЕ пишем, push не пытаемся.
+        git reset -q -- "${paths[@]}" >/dev/null 2>&1 || true
         echo "FORGE-MEMORY: коммит памяти не прошёл (частые причины: git config user.name/email, index.lock от параллельного git, незавершённый merge). Память НЕ сохранена — сообщи пользователю одной строкой."
         exit 0
     fi

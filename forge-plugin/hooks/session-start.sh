@@ -49,14 +49,18 @@ else
     header="Forge plugin активен."
 fi
 
-# Напоминание про отчёт «Что дальше» (Фаза 5): одна строка и только когда есть что напомнить
-# (render.py summary молчит, если открытых решений нет и отчёт не устарел). Без PyYAML — JSON.
+# Напоминание про гайд по проекту (Фаза 5): одна строка и только когда есть что напомнить
+# (render.py summary молчит, если открытых решений нет и гайд не устарел). Без PyYAML — JSON.
+# Гайд есть, если лежит хоть одна версия .forge/guide/vX.Y.json (последняя = максимум по имени).
 report_warn=""
-if [ -f ".forge/status-report.json" ]; then
-    line=$(python3 "$plugin_root/skills/status-report/render.py" summary 2>/dev/null || true)
+if ls .forge/guide/v*.json >/dev/null 2>&1; then
+    line=$(python3 "$plugin_root/skills/project-guide/render.py" summary 2>/dev/null || true)
     if [ -n "$line" ]; then
-        report_warn=$'\n\n'"$line — напомни пользователю одной строкой; вопросы по решениям задавай по одному и только по его слову. Если владелец в любой форме отвечает на открытое решение из отчёта — запиши его в .forge/decisions.yml, поставь этой карточке \"status\": \"done\" в .forge/status-report.json (через Edit) и пересобери: python3 $plugin_root/skills/status-report/render.py render"
+        report_warn=$'\n\n'"$line — напомни пользователю одной строкой; вопросы по решениям задавай по одному и только по его слову. Если владелец отвечает на решение из гайда (кодом или словами) — разбери, что он имел в виду, и примени по одному коду: \`python3 $plugin_root/skills/project-guide/render.py verdict <КОД> <accepted|changed|discuss|works|dropped|agreed|done|up|down|deferred> [текст]\`; принятое запиши в .forge/decisions.yml; рендерер сам перерисует guide-latest.html, новую версию не заводит"
     fi
+elif [ -f ".forge/status-report.json" ]; then
+    # Гайда ещё нет, но лежит старый отчёт «Что дальше» — по слову «собери гайд» он станет версией 1.0 гайда
+    report_warn=$'\n\n'"📖 Найден старый отчёт «Что дальше» (.forge/status-report.json), гайда по проекту ещё нет — скажи владельцу одной строкой: «скажи «собери гайд» — перенесу находки в гайд по проекту»."
 fi
 
 # Короткое введение — что есть forge и как им пользоваться
@@ -70,7 +74,7 @@ ${header}
   Phase 2   /forge:plan        — план с чекпоинтами
   Phase 3   /forge:critique    — 4 персоны рвут план
   Phase 4   /forge:execute     — реализация
-  Phase 5   /forge:status-report — отчёт «что дальше»: что чиню, что решаешь
+  Phase 5   /forge:guide       — гайд по проекту: суть, решения с кодами, риски, план
 
 И 30+ поддерживающих скиллов (debugging, design, deployment, etc.) — триггерятся автоматически по описанию или вызываются явно через /forge:<name>.
 
