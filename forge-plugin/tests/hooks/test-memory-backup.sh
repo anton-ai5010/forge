@@ -84,9 +84,10 @@ files=$(git show --name-only --format= HEAD)
 printf '%s' "$files" | grep -q "index.yml" \
   && ! printf '%s' "$files" | grep -qE "inject-state|state.yml|github-issue" \
   && [ -f .forge/.gitignore ] \
-  && grep -qx "status-report.html" .forge/.gitignore \
-  && grep -qx "reports/shots/" .forge/.gitignore
-check "should auto-create .forge/.gitignore (incl. report HTML/shots lines) and never commit runtime junk" $?
+  && [ "$(grep -c '' .forge/.gitignore)" -eq 7 ] \
+  && grep -qx "guide/shots/" .forge/.gitignore \
+  && ! grep -qE "status-report|reports/shots" .forge/.gitignore
+check "should auto-create .forge/.gitignore (7 lines incl. guide/shots/) and never commit runtime junk" $?
 cd / && rm -rf "$REPO"
 
 # --- (4) нет удалёнки → сохраняет локально + просит предложить приватный репо ---
@@ -191,6 +192,42 @@ rc=$?
 [ "$rc" -eq 0 ] && [ -z "$out" ]
 check "should exit 0 silently when not a git repository" $?
 cd / && rm -rf "$nodir"
+
+# --- (13) видимые версии гайда docs/guide/ уезжают тем же коммитом памяти; посторонние файлы — нет ---
+
+new_repo
+bare=$(mktemp -d)
+git init -q --bare "$bare"
+git remote add origin "$bare"
+mkdir -p docs/guide
+printf '<html>v1.0</html>' > docs/guide/guide-v1.0.html
+cp docs/guide/guide-v1.0.html docs/guide/guide-latest.html
+printf '# чужое' > docs/guide/index.md          # посторонний файл в docs/guide/
+printf 'x' > stray.txt                           # посторонний файл вне .forge
+echo 'note: "гайд"' >> .forge/index.yml
+out=$(run_backup "гайд v1.0")
+last_msg=$(git log -1 --format=%s)
+files=$(git show --name-only --format= HEAD)
+remote_msg=$(git --git-dir="$bare" log -1 --format=%s 2>/dev/null)
+[ "$last_msg" = "[forge] память: гайд v1.0" ] \
+  && printf '%s' "$files" | grep -q ".forge/index.yml" \
+  && printf '%s' "$files" | grep -q "docs/guide/guide-v1.0.html" \
+  && printf '%s' "$files" | grep -q "docs/guide/guide-latest.html" \
+  && ! printf '%s' "$files" | grep -qE "index.md|stray.txt" \
+  && [ "$(git status --short -- docs/guide/index.md stray.txt | grep -c '^??')" -eq 2 ] \
+  && [ "$remote_msg" = "[forge] память: гайд v1.0" ]
+check "should commit own docs/guide/ files (guide-v*.html, guide-latest.html) with memory and leave stray files untracked" $?
+cd / && rm -rf "$REPO" "$bare"
+
+# --- (13б) docs/guide/ нет вообще → коммит памяти не падает ---
+
+new_repo
+echo 'note: "без гайда"' >> .forge/index.yml
+out=$(run_backup "без гайда")
+last_msg=$(git log -1 --format=%s)
+[ "$last_msg" = "[forge] память: без гайда" ] && [ ! -d docs/guide ]
+check "should commit memory normally when docs/guide/ does not exist" $?
+cd / && rm -rf "$REPO"
 
 echo "---"
 if [ "$fails" -gt 0 ]; then

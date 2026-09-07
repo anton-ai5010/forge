@@ -43,9 +43,13 @@ directories:
     files: 1
     about: "Управление картой целей проекта (milestones) через человеческий язык"
 
-  forge-plugin/skills/status-report/:
+  forge-plugin/skills/project-guide/:
     files: "SKILL.md, render.py"
-    about: "Фаза 5 — отчёт «Что дальше» (что чинит Клод / что решает владелец). render.py: render / merged <slug> / link <id> <slug> / summary; данные .forge/status-report.json → .forge/status-report.html"
+    about: "Фаза 5 — гайд по проекту (версионный документ для читающего со стороны, эталон Vespera). render.py: bump [major] / render / pdf / verdict <код> <статус> [текст] / merged <slug> / link <id> <slug> / summary; данные .forge/guide/vX.Y.json → docs/guide/guide-vX.Y.html + .pdf + guide-latest.html"
+
+  docs/guide/:
+    files: "guide-vX.Y.html, guide-vX.Y.pdf, guide-latest.html"
+    about: "Витрина гайда по проекту — все версии на виду; коммитится backup.sh вместе с .forge"
 
   forge-plugin/output-styles/:
     files: 1
@@ -73,7 +77,7 @@ directories:
 
   forge-plugin/tests/:
     files: 47
-    about: "Prompt-based тесты скиллов + bash-тесты хуков (bash-safety, context-inject, memory-backup, session-start, status-report, user-rules-check) + фикстуры"
+    about: "Prompt-based тесты скиллов + bash-тесты хуков (bash-safety, context-inject, memory-backup, session-start, project-guide, user-rules-check) + фикстуры"
 
   forge-plugin/sounds/:
     files: 1

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lumen · Гайд по проекту v1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Golos+Text:wght@400;500;600&display=swap">
+<style>
+@page{size:A4;margin:16mm 14mm}
+:root{
+  --bg:#FFFFFF; --card:#FBF7EF; --border:#E2D5C3;
+  --text:#33291F; --text2:#6E6258; --muted:#8A7A67;
+  --accent:#A9603C; --accent-d:#8C4A2B; --accent-bg:#F4E9DE;
+  --crit:#B0472F; --crit-bg:#F6DFD6; --warn:#9A6B22; --warn-bg:#F3E7CF;
+  --ok:#6B7A52; --ok-bg:#EAEDDF;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Golos Text',system-ui,sans-serif;font-size:10.5pt;line-height:1.5;margin:0}
+h1{font-family:'Playfair Display',serif;font-size:23pt;font-weight:700;line-height:1.15;margin:0 0 6pt}
+h2{font-family:'Playfair Display',serif;font-size:16pt;font-weight:600;margin:22pt 0 6pt;break-after:avoid}
+h2 .no{color:var(--accent);margin-right:6pt}
+h3{font-size:11.5pt;font-weight:600;margin:14pt 0 6pt;break-after:avoid}
+p{margin:6pt 0}
+.brandline{display:flex;align-items:center;gap:10pt;margin-bottom:12pt}
+.logo{width:30pt;height:30pt;border-radius:8pt;background:var(--accent);color:#FFFCF6;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:16pt;font-weight:700}
+.bn{font-family:'Playfair Display',serif;font-size:13pt;font-weight:600}
+.bd{font-size:8.5pt;color:var(--muted)}
+.sub{font-size:11pt;color:var(--text2);margin:0 0 10pt}
+.howto{background:var(--accent-bg);border:1pt solid var(--border);border-radius:10pt;padding:10pt 12pt;margin:12pt 0;break-inside:avoid}
+.howto b{color:var(--accent-d)}
+.howto .ex{font-family:ui-monospace,Menlo,monospace;font-size:9pt;background:var(--bg);border:1pt solid var(--border);border-radius:6pt;padding:6pt 8pt;margin-top:6pt}
+.card{background:var(--card);border:1pt solid var(--border);border-radius:10pt;padding:9pt 11pt;margin:8pt 0;break-inside:avoid}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8pt}
+.svc .t{font-weight:600;font-size:10.5pt}
+.svc .d{font-size:9.5pt;color:var(--text2);margin-top:2pt}
+.svc .cd{font-size:8pt;color:var(--accent-d);font-weight:600}
+/* схема */
+.scheme{display:flex;align-items:stretch;gap:0;margin:12pt 0;break-inside:avoid}
+.sbox{flex:1;background:var(--card);border:1pt solid var(--border);border-radius:10pt;padding:8pt 9pt;text-align:center}
+.sbox .st{font-weight:600;font-size:10pt}
+.sbox .sd{font-size:8.5pt;color:var(--text2);margin-top:2pt}
+.sarr{display:flex;flex-direction:column;justify-content:center;padding:0 4pt;color:var(--accent);font-size:12pt}
+.sarr small{font-size:7pt;color:var(--muted);text-align:center}
+.flow{counter-reset:st;display:flex;flex-direction:column;gap:5pt;margin:10pt 0}
+.fstep{background:var(--card);border:1pt solid var(--border);border-radius:8pt;padding:7pt 10pt 7pt 34pt;position:relative;font-size:9.8pt;break-inside:avoid}
+.fstep::before{counter-increment:st;content:counter(st);position:absolute;left:8pt;top:6pt;width:18pt;height:18pt;border-radius:50%;background:var(--accent-bg);color:var(--accent-d);font-weight:600;font-size:9pt;display:flex;align-items:center;justify-content:center}
+table{border-collapse:collapse;width:100%;font-size:9.5pt;margin:8pt 0;break-inside:avoid}
+th,td{border:1pt solid var(--border);padding:5pt 8pt;text-align:left;vertical-align:top}
+th{background:var(--accent-bg);font-weight:600}
+/* решения */
+.dcs{background:var(--card);border:1pt solid var(--border);border-radius:10pt;padding:9pt 11pt;margin:7pt 0;break-inside:avoid}
+.dcs .dh{display:flex;align-items:baseline;gap:8pt;flex-wrap:wrap}
+.code{font-family:ui-monospace,Menlo,monospace;font-weight:700;font-size:10.5pt;background:var(--accent);color:#FFFCF6;border-radius:6pt;padding:1pt 7pt}
+.code.o{background:var(--warn)}
+.dcs .dt{font-weight:600;font-size:10.5pt}
+.dcs .what{font-size:9.8pt;margin:5pt 0 2pt}
+.dcs .why{font-size:9.3pt;color:var(--text2);margin:2pt 0 0}
+.dcs .why b,.dcs .what b{font-weight:600}
+.gt{font-size:9pt;color:var(--muted);margin:2pt 0 8pt}
+/* риски */
+.risk{border:1pt solid var(--border);border-left:3pt solid var(--muted);border-radius:8pt;padding:7pt 10pt;margin:6pt 0;break-inside:avoid;background:var(--card)}
+.risk.crit{border-left-color:var(--crit)}
+.risk.warn{border-left-color:var(--warn)}
+.risk .rt{font-weight:600;font-size:10pt}
+.risk .rt .rc{font-family:ui-monospace,Menlo,monospace;color:var(--crit);font-weight:700;margin-right:4pt}
+.risk.warn .rt .rc{color:var(--warn)}
+.risk.mid .rt .rc{color:var(--accent-d)}
+.risk p{font-size:9.3pt;color:var(--text2);margin:3pt 0}
+.risk p b{color:var(--ok);font-weight:600}
+ul.clean{padding-left:14pt;margin:6pt 0}
+ul.clean li{margin:3pt 0}
+.gl{font-size:9.5pt;columns:2;column-gap:16pt}
+.gl dt{font-weight:600;margin-top:6pt}
+.gl dd{margin:1pt 0 0;color:var(--text2)}
+footer{margin-top:24pt;padding-top:8pt;border-top:1pt solid var(--border);font-size:8.5pt;color:var(--muted)}
+.pagebreak{break-before:page}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:6pt;margin:8pt 0}
+.fact{background:var(--ok-bg);border-radius:8pt;padding:6pt 9pt;font-size:9.3pt}
+.fact b{color:var(--ok)}
+.fire{font-size:8pt;font-weight:700;letter-spacing:.03em;background:var(--crit-bg);color:var(--crit);border-radius:5pt;padding:1pt 6pt;text-transform:uppercase}
+.dflt{font-size:8pt;font-weight:600;background:var(--ok-bg);color:var(--ok);border-radius:5pt;padding:1pt 6pt}
+.week{background:var(--crit-bg);border-radius:10pt;padding:10pt 12pt;margin:10pt 0;break-inside:avoid}
+.week .wt{font-weight:700;font-size:10.5pt;color:var(--crit)}
+.week ul{margin:4pt 0 0;padding-left:14pt;font-size:9.8pt}
+.week li{margin:3pt 0}
+.shots{display:grid;grid-template-columns:repeat(4,1fr);gap:8pt;margin:10pt 0;break-inside:avoid}
+.shot{margin:0}
+.shot img{width:100%;border:1pt solid var(--border);border-radius:8pt;display:block}
+.shot figcaption{font-size:8.3pt;color:var(--muted);text-align:center;margin-top:3pt}
+.rmap{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8pt;margin:10pt 0}
+.rcol{background:var(--card);border:1pt solid var(--border);border-radius:10pt;padding:9pt 11pt;break-inside:avoid}
+.rcol .rh{font-weight:700;font-size:10pt;margin-bottom:4pt}
+.rcol.now .rh{color:var(--crit)} .rcol.next .rh{color:var(--warn)} .rcol.later .rh{color:var(--ok)}
+.rcol ul{margin:0;padding-left:12pt;font-size:9pt}
+.rcol li{margin:3pt 0}
+/* мокап телеграм-чата партнёра */
+.tgmock{background:var(--accent-bg);border:1pt solid var(--border);border-radius:12pt;padding:10pt 12pt;display:flex;flex-direction:column;gap:5pt;max-width:340pt;break-inside:avoid}
+.tgb{border-radius:10pt;padding:6pt 9pt;font-size:8.8pt;line-height:1.45;white-space:pre-line;max-width:85%}
+.tgb.bot{background:var(--card);border:1pt solid var(--border);align-self:flex-start}
+.tgb.me{background:var(--accent);color:#FFFCF6;align-self:flex-end}
+.tgb.sysnote{background:none;border:none;color:var(--muted);font-size:8pt;align-self:flex-start;padding:0 4pt}
+.tgbtns{display:flex;gap:4pt;margin-top:3pt}
+.tgbtn{background:var(--accent-bg);border:1pt solid var(--border);border-radius:6pt;padding:2pt 8pt;font-size:8pt;color:var(--accent-d);font-weight:600}
+.shots3{display:grid;grid-template-columns:repeat(3,1fr);gap:8pt;margin:10pt 0;break-inside:avoid}
+.shots2{display:grid;grid-template-columns:1fr 1fr;gap:10pt;margin:10pt 0;break-inside:avoid}
+.shots3 .shot img,.shots2 .shot img{width:100%;border:1pt solid var(--border);border-radius:8pt;display:block}
+.shotwide{margin:8pt 0;break-inside:avoid}
+.shotwide img{width:100%;border:1pt solid var(--border);border-radius:8pt;display:block}
+.shotwide figcaption{font-size:8.3pt;color:var(--muted);margin-top:3pt}
+.acc{font-size:8pt;font-weight:600;background:var(--ok-bg);color:var(--ok);border-radius:5pt;padding:1pt 6pt}
+.dsc{font-size:8pt;font-weight:600;background:var(--warn-bg);color:var(--warn);border-radius:5pt;padding:1pt 6pt}
+.dcs .was{display:block;font-size:8.8pt;color:var(--muted);text-decoration:line-through;margin:2pt 0}
+.dcs .vd{display:block;font-size:8.8pt;color:var(--accent-d);margin-top:3pt}
+.risk.done{opacity:.55}.risk.done .rt{text-decoration:line-through}
+.risk .slug{font-family:ui-monospace,Menlo,monospace;font-size:8pt;color:var(--accent-d)}
+.risk .shot img{width:100%;border:1pt solid var(--border);border-radius:8pt;margin-top:4pt}
+.changes{background:var(--card);border:1pt solid var(--border);border-radius:10pt;padding:8pt 12pt;margin:10pt 0;font-size:9.5pt;break-inside:avoid}
+.changes .ct{font-weight:600;color:var(--accent-d)}
+.empty{font-size:9.3pt;color:var(--muted);font-style:italic}
+/* на экране — читаемая колонка; печать/PDF остаются как у эталона (@page A4) */
+@media screen{body{max-width:960px;margin:0 auto;padding:28px 36px 48px}}
+</style>
+</head>
+<body>
+<div class="brandline"><div class="logo">L</div><div><div class="bn">Lumen</div><div class="bd">для владельца сети салонов и управляющей · 2026-09-06 · версия проекта 0.9.2</div></div></div>
+<h1>Гайд по проекту v1.0</h1>
+<p class="sub">перед подключением второго салона</p>
+<h2><span class="no">00</span>Где мы сейчас — за 30 секунд</h2>
+<div class="facts">
+<div class="fact"><b>Запись работает</b> — клиенты записываются сами, мастер видит календарь.</div>
+<div class="fact"><b>Предоплата подключена</b> — деньги списываются при записи.</div>
+<div class="fact"><b>Напоминаний нет</b> — треть опозданий — «забыл».</div>
+<div class="fact"><b>До второго салона</b> — ваши решения по возвратам и регистрации.</div>
+</div>
+<div class="week"><div class="wt">🔥 Решения, без которых стоим — нужны на этой неделе</div>
+<ul>
+<li><b>B1</b> — Автоподтверждение через 10 минут</li>
+<li><b>D1</b> — Кто платит комиссию за возврат</li>
+<li><b>O1</b> — Кто отвечает клиентам ночью</li>
+</ul></div>
+<div class="howto"><b>Как работать с документом.</b> Каждое решение и риск имеет код: <b>P*</b> — процесс, <b>A*</b> — рамка, <b>B*</b> — механика, <b>D*</b> — деньги, <b>O*</b> — открытые вопросы, <b>R*</b> — риски. Метка 🔥 — нужно на этой неделе, без этого стоим. Метка «дефолт» — наша рекомендация: нет возражений — действуем (см. P1). Отвечайте списком кодов — так / не так / как переделать:<div class="ex">A2 — ок.&nbsp;&nbsp;B2 — переделать: …и как именно.&nbsp;&nbsp;D2 — обсудить.</div>После ваших ответов следующая версия гайда выйдет с обновлёнными статусами.</div>
+<h2><span class="no">01</span>Что это такое</h2>
+<p><b>Lumen — онлайн-запись для салонов красоты.</b> Клиент выбирает мастера и время, вносит предоплату, мастер подтверждает.</p>
+<div class="scheme">
+<div class="sbox"><div class="st">Клиент</div><div class="sd">сайт: выбор мастера, времени, предоплата</div></div>
+<div class="sarr">→<small>запись</small></div>
+<div class="sbox"><div class="st">Lumen</div><div class="sd">календарь, оплата, уведомления</div></div>
+<div class="sarr">→<small>уведомление</small></div>
+<div class="sbox"><div class="st">Мастер</div><div class="sd">подтверждает или отклоняет в Telegram</div></div>
+</div>
+<p style="font-size:9.5pt;color:var(--text2)">Если мастер молчит 10 минут — запись подтверждается сама.</p>
+<h3>Мастер · подтверждение записи в боте</h3>
+<div class="tgmock">
+<div class="tgb bot">Новая запись: 14:00, стрижка, Анна.
+Подтвердить?<div class="tgbtns"><span class="tgbtn">Принять</span><span class="tgbtn">Отклонить</span></div></div>
+<div class="tgb me">Принять</div>
+<div class="tgb sysnote">Клиенту отправлено «вас ждут»</div>
+</div>
+<p class="gt">Воспроизведение сообщений бота, данные вымышленные.</p>
+<h2><span class="no">02</span>Из чего состоит</h2>
+<div class="grid2">
+<div class="card svc"><div class="t">📅 Запись <span class="cd">→ B1</span></div><div class="d">Выбор мастера и времени, подтверждение.</div></div>
+<div class="card svc"><div class="t">💳 Предоплата <span class="cd">→ D1</span></div><div class="d">Списание при записи, возврат при отмене.</div></div>
+<div class="card svc"><div class="t">🔔 Уведомления</div><div class="d">Telegram мастеру и клиенту.</div></div>
+</div>
+<h2><span class="no">03</span>Главный путь по шагам</h2>
+<div class="flow">
+<div class="fstep"><b>Выбор.</b> клиент открывает сайт салона, выбирает мастера и слот.</div>
+<div class="fstep"><b>Предоплата.</b> списание через банк.</div>
+<div class="fstep"><b>Подтверждение.</b> мастер нажимает «принять» в Telegram.</div>
+<div class="fstep"><b>Визит.</b> запись в календаре, статус «выполнено».</div>
+</div>
+<h2><span class="no">04</span>Кто и что делает</h2>
+<table>
+<tr><th>Роль</th><th>Что видит и делает</th></tr>
+<tr><td><b>Клиент</b></td><td>записывается, платит, видит свои записи.</td></tr>
+<tr><td><b>Мастер</b></td><td>календарь, подтверждение записей.</td></tr>
+<tr><td><b>Владелец</b></td><td>все салоны, статистика, возвраты.</td></tr>
+</table>
+<h2><span class="no">05</span>Решения</h2>
+<p class="gt">Каждое — как заложено сейчас и почему. Ждём по каждому: ок / переделать / обсудить.</p>
+<h3>P — Процесс</h3>
+<div class="dcs"><div class="dh"><span class="code">P1</span><span class="dt">Правило дефолта</span><span class="dflt">дефолт</span></div>
+<div class="what">По каждому пункту с меткой «дефолт» есть наша рекомендация. Если возражений нет — действуем по ней и не стоим; передумать можно позже.</div>
+<div class="why"><b>Почему:</b> Двигает проект вперёд без бесконечных согласований, и всегда видно, что и когда решили.</div>
+</div>
+<h3>A — Рамка</h3>
+<div class="dcs"><div class="dh"><span class="code">A1</span><span class="dt">Запись без регистрации — по телефону</span><span class="dflt">дефолт</span></div>
+<div class="what">Только номер и код из СМС.</div>
+<div class="why"><b>Почему:</b> Половина клиентов уходит на шаге «придумайте пароль».</div>
+</div>
+<div class="dcs"><div class="dh"><span class="code">A2</span><span class="dt">Один аккаунт — много салонов</span><span class="acc">принято</span></div>
+<div class="what">Владелец видит все салоны в одном кабинете.</div>
+<div class="why"><b>Почему:</b> Второй салон — тот же владелец.</div>
+</div>
+<h3>B — Механика</h3>
+<div class="dcs"><div class="dh"><span class="code">B1</span><span class="fire">🔥 эта неделя</span><span class="dt">Автоподтверждение через 10 минут</span><span class="dflt">дефолт</span></div>
+<div class="what">Мастер молчит 10 минут — запись подтверждается сама.</div>
+<div class="why"><b>Почему:</b> Клиент не ждёт полчаса и не уходит к соседям.</div>
+</div>
+<h3>D — Деньги</h3>
+<div class="dcs"><div class="dh"><span class="code">D1</span><span class="fire">🔥 эта неделя</span><span class="dt">Кто платит комиссию за возврат</span><span class="dsc">обсудить</span></div>
+<div class="what">Салон / клиент / пополам / не возвращаем позже чем за 2 часа.</div>
+<div class="why"><b>Почему:</b> Пока правила нет, возвраты делаются по-разному.</div>
+</div>
+<h3>O — Открытые вопросы</h3>
+<div class="dcs"><div class="dh"><span class="code o">O1</span><span class="fire">🔥 эта неделя</span><span class="dt">Кто отвечает клиентам ночью</span><span class="dsc">открыто</span></div>
+<div class="what">Ночью подтверждать некому; предложений нет.</div>
+</div>
+<h2><span class="no">06</span>Карта рисков</h2>
+<p class="gt">Отсортировано по срочности. Меры — наши предложения, отвечайте по кодам R.</p>
+<h3>🔴 Критичные — закрыть в первую очередь</h3>
+<div class="risk crit"><div class="rt"><span class="rc">R1</span>Клиент не получает подтверждение, если мастер молчит 10 минут</div>
+<p>Сейчас клиент смотрит на «ожидает» полчаса, решает, что его не примут, и записывается к соседям — тихий слив.</p>
+<p><b>Предлагаем:</b> Если мастер не нажал «принять» за 10 минут, запись подтверждается автоматически, а клиенту уходит сообщение «вас ждут».</p>
+</div>
+<div class="risk crit"><div class="rt"><span class="rc">R2</span>Предоплата списана, а записи нет при обрыве связи (→ D1)</div>
+<p>Без этого каждый обрыв — ручной возврат и злой клиент; от вас — правило, кто платит комиссию за возврат (см. D1).</p>
+<p><b>Предлагаем:</b> Оплату и создание записи связываем в одну операцию: либо есть и то и другое, либо деньги возвращаются сами в течение минуты.</p>
+</div>
+<h3>🟠 Высокие — ближайший месяц</h3>
+<div class="risk warn"><div class="rt"><span class="rc">R3</span>Кто платит комиссию за возврат предоплаты (→ D1)</div>
+<p>Пока правила нет, возвраты делаются вручную и по-разному — клиенты сравнивают и обижаются.</p>
+<p><b>Предлагаем:</b> Банк берёт 2,5% с каждого возврата. Варианты: салон, клиент, пополам, или предоплата не возвращается при отмене позже чем за 2 часа.</p>
+</div>
+<div class="risk warn"><div class="rt"><span class="rc">R4</span>Запись без регистрации — по одному номеру телефона</div>
+<p>Половина новых клиентов уходит на шаге «придумайте пароль» — это видно в аналитике за август.</p>
+<p><b>Предлагаем:</b> Пускать клиента до формы записи без аккаунта: только телефон и код из СМС. Или оставить обязательную регистрацию.</p>
+</div>
+<h3>🟡 Средние — держать в поле зрения</h3>
+<div class="risk mid"><div class="rt"><span class="rc">R5</span>Календарь мастера на телефоне показывает занятые часы как свободные</div>
+<p><b>Предлагаем:</b> На узком экране слоты «занято» и «свободно» одного цвета — мастера записывают клиентов на одно время. Разводим цвета и добавляем подпись.</p>
+</div>
+<div class="risk mid"><div class="rt"><span class="rc">R6</span>Напоминание клиенту за 2 часа до визита</div>
+<p><b>Предлагаем:</b> Сообщение в Telegram с адресом и кнопкой «не приду» — по данным салона треть опозданий из-за того, что клиент забыл.</p>
+</div>
+<div class="risk mid"><div class="rt"><span class="rc">R7</span>Логотип в письме-подтверждении размытый</div>
+<p><b>Предлагаем:</b> Подставить картинку в двойном разрешении.</p>
+</div>
+<p class="gt">Отложено — 1: Тёмная тема админки.</p>
+<h2><span class="no">07</span>План</h2>
+<div class="rmap">
+<div class="rcol now"><div class="rh">Сейчас · эта неделя</div><ul><li>Ответы по 🔥 (B1, D1, O1)</li><li>Починить предоплату при обрыве (R2)</li></ul></div>
+<div class="rcol next"><div class="rh">Дальше · 2–4 недели</div><ul><li>Напоминания за 2 часа (R6)</li><li>Календарь на телефоне (R5)</li></ul></div>
+<div class="rcol later"><div class="rh">Позже</div><ul><li>Тёмная тема админки (R8)</li><li>Второй салон</li></ul></div>
+</div>
+<h2><span class="no">08</span>Словарик</h2>
+<dl class="gl">
+<dt>Слот</dt><dd>Свободный промежуток в календаре мастера.</dd>
+<dt>Предоплата</dt><dd>Часть цены, списанная при записи.</dd>
+<dt>Автоподтверждение</dt><dd>Запись подтверждается без участия мастера.</dd>
+</dl>
+<footer>Lumen · гайд v1.0 от 2026-09-06 · Собрано из: код проекта, память .forge, созвон 30.08</footer>
+</body>
+</html>

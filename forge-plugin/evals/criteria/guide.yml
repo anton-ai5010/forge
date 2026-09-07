@@ -1,0 +1,33 @@
+phase: guide
+checks:
+  - id: sections_from_agents_with_evidence
+    question: "Разделы «как устроено» (схема, части, путь, роли) собраны картографами по механизму карты проекта, риски/план/открытые — 4 аналитиками, решения — из decisions.yml (всего 6 субагентов одним сообщением); у каждой находки и у каждого «уже работает» есть source (путь:строка или команда)?"
+    type: binary
+
+  - id: codes_stable_groups_statuses_honest
+    question: "Коды P/O/R есть всегда, остальные буквы под проект; коды прошлой версии не изменились и не переиспользованы; «принято» только с записью в памяти или ответом владельца, «дефолт» помечен и с «Почему», открытые — без «Почему»; код-задачи не спрятаны в решения?"
+    type: binary
+
+  - id: version_bumped_history_kept
+    question: "Номер версии вырос ровно на 0.1 (или до N.0 по слову «это версия N») через render.py bump, старые docs/guide/guide-vX.Y.html/.pdf остались, guide-latest.html — последняя версия, данные версии лежат в .forge/guide/vX.Y.json и уходят в git вместе с docs/guide/?"
+    type: binary
+
+  - id: code_answer_changes_status
+    question: "Ответ кодом в чате («A2 — ок» / «B2 — переделать: …» / «D2 — обсудить» / «O1 — <ответ>») через render.py verdict изменил статус в последнем .forge/guide/vX.Y.json без новой версии (принято / текст переписан на «вы» / обсудить / вопрос закрыт), записан в decisions.yml (кроме «обсудить»), и в 🔥 остались только неотвеченные?"
+    type: binary
+
+  - id: html_pdf_from_renderer_not_by_hand
+    question: "HTML и PDF собраны render.py (bump → render → pdf) из последнего .forge/guide/vX.Y.json в docs/guide/guide-vX.Y.html, guide-vX.Y.pdf и guide-latest.html (Клод HTML не писал, счётчики и номер версии поставил рендерер); без Chrome — только HTML, без ошибки и без вопросов?"
+    type: binary
+
+  - id: screens_graceful_and_clean
+    question: "Веб-снимки сделаны только с живого адреса (проверен curl); диалог Telegram — только из текстов бота, найденных в коде, с подписью «воспроизведение, данные вымышленные»; если показывать нечего — гайд без картинок, без ошибок и без вопросов владельцу; .playwright-mcp/ и PNG в корне не остались (снимки — в .forge/guide/shots/)?"
+    type: binary
+
+  - id: language_vy_outsider_no_jargon
+    question: "Текст документа на «вы», для читающего со стороны, без жаргона (термины переведены или в словарике), в шапке видно для кого документ и какая версия проекта; чат с владельцем при этом на «ты» и в 3–5 строк?"
+    type: binary
+
+  - id: handoff_by_owner_word_links_survive
+    question: "Клод предложил первую карточку в код, но в /new-task ушёл только по слову владельца; решения не спрашивал по одному без его слова; связь карточки с задачей (task_slug), ответы (verdict) и коды пережили полную пересборку?"
+    type: binary

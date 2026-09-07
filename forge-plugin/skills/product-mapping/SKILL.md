@@ -11,6 +11,8 @@ description: "Use proactively when the user needs a bird's-eye view of an unfami
 
 **Announce at start:** "Строю карту проекта — будет интерактивный навигатор в HTML." (action-first, без имени скилла)
 
+**Не путать с гайдом по проекту (`/forge:guide`, Phase 5):** карта — интерактив в браузере для владельца; документ для читателя со стороны (суть, решения с кодами, риски, план, версии в docs/guide/) — это гайд, его разделы «как устроено» собирают картографы по образцу этого скилла.
+
 ## What This Produces
 
 An interactive HTML page with 4 tabs:

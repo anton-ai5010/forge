@@ -1,14 +1,14 @@
 project: forge-plugin
 github_sync: true
-goal: "Плагин для Claude Code, автоматизирующий рабочие процессы разработки через 7-фазный pipeline (0 unblocker → 1 new-task → 1.5 refine-idea → 2 plan → 3 critique → 4 execute → 5 status-report) + систему скиллов + L0/L1/L2 контекст"
+goal: "Плагин для Claude Code, автоматизирующий рабочие процессы разработки через 7-фазный pipeline (0 unblocker → 1 new-task → 1.5 refine-idea → 2 plan → 3 critique → 4 execute → 5 guide) + систему скиллов + L0/L1/L2 контекст"
 stage: maintenance
 progress: 100%
 blocked: нет
-version: "7.7.0"
+version: "7.8.0"
 stack: [python, bash, markdown, claude-code-plugin]
 
 now:
-  task: "v7.7.0 на GitHub — отчёт «Что дальше» доступен как /forge:status-report"
+  task: "v7.8.0 на GitHub — гайд по проекту доступен как /forge:guide"
   branch: master
 
 catalog:
@@ -44,17 +44,17 @@ catalog:
     path: .forge/direction.yml
     tags: [direction, goal, strategy, hypotheses, backlog, navigate, where-to-go]
 
-  status-report:
-    path: .forge/status-report.json
-    tags: [report, what-next, findings, decisions-pending, owner, effort]
+  guide:
+    path: .forge/guide/
+    tags: [guide, report, what-next, findings, decisions-pending, owner, risks, versions]
 
 session:
-  started: "2026-09-04"
-  goal: "Отчёт «Что дальше» — фаза 5 (status-report), v7.7.0"
+  started: "2026-09-06"
+  goal: "Гайд по проекту — фаза 5 становится версионным документом, v7.8.0"
   done:
-    - "Фаза 5 status-report влита в master, v7.7.0 на GitHub"
-  now: "Влито в master, версия 7.7.0 выложена"
-  next: "Собрать первый отчёт на живом проекте"
+    - "skills/project-guide (SKILL.md + render.py bump/render/pdf/verdict/merged/link/summary), /forge:guide, docs/guide/ версии, отчёт этого репо мигрирован в v1.0"
+  now: "Живой прогон гайда v1.0 на этом репо, затем мерж и релиз 7.8.0"
+  next: "Собрать гайд на чужом проекте (веб + Telegram-бот)"
   errors: []
 
-last_session: "2026-09-04 — v7.7.0: отчёт «Что дальше» (фаза 5): render.py из JSON, аудит агентами, лёгкое обновление после мержа, напоминание при старте"
+last_session: "2026-09-06 — v7.8.0: гайд по проекту (фаза 5): версии docs/guide/, коды решений, ответы в чате, PDF через Chrome"

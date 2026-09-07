@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>forge-plugin · Гайд по проекту v1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Golos+Text:wght@400;500;600&display=swap">
+<style>
+@page{size:A4;margin:16mm 14mm}
+:root{
+  --bg:#FFFFFF; --card:#FBF7EF; --border:#E2D5C3;
+  --text:#33291F; --text2:#6E6258; --muted:#8A7A67;
+  --accent:#A9603C; --accent-d:#8C4A2B; --accent-bg:#F4E9DE;
+  --crit:#B0472F; --crit-bg:#F6DFD6; --warn:#9A6B22; --warn-bg:#F3E7CF;
+  --ok:#6B7A52; --ok-bg:#EAEDDF;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Golos Text',system-ui,sans-serif;font-size:10.5pt;line-height:1.5;margin:0}
+h1{font-family:'Playfair Display',serif;font-size:23pt;font-weight:700;line-height:1.15;margin:0 0 6pt}
+h2{font-family:'Playfair Display',serif;font-size:16pt;font-weight:600;margin:22pt 0 6pt;break-after:avoid}
+h2 .no{color:var(--accent);margin-right:6pt}
+h3{font-size:11.5pt;font-weight:600;margin:14pt 0 6pt;break-after:avoid}
+p{margin:6pt 0}
+.brandline{display:flex;align-items:center;gap:10pt;margin-bottom:12pt}
+.logo{width:30pt;height:30pt;border-radius:8pt;background:var(--accent);color:#FFFCF6;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:16pt;font-weight:700}
+.bn{font-family:'Playfair Display',serif;font-size:13pt;font-weight:600}
+.bd{font-size:8.5pt;color:var(--muted)}
+.sub{font-size:11pt;color:var(--text2);margin:0 0 10pt}
+.howto{background:var(--accent-bg);border:1pt solid var(--border);border-radius:10pt;padding:10pt 12pt;margin:12pt 0;break-inside:avoid}
+.howto b{color:var(--accent-d)}
+.howto .ex{font-family:ui-monospace,Menlo,monospace;font-size:9pt;background:var(--bg);border:1pt solid var(--border);border-radius:6pt;padding:6pt 8pt;margin-top:6pt}
+.card{background:var(--card);border:1pt solid var(--border);border-radius:10pt;padding:9pt 11pt;margin:8pt 0;break-inside:avoid}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8pt}
+.svc .t{font-weight:600;font-size:10.5pt}
+.svc .d{font-size:9.5pt;color:var(--text2);margin-top:2pt}
+.svc .cd{font-size:8pt;color:var(--accent-d);font-weight:600}
+/* схема */
+.scheme{display:flex;align-items:stretch;gap:0;margin:12pt 0;break-inside:avoid}
+.sbox{flex:1;background:var(--card);border:1pt solid var(--border);border-radius:10pt;padding:8pt 9pt;text-align:center}
+.sbox .st{font-weight:600;font-size:10pt}
+.sbox .sd{font-size:8.5pt;color:var(--text2);margin-top:2pt}
+.sarr{display:flex;flex-direction:column;justify-content:center;padding:0 4pt;color:var(--accent);font-size:12pt}
+.sarr small{font-size:7pt;color:var(--muted);text-align:center}
+.flow{counter-reset:st;display:flex;flex-direction:column;gap:5pt;margin:10pt 0}
+.fstep{background:var(--card);border:1pt solid var(--border);border-radius:8pt;padding:7pt 10pt 7pt 34pt;position:relative;font-size:9.8pt;break-inside:avoid}
+.fstep::before{counter-increment:st;content:counter(st);position:absolute;left:8pt;top:6pt;width:18pt;height:18pt;border-radius:50%;background:var(--accent-bg);color:var(--accent-d);font-weight:600;font-size:9pt;display:flex;align-items:center;justify-content:center}
+table{border-collapse:collapse;width:100%;font-size:9.5pt;margin:8pt 0;break-inside:avoid}
+th,td{border:1pt solid var(--border);padding:5pt 8pt;text-align:left;vertical-align:top}
+th{background:var(--accent-bg);font-weight:600}
+/* решения */
+.dcs{background:var(--card);border:1pt solid var(--border);border-radius:10pt;padding:9pt 11pt;margin:7pt 0;break-inside:avoid}
+.dcs .dh{display:flex;align-items:baseline;gap:8pt;flex-wrap:wrap}
+.code{font-family:ui-monospace,Menlo,monospace;font-weight:700;font-size:10.5pt;background:var(--accent);color:#FFFCF6;border-radius:6pt;padding:1pt 7pt}
+.code.o{background:var(--warn)}
+.dcs .dt{font-weight:600;font-size:10.5pt}
+.dcs .what{font-size:9.8pt;margin:5pt 0 2pt}
+.dcs .why{font-size:9.3pt;color:var(--text2);margin:2pt 0 0}
+.dcs .why b,.dcs .what b{font-weight:600}
+.gt{font-size:9pt;color:var(--muted);margin:2pt 0 8pt}
+/* риски */
+.risk{border:1pt solid var(--border);border-left:3pt solid var(--muted);border-radius:8pt;padding:7pt 10pt;margin:6pt 0;break-inside:avoid;background:var(--card)}
+.risk.crit{border-left-color:var(--crit)}
+.risk.warn{border-left-color:var(--warn)}
+.risk .rt{font-weight:600;font-size:10pt}
+.risk .rt .rc{font-family:ui-monospace,Menlo,monospace;color:var(--crit);font-weight:700;margin-right:4pt}
+.risk.warn .rt .rc{color:var(--warn)}
+.risk.mid .rt .rc{color:var(--accent-d)}
+.risk p{font-size:9.3pt;color:var(--text2);margin:3pt 0}
+.risk p b{color:var(--ok);font-weight:600}
+ul.clean{padding-left:14pt;margin:6pt 0}
+ul.clean li{margin:3pt 0}
+.gl{font-size:9.5pt;columns:2;column-gap:16pt}
+.gl dt{font-weight:600;margin-top:6pt}
+.gl dd{margin:1pt 0 0;color:var(--text2)}
+footer{margin-top:24pt;padding-top:8pt;border-top:1pt solid var(--border);font-size:8.5pt;color:var(--muted)}
+.pagebreak{break-before:page}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:6pt;margin:8pt 0}
+.fact{background:var(--ok-bg);border-radius:8pt;padding:6pt 9pt;font-size:9.3pt}
+.fact b{color:var(--ok)}
+.fire{font-size:8pt;font-weight:700;letter-spacing:.03em;background:var(--crit-bg);color:var(--crit);border-radius:5pt;padding:1pt 6pt;text-transform:uppercase}
+.dflt{font-size:8pt;font-weight:600;background:var(--ok-bg);color:var(--ok);border-radius:5pt;padding:1pt 6pt}
+.week{background:var(--crit-bg);border-radius:10pt;padding:10pt 12pt;margin:10pt 0;break-inside:avoid}
+.week .wt{font-weight:700;font-size:10.5pt;color:var(--crit)}
+.week ul{margin:4pt 0 0;padding-left:14pt;font-size:9.8pt}
+.week li{margin:3pt 0}
+.shots{display:grid;grid-template-columns:repeat(4,1fr);gap:8pt;margin:10pt 0;break-inside:avoid}
+.shot{margin:0}
+.shot img{width:100%;border:1pt solid var(--border);border-radius:8pt;display:block}
+.shot figcaption{font-size:8.3pt;color:var(--muted);text-align:center;margin-top:3pt}
+.rmap{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8pt;margin:10pt 0}
+.rcol{background:var(--card);border:1pt solid var(--border);border-radius:10pt;padding:9pt 11pt;break-inside:avoid}
+.rcol .rh{font-weight:700;font-size:10pt;margin-bottom:4pt}
+.rcol.now .rh{color:var(--crit)} .rcol.next .rh{color:var(--warn)} .rcol.later .rh{color:var(--ok)}
+.rcol ul{margin:0;padding-left:12pt;font-size:9pt}
+.rcol li{margin:3pt 0}
+/* мокап телеграм-чата партнёра */
+.tgmock{background:var(--accent-bg);border:1pt solid var(--border);border-radius:12pt;padding:10pt 12pt;display:flex;flex-direction:column;gap:5pt;max-width:340pt;break-inside:avoid}
+.tgb{border-radius:10pt;padding:6pt 9pt;font-size:8.8pt;line-height:1.45;white-space:pre-line;max-width:85%}
+.tgb.bot{background:var(--card);border:1pt solid var(--border);align-self:flex-start}
+.tgb.me{background:var(--accent);color:#FFFCF6;align-self:flex-end}
+.tgb.sysnote{background:none;border:none;color:var(--muted);font-size:8pt;align-self:flex-start;padding:0 4pt}
+.tgbtns{display:flex;gap:4pt;margin-top:3pt}
+.tgbtn{background:var(--accent-bg);border:1pt solid var(--border);border-radius:6pt;padding:2pt 8pt;font-size:8pt;color:var(--accent-d);font-weight:600}
+.shots3{display:grid;grid-template-columns:repeat(3,1fr);gap:8pt;margin:10pt 0;break-inside:avoid}
+.shots2{display:grid;grid-template-columns:1fr 1fr;gap:10pt;margin:10pt 0;break-inside:avoid}
+.shots3 .shot img,.shots2 .shot img{width:100%;border:1pt solid var(--border);border-radius:8pt;display:block}
+.shotwide{margin:8pt 0;break-inside:avoid}
+.shotwide img{width:100%;border:1pt solid var(--border);border-radius:8pt;display:block}
+.shotwide figcaption{font-size:8.3pt;color:var(--muted);margin-top:3pt}
+.acc{font-size:8pt;font-weight:600;background:var(--ok-bg);color:var(--ok);border-radius:5pt;padding:1pt 6pt}
+.dsc{font-size:8pt;font-weight:600;background:var(--warn-bg);color:var(--warn);border-radius:5pt;padding:1pt 6pt}
+.dcs .was{display:block;font-size:8.8pt;color:var(--muted);text-decoration:line-through;margin:2pt 0}
+.dcs .vd{display:block;font-size:8.8pt;color:var(--accent-d);margin-top:3pt}
+.risk.done{opacity:.55}.risk.done .rt{text-decoration:line-through}
+.risk .slug{font-family:ui-monospace,Menlo,monospace;font-size:8pt;color:var(--accent-d)}
+.risk .shot img{width:100%;border:1pt solid var(--border);border-radius:8pt;margin-top:4pt}
+.changes{background:var(--card);border:1pt solid var(--border);border-radius:10pt;padding:8pt 12pt;margin:10pt 0;font-size:9.5pt;break-inside:avoid}
+.changes .ct{font-weight:600;color:var(--accent-d)}
+.empty{font-size:9.3pt;color:var(--muted);font-style:italic}
+/* на экране — читаемая колонка; печать/PDF остаются как у эталона (@page A4) */
+@media screen{body{max-width:960px;margin:0 auto;padding:28px 36px 48px}}
+</style>
+</head>
+<body>
+<div class="brandline"><div class="logo">F</div><div><div class="bn">forge-plugin</div><div class="bd">для владельца плагина и людей со стороны · 2026-09-06 · версия проекта 7.8.0</div></div></div>
+<h1>Гайд по проекту v1.0</h1>
+<p class="sub">плагин работает у владельца, версия 7.8.0; фаза 5 переезжает на гайд</p>
+<h2><span class="no">00</span>Где мы сейчас — за 30 секунд</h2>
+<div class="facts">
+<div class="fact"><b>Плагин работает у владельца</b> — установлен в его Claude Code, опубликован на GitHub; проверки служебных скриптов — 122 из 122 прошли.</div>
+<div class="fact"><b>Петля замкнута до слияния</b> — задача → план → критика → код → слияние проходят на этом же проекте; фаза 5 (гайд) ещё в ветке.</div>
+<div class="fact"><b>Память сама, тесты руками</b> — память проекта уезжает в git после сессии и слияния; автопроверки при изменениях нет, тесты запускают вручную.</div>
+<div class="fact"><b>До версии 7.8.0</b> — влить ветку гайда в основную и выложить 7.8.0 на GitHub; ответить на O2 и остальные открытые вопросы.</div>
+</div>
+<div class="week"><div class="wt">🔥 Решения, без которых стоим — нужны на этой неделе</div>
+<ul>
+<li><b>O1</b> — Сколько у проекта «витрин»: только гайд — или ещё карта задач на GitHub?</li>
+<li><b>O2</b> — Плагин — личный инструмент владельца или продукт для других, кто не пишет код?</li>
+</ul></div>
+<div class="howto"><b>Как работать с документом.</b> Каждое решение и риск имеет код: <b>P*</b> — процесс, <b>A*</b> — рамка: для кого плагин и как он говорит, <b>B*</b> — механика конвейера, <b>C*</b> — память проекта и GitHub, <b>D*</b> — качество и проверки, <b>O*</b> — открытые вопросы, <b>R*</b> — риски. Метка 🔥 — нужно на этой неделе, без этого стоим. Метка «дефолт» — наша рекомендация: нет возражений — действуем (см. P1). Отвечайте списком кодов — так / не так / как переделать:<div class="ex">A2 — ок.&nbsp;&nbsp;B2 — переделать: …и как именно.&nbsp;&nbsp;D2 — обсудить.</div>Ответы — владельцу проекта в любом виде: списком кодов, голосом, в переписке; он вносит их в гайд, и следующая версия выйдет с обновлёнными статусами</div>
+<h2><span class="no">01</span>Что это такое</h2>
+<p><b>forge-plugin</b> — надстройка (плагин) для Claude Code, помощника-программиста от Anthropic. Она ведёт владельца, который не пишет код, от фразы «хочу X» до готовой и влитой в проект правки по семи обязательным шагам, а между сессиями хранит память проекта и сама сохраняет её в git. Работает у самого владельца: плагин установлен в его Claude Code и опубликован на GitHub; есть ли другие пользователи — не проверяли.</p>
+<div class="scheme">
+<div class="sbox"><div class="st">🧑 Владелец</div><div class="sd">голосом по-русски пишет «хочу X» в Claude Code</div></div>
+<div class="sarr">→<small>контекст</small></div>
+<div class="sbox"><div class="st">🪝 Хуки плагина</div><div class="sd">к каждому сообщению подкладывают память проекта, блокируют опасные команды</div></div>
+<div class="sarr">→<small>план</small></div>
+<div class="sbox"><div class="st">🎯 Понимание и план</div><div class="sd">фазы 1–3: вопросы по одному, проверка идеи, план, четыре критика</div></div>
+<div class="sarr">→<small>«мержим»</small></div>
+<div class="sbox"><div class="st">🚀 Реализация</div><div class="sd">фаза 4: код в отдельной ветке, паузы только на контрольных точках</div></div>
+<div class="sarr">→<small>итог</small></div>
+<div class="sbox"><div class="st">✅ Слияние и память</div><div class="sd">тесты, вливание в основную ветку, память — в git и на GitHub</div></div>
+<div class="sarr">→<small></small></div>
+<div class="sbox"><div class="st">📖 Гайд по проекту</div><div class="sd">фаза 5: документ для людей со стороны; пока не влит в основную ветку</div></div>
+</div>
+<p style="font-size:9.5pt;color:var(--text2)">После каждого шага Клод показывает сводку и ждёт «ОК» или «стоп»; вопросы задаёт по одному. Опасные команды останавливаются до выполнения, память проекта подкладывается автоматически, а при старте сессии плагин напоминает, если память давно не сохранялась.</p>
+<h2><span class="no">02</span>Из чего состоит</h2>
+<div class="grid2">
+<div class="card svc"><div class="t">🧭 Конвейер из семи шагов <span class="cd">→ B1, B3, P2, P3, P5</span></div><div class="d">Вы пишете по-русски «хочу…», «почини…», а плагин ведёт Клода по фиксированным шагам: понять задачу → проверить идею → составить план → разнести план четырьмя критиками → сделать с остановками на контрольных точках → собрать гайд. На этом проекте цепочка пройдена вживую: есть файл задачи, план и разбор критики по текущей задаче.</div></div>
+<div class="card svc"><div class="t">🧠 Память проекта между сессиями</div><div class="d">Цель, стадия, решения, тупики и журнал хранятся в папке памяти, и при каждом сообщении Клоду подкладывается короткая выжимка (полная — только когда что-то изменилось или раз в 15 сообщений), чтобы он не начинал с нуля. Проверено тестами: 12 из 12 прошли.</div></div>
+<div class="card svc"><div class="t">💾 Сохранение памяти в git <span class="cd">→ C1</span></div><div class="d">Память уезжает в репозиторий отдельными записями по слову «сохрани» и сама после итога сессии и слияния; при старте сессии плагин напомнит, если несохранённое старше суток. Тесты: 14 из 14, включая случай, когда отправка на сервер не удалась.</div></div>
+<div class="card svc"><div class="t">🛡️ Страховка от опасных команд <span class="cd">→ D1</span></div><div class="d">До выполнения любой команды в терминале плагин проверяет её и блокирует разрушительные (стереть диск, перезаписать основную ветку, удалить ключи); свои правила добавляются словами «чтобы это не повторялось». Тесты: 26 + 8 прошли.</div></div>
+<div class="card svc"><div class="t">📖 Гайд по проекту (шаг 5) <span class="cd">→ B2, B6, C2</span></div><div class="d">Один версионный документ для человека со стороны: суть, устройство, решения с кодами, риски, план; ответы кодами в чат меняют его без пересборки. Сборщик написан и проверен 56 тестами; этот документ — первая собранная версия, работа ещё не влита в основную ветку.</div></div>
+<div class="card svc"><div class="t">🔗 Связь задач с GitHub <span class="cd">→ C3, O1</span></div><div class="d">Обещано: каждая задача — карточка (Issue) на GitHub, шаги — подкарточки, закреплённая карта целей и живая шапка в README. На маке владельца цепочка не работает: команда включения падает, привязка к целям молча не срабатывает, шапка README застыла на 26 мая.</div></div>
+<div class="card svc"><div class="t">🧰 Навыки-помощники под ситуацию <span class="cd">→ A1, P4</span></div><div class="d">Помимо конвейера — около 28 навыков, которые Клод включает по вашим словам: разобраться «почему не работает» и починить, проверить безопасность, спроектировать интерфейс (поиск по базе дизайн-правил проверен запуском), выложить на сервер, ревью кода, закрытие ветки. Что они включаются по фразе, проверено лишь для 10 из 35.</div></div>
+<div class="card svc"><div class="t">🖥️ Удобства в рабочем окне <span class="cd">→ A2</span></div><div class="d">Краткий стиль ответов без воды (включается вместе с плагином), звуки на «готово» и «нужно разрешение» (7 + 7 записей подключены), полоска внизу окна с текущим шагом и веткой. Полоска у владельца не включена.</div></div>
+<div class="card svc"><div class="t">⚒ Меню команд в строке состояния</div><div class="d">Маленькая иконка на маке: клик по пункту копирует команду плагина, чтобы не набирать её. Версия для мака знает все 7 шагов (в рабочей ветке пятый пункт уже переименован в гайд); версия для Linux предлагает команды, которых в плагине давно нет.</div></div>
+<div class="card svc"><div class="t">🧪 Проверка самого плагина <span class="cd">→ D2, O3</span></div><div class="d">Шесть наборов тестов на служебные скрипты (122 проверки, все прошли при ручном запуске) и заготовка системы оценки качества по реальным диалогам. Автозапуска нет, старые тесты навыков на маке не стартуют, а система оценки пуста.</div></div>
+</div>
+<h2><span class="no">03</span>Главный путь по шагам</h2>
+<div class="flow">
+<div class="fstep"><b>«Хочу X».</b> владелец пишет любую просьбу — «хочу», «нужно», «добавь», «сделай». Клод сам направляет её в фазу 1; жалоба на поломку уходит в разбор проблемы, «почини» — в отладку.</div>
+<div class="fstep"><b>Понимание задачи.</b> Клод задаёт только смысловые вопросы (что, кому, зачем) по одному; техническое ищет сам. Итог — файл задачи с разделами «Задача» и «Критерий готовности». После «да, оно» Клод сам переходит к проверке идеи.</div>
+<div class="fstep"><b>Проверка идеи.</b> Клод пересказывает идею своими словами и спорит с ней фактами проекта: та ли проблема, нет ли пути проще, что сломает, стоит ли усилий. На каждую слабость — конкретная альтернатива; здравую идею не оспаривает ради спора.</div>
+<div class="fstep"><b>План с паузами.</b> план из маленьких шагов с контрольными точками на смысловых границах и разделом о том, что увидит владелец. Если задача упирается в большое отдельное дело, Клод останавливается и предлагает решить его в отдельной сессии.</div>
+<div class="fstep"><b>Четыре критика.</b> четыре независимых помощника (Скептик, Прагматик, Архитектор, Адвокат пользователя) одновременно ищут дыры в плане; в сводку попадают только находки с уверенностью не ниже 80 %. Если чат уже тяжёлый, Клод рекомендует новый чат.</div>
+<div class="fstep"><b>Реализация в ветке.</b> Клод молча заводит отдельную ветку под задачу, выполняет шаги, тяжёлое отдаёт помощникам, останавливается только на контрольных точках и проверяет их реальным запуском. Пробел в плане — стоп и вопрос, не импровизация. В конце — по каждому пункту критерия доказательство или честный ❌ и вопрос, вливать ли в основной проект.</div>
+<div class="fstep"><b>Слияние.</b> по слову «мержим» Клод гоняет тесты (не прошли — не сливает), показывает, что сохранит, вливает ветку в основную и удаляет её; при конфликте останавливается и объясняет простыми словами. Затем отмечает задачу в гайде как сделанную и сохраняет память проекта в git с отправкой на GitHub.</div>
+<div class="fstep"><b>Гайд по проекту.</b> по слову «собери гайд» Клод заводит новую версию, шесть помощников проходят по коду и памяти, сборщик собирает HTML и PDF и открывает документ; владелец отвечает на решения кодами («B1 ок», «D1 — переделать: …»). Первая версия — этот документ; в основную ветку ещё не влито.</div>
+</div>
+<h2><span class="no">04</span>Кто и что делает</h2>
+<table>
+<tr><th>Роль</th><th>Что видит и делает</th></tr>
+<tr><td><b>Владелец проекта</b></td><td>не пишет код, говорит по-русски голосом: «хочу…», «почини…», «собери гайд»; отвечает «ок» или кодами вроде «A2 ок». Видит вопросы по одному, план с контрольными точками, результат в браузере; технических вопросов ему не задают.</td></tr>
+<tr><td><b>Клод внутри Claude Code</b></td><td>исполнитель: при старте получает памятку плагина и память проекта, по словам владельца выбирает навык, ведёт шаги конвейера, тяжёлую работу отдаёт помощникам, записывает решения и тупики в память.</td></tr>
+<tr><td><b>Помощники-субагенты</b></td><td>отдельные экземпляры Клода, запускаемые параллельно: четыре критика плана, шесть аналитиков и картографов при сборке гайда, проверяющие код перед слиянием. Владелец их не видит — получает только сведённый итог.</td></tr>
+<tr><td><b>Читатель гайда со стороны</b></td><td>партнёр, заказчик или сам владелец через месяц: открывает последнюю версию гайда (HTML или PDF), понимает проект целиком и отвечает на решения по их кодам.</td></tr>
+<tr><td><b>Сторонний установщик плагина</b></td><td>ставит плагин из каталога двумя командами по описанию плагина. Если пойдёт по большому руководству — попадёт на чужой адрес и устаревшие команды версии 5.0; что нужно на компьютере, нигде не сказано.</td></tr>
+<tr><td><b>Разработчик плагина</b></td><td>сам владелец вместе с Клодом: правит тексты навыков и скрипты, гоняет тесты руками по одному файлу, выкладывает новую версию на GitHub.</td></tr>
+</table>
+<h2><span class="no">05</span>Решения</h2>
+<p class="gt">Каждое — как заложено сейчас и почему. Ждём по каждому: ок / переделать / обсудить.</p>
+<h3>P — Процесс</h3>
+<div class="dcs"><div class="dh"><span class="code">P1</span><span class="dt">Правило дефолта</span><span class="dflt">дефолт</span></div>
+<div class="what">По каждому пункту с меткой «дефолт» есть наша рекомендация. Если возражений нет — действуем по ней и не стоим; передумать можно позже.</div>
+<div class="why"><b>Почему:</b> Двигает проект вперёд без бесконечных согласований, и всегда видно, что и когда решили.</div>
+</div>
+<div class="dcs"><div class="dh"><span class="code">P2</span><span class="dt">Одна задача — одна ветка, слияние по слову «мержим»</span><span class="dflt">уже работает</span></div>
+<div class="what">Каждая задача живёт в своей ветке, которую плагин заводит сам при входе в реализацию; по слову «мержим» он сохраняет несохранённое, вливает работу в основную ветку и убирает рабочую.</div>
+<div class="why"><b>Почему:</b> Основная ветка всегда остаётся рабочей, чужая незавершённая работа не смешивается с новой.</div>
+</div>
+<div class="dcs"><div class="dh"><span class="code">P3</span><span class="dt">Код — только после утверждённой задачи и раскритикованного плана</span><span class="dflt">уже работает</span></div>
+<div class="what">Реализация не начинается без файла задачи с критерием готовности и без плана, прошедшего критику; «простых» задач, для которых фазу понимания можно пропустить, не бывает.</div>
+<div class="why"><b>Почему:</b> Половина прошлых провалов начиналась с задачи, не понятой до планирования, а без критики дыры плана всплывают дорого — уже в коде.</div>
+</div>
+<div class="dcs"><div class="dh"><span class="code">P4</span><span class="dt">Технику Клод решает сам, владельцу — только смысл, по одному вопросу</span><span class="dflt">уже работает</span></div>
+<div class="what">Вопросы про стек, библиотеки и устройство кода Клод закрывает сам чтением кода и документации; владельцу задаются только вопросы «что, для кого, зачем», по одному за раз; вместо списка вариантов даётся рекомендация.</div>
+<div class="why"><b>Почему:</b> Владелец — не программист: технические вопросы для него — ощущение, что его заваливают непонятным; а смысловые вопросы может решить только он, без них задача поставлена криво.</div>
+</div>
+<div class="dcs"><div class="dh"><span class="code">P5</span><span class="dt">После «ОК» следующая фаза стартует сама; гайд — только по слову</span><span class="acc">принято</span></div>
+<div class="what">Короткое «ОК», «го», «дальше» после фазы запускает следующую без отдельной команды; «стоп», «пауза», «погоди» останавливают; если чат уже тяжёлый, между критикой и реализацией Клод предлагает новый чат. Гайд (фаза 5) в авто-цепочку не входит — собирается по слову, а после слияния обновляется сам.</div>
+<div class="why"><b>Почему:</b> Одним «ок» можно прокатить весь конвейер, не набирая команды, и при этом нельзя случайно выскочить из критики в реализацию с дырявым планом.</div>
+</div>
+<h3>A — Рамка: для кого плагин и как он говорит</h3>
+<div class="dcs"><div class="dh"><span class="code">A1</span><span class="dt">Пользователь — не программист с голосовым вводом по-русски</span><span class="dflt">уже работает</span></div>
+<div class="what">Все навыки срабатывают на русские слова («хочу», «почини», «собери гайд»), объясняют без жаргона, опечатки и оборванные фразы считают нормой и не переспрашивают «вы имели в виду X?».</div>
+<div class="why"><b>Почему:</b> Владелец не пишет код и вводит голосом; скорость понимания важнее полноты.</div>
+</div>
+<div class="dcs"><div class="dh"><span class="code">A2</span><span class="dt">Отвечать коротко — через встроенный стиль ответов Claude Code, а не через самодельные хуки</span><span class="dflt">уже работает</span></div>
+<div class="what">Правила краткости живут во встроенном стиле ответов «Forge Concise», который включается сам вместе с плагином; если в Claude Code есть штатный механизм (стиль, полоска состояния, проверка перед командой) — используется он, а не самодельный хук.</div>
+<div class="why"><b>Почему:</b> Раньше правила стиля вставлялись в каждый запрос через хук и тратили объём чата; встроенный стиль включается один раз — меньше расходов, проще отладка.</div>
+</div>
+<h3>B — Механика конвейера</h3>
+<div class="dcs"><div class="dh"><span class="code">B1</span><span class="dt">Семь фаз конвейера, у каждой свой вход, выход и след в памяти</span><span class="dflt">уже работает</span></div>
+<div class="what">Направление → понимание задачи → разбор идеи → план → критика → реализация → гайд; у каждой фазы своя команда и свой файл в памяти проекта.</div>
+<div class="why"><b>Почему:</b> Старая схема смешивала понимание задачи и планирование и не имела шага критики; разведение фаз даёт чёткий вход, выход и след на каждом шаге.</div>
+</div>
+<div class="dcs"><div class="dh"><span class="code">B2</span><span class="dt">Фаза 5 — живой версионный гайд по проекту вместо отчёта «Что дальше»</span><span class="acc">принято</span></div>
+<div class="what">Один документ для читающего со стороны (суть, устройство, роли, решения с кодами, риски, план), версии с номерами и PDF на виду; каждая сборка дополняет прошлую версию, ответы владельца кодами меняют реестр; после слияния задачи обновляется сам. Код готов в рабочей ветке, в основную ветку и в версию 7.8.0 ещё не выложен.</div>
+<div class="why"><b>Почему:</b> Два документа «что чинить / что решать» и «где мы» для одного человека — путаница; нужен один живой документ, из которого человек со стороны понимает проект целиком, а история версий не пишется с нуля.</div>
+</div>
+<div class="dcs"><div class="dh"><span class="code">B3</span><span class="dt">План рвут четыре критика; в план попадает только уверенное (≥ 80 %)</span><span class="dflt">уже работает</span></div>
+<div class="what">Скептик, Прагматик, Архитектор и Адвокат пользователя разбирают план одновременно; находки с уверенностью ниже 80 % отбрасываются; при фатальной дыре реализация не начинается — план возвращается на доработку.</div>
+<div class="why"><b>Почему:</b> Планировщик влюблён в свой план — свежие глаза ловят дыры дешевле, чем разбор в коде; порог уверенности отсекает шум.</div>
+</div>
+<div class="dcs"><div class="dh"><span class="code">B4</span><span class="dt">Приёмы поиска неизвестного: слепые зоны, «что увидит владелец», макет до кода, журнал отклонений</span><span class="dflt">уже работает</span></div>
+<div class="what">В понимании задачи — проход по слепым зонам, если область для владельца новая; в плане — первым блоком «что увидит владелец» и обязательный макет экрана до кода для задач с интерфейсом; в реализации — журнал отклонений от плана. Проверочный опрос перед слиянием отвергнут владельцем.</div>
+<div class="why"><b>Почему:</b> У человека без опыта в коде максимум «неизвестных неизвестных»; реакция на картинку работает у него лучше текста; отклонения иначе растворяются молча; опрос при каждом слиянии раздражал бы.</div>
+</div>
+<div class="dcs"><div class="dh"><span class="code">B5</span><span class="dt">Навигатор расписывает все направления и рекомендует, но выбор оставляет владельцу; отдельной дорожной карты не ведёт</span><span class="acc">принято</span></div>
+<div class="what">Фаза 0 показывает карту проекта со статусами частей, перечисляет все направления к цели, рекомендует движение по умолчанию и ждёт реакции; отдельный документ «для глаз» навигатор не пишет — витрина одна, гайд. По-настоящему навигатор на этом проекте ещё не запускали (см. O4).</div>
+<div class="why"><b>Почему:</b> Владелец слаб в придумывании стратегии, но финальный выбор за ним; два документа «где мы» для одного человека — путаница.</div>
+</div>
+<div class="dcs"><div class="dh"><span class="code">B6</span><span class="dt">Вид и место гайда: оформление эталона, папка на виду, PDF через Chrome, коды P/O/R плюс латинские группы</span><span class="dflt">дефолт</span></div>
+<div class="what">Предлагаем закрепить: тёплая палитра и шрифты эталона, печать на A4, ширина на экране 960 px; видимые версии лежат в открытой папке документов, а не в скрытой папке памяти; PDF собирается через установленный Chrome, без Chrome — только HTML; группы кодов P, O, R всегда, остальные буквы подбираются под проект.</div>
+<div class="why"><b>Почему:</b> Эти пункты Клод принял сам с пометкой «владелец может отменить»; владелец уже реагировал на живой макет (попросил ограничить ширину) и не возражал против остального; менять формат после первой собранной версии дороже, чем подтвердить сейчас.</div>
+</div>
+<h3>C — Память проекта и GitHub</h3>
+<div class="dcs"><div class="dh"><span class="code">C1</span><span class="dt">Память проекта — в git и на GitHub; секреты — только названия записей в хранилище паролей</span><span class="dflt">уже работает</span></div>
+<div class="what">Задачи, планы, решения, журнал и данные гайда сохраняются в репозиторий и отправляются на GitHub сами (итог сессии, слияние, слово «сохрани»); служебный мусор отсечён; при несохранённом дольше суток плагин напоминает; без удалённой копии предлагает приватный репозиторий только с явного «да»; пароли и ключи в память не пишутся.</div>
+<div class="why"><b>Почему:</b> Память должна переживать смерть диска и сервера во всех проектах; локальная папка — единая точка отказа; история изменений памяти — бесплатный бонус.</div>
+</div>
+<div class="dcs"><div class="dh"><span class="code">C2</span><span class="dt">Данные гайда — JSON, не YAML; HTML собирает сборщик, Клод HTML руками не пишет</span><span class="dflt">уже работает</span></div>
+<div class="what">Данные фазы 5 хранятся в файлах версий в памяти проекта, страницу и PDF собирает скрипт на стандартной библиотеке Python; после слияния и ответов владельца документ пересобирается механически.</div>
+<div class="why"><b>Почему:</b> На маке владельца нет библиотеки YAML, а JSON есть «из коробки»; данные плюс шаблон не дают сломанной вёрстки, обновление после слияния становится механическим шагом.</div>
+</div>
+<div class="dcs"><div class="dh"><span class="code">C3</span><span class="dt">Связь с GitHub — через утилиту gh из скрипта, вызовы из навыков фаз, без досок Projects</span><span class="acc">принято</span></div>
+<div class="what">Задачи → карточки (Issues), шаги плана → подкарточки, карта целей → закреплённая карточка и шапка README; всё делает один скрипт через утилиту gh, вызываемый из навыков после завершения фазы, а не хуком на каждое действие; доска Projects не используется. Решение записано и воплощено в коде, но на маке владельца цепочка сейчас не работает (R1–R3) — судьба в O1.</div>
+<div class="why"><b>Почему:</b> Хук на каждое действие срабатывал бы много раз за фазу; доска дублирует закреплённую карточку и требует лишних прав, которых у большинства пользователей нет.</div>
+</div>
+<h3>D — Качество и проверки</h3>
+<div class="dcs"><div class="dh"><span class="code">D1</span><span class="dt">Опасные команды и правила владельца проверяются до выполнения</span><span class="dflt">уже работает</span></div>
+<div class="what">Хук перед выполнением команды отсекает удаление диска, перезапись основной ветки и подобное; второй хук перед правкой файла сверяет действие с правилами владельца, зафиксированными по слову «чтобы не повторялось».</div>
+<div class="why"><b>Почему:</b> Разрушительные команды должны останавливаться раньше, чем дойдут до терминала; правила «чтобы не повторялось» действуют в новых сессиях без напоминаний.</div>
+</div>
+<div class="dcs"><div class="dh"><span class="code">D2</span><span class="dt">Логика хуков и сборщика — через тесты; «готово» — после запуска</span><span class="dflt">уже работает</span></div>
+<div class="what">Логика хуков, сборщика гайда и сохранения памяти пишется через тесты (сначала падающий тест, потом код); вёрстка и настройки тестами не обкладываются; заявить «работает» можно только после реального запуска с цитатой вывода.</div>
+<div class="why"><b>Почему:</b> Тесты без изоляции однажды испачкали настоящий репозиторий и отправили мусорные записи на GitHub; без запуска «должно работать» — не доказательство.</div>
+</div>
+<h3>O — Открытые вопросы</h3>
+<div class="dcs"><div class="dh"><span class="code o">O1</span><span class="fire">🔥 эта неделя</span><span class="dt">Сколько у проекта «витрин»: только гайд — или ещё карта задач на GitHub?</span><span class="dsc">открыто</span></div>
+<div class="what">Оставить карту на GitHub (карточки под задачи, закреплённая карта целей, шапка README) — тогда чинить включение на маке (R1), привязку задач к целям (R2) и шапку (R3), а потом покрыть скрипт тестами (R10); или выключить синхронизацию и оставить гайд единственным документом «где мы», как записано в решении о фазе 5.</div>
+</div>
+<div class="dcs"><div class="dh"><span class="code o">O2</span><span class="fire">🔥 эта неделя</span><span class="dt">Плагин — личный инструмент владельца или продукт для других, кто не пишет код?</span><span class="dsc">открыто</span></div>
+<div class="what">Если продукт для других — руководство, страница на GitHub, установка «с нуля», проверка всех навыков по фразам становятся обязательными (R8, R9, R13, R24), а личное обращение к владельцу по имени из стиля ответов убирается; если личный инструмент — эти находки уходят в «потом», а обещание «для любого, кто пишет код через Claude Code» снимается из описания.</div>
+</div>
+<div class="dcs"><div class="dh"><span class="code o">O3</span><span class="dt">Оценка качества плагина по реальным сессиям: собирать корпус сейчас или отложить?</span><span class="dsc">открыто</span></div>
+<div class="what">Заготовка есть: критерии по каждой фазе и таблица разбора ошибок, но корпус из ~116 сессий владельца не собран и ни один прогон не делался. Варианты: собрать записи сессий, разметить провалы и прогнать (несколько сессий работы) — или честно пометить папку отложенной идеей и не считать её работающей.</div>
+</div>
+<div class="dcs"><div class="dh"><span class="code o">O4</span><span class="dt">Запускать ли навигатор направления по-настоящему?</span><span class="dsc">открыто</span></div>
+<div class="what">Файл стратегии пуст: карта, направления, запас идей — все списки пустые, петля «разговор → память → задачи → снова память» ни разу не замкнулась. Варианты: провести первый разговор с навигатором и записать направления в память — или снять это обещание из описания плагина.</div>
+</div>
+<div class="dcs"><div class="dh"><span class="code o">O5</span><span class="dt">Судьба задачи «отделить проверенные факты от догадок» (заведена 7 июля)</span><span class="dsc">открыто</span></div>
+<div class="what">Задача сформулирована владельцем 7 июля и заведена на GitHub, плана к ней нет два месяца. Варианты: взять следующей после гайда, положить в запас идей или закрыть.</div>
+</div>
+<div class="dcs"><div class="dh"><span class="code o">O6</span><span class="dt">Судьба черновиков и посторонних файлов в корне репозитория</span><span class="dsc">открыто</span></div>
+<div class="what">Папка черновиков (27 файлов, из них 11 версий одного прототипа) и четыре посторонних файла в корне не менялись с апреля и ниоткуда не вызываются. Варианты: убрать в архив (ничего не теряется), удалить или оставить как есть.</div>
+</div>
+<h2><span class="no">06</span>Карта рисков</h2>
+<p class="gt">Отсортировано по срочности. Меры — наши предложения, отвечайте по кодам R.</p>
+<h3>🔴 Критичные — закрыть в первую очередь</h3>
+<div class="risk crit"><div class="rt"><span class="rc">R22</span>Гайд ещё не влит в основную ветку</div>
+<p>Пока ветка не влита, гайд существует только в ней: в основной версии плагина команды «открой гайд» ещё нет, и партнёру показать нечего.</p>
+<p><b>Предлагаем:</b> Влить ветку feat/project-guide в основную и выложить версию 7.8.0 на GitHub. Переименование команды в описаниях плагина, справке, шаблоне «первого запуска» и меню уже сделано в ветке, но ещё не сохранено в истории.</p>
+<p><span class="slug" title="project-guide">→ в работе</span></p>
+</div>
+<div class="risk crit"><div class="rt"><span class="rc">R16</span>Скрипты плагина вызываются по адресу, который в сессии пуст — сохранение памяти и обновление гайда держатся на догадке Клода</div>
+<p>Синхронизация с GitHub, сохранение памяти в git, пересборка гайда после слияния, связь карточки с задачей — все зовут скрипт по переменной, которая в сессии оказалась пустой. Клод либо тратит ход на поиск файла, либо пропускает шаг, а владелец слышит «готово». Пока выручает то, что Клод ищет папку сам; фаза 5 целиком зависит от этих вызовов.</p>
+<p><b>Предлагаем:</b> Привести все 37 вызовов в навыках к форме, которую Claude Code подставляет в текст (со скобками, как уже сделано в хуках), добавить в тесты проверку, чтобы старая форма не возвращалась, и запасной путь к папке плагина на случай пустой переменной.</p>
+</div>
+<div class="risk crit"><div class="rt"><span class="rc">R1</span>Команда «включи GitHub» на маке не срабатывает (→ O1)</div>
+<p>Владелец отвечает «да» на предложение включить синхронизацию — плагин выдаёт служебную ошибку, флаг не ставится, и вся связь задач с GitHub дальше тихо не работает; выглядит как «просто выключено». Проверено 6 сентября живым запуском на маке.</p>
+<p><b>Предлагаем:</b> Переписать запись флага в память проекта способом, который одинаково работает на маке и Linux, и добавить тест на маковский вариант команды правки файла (sed).</p>
+</div>
+<div class="risk crit"><div class="rt"><span class="rc">R2</span>Задачи молча не привязываются к целям на GitHub (→ O1)</div>
+<p>Задача заводится без цели, ошибка подавлена. Карта целей на GitHub показывает шесть целей с нулём задач в каждой — а по ней владелец и смотрит, что куда идёт. Известно с 10 июля и записано в уроки проекта, код не исправлен.</p>
+<p><b>Предлагаем:</b> Передавать GitHub название цели вместо номера (или превращать номер в название запросом) и поправить две инструкции навыков, которые учат передавать номер.</p>
+</div>
+<div class="risk crit"><div class="rt"><span class="rc">R3</span>Шапка «над чем идёт работа» в README не обновляется с мая (→ O1)</div>
+<p>Заявлено как работающая возможность, но на любой машине без этой библиотеки скрипт тихо выходит «успешно». На маке владельца Python (язык скриптов плагина) в сессиях Клода запускается из окружения трея, где этой библиотеки нет. Шапка застыла на 26 мая и говорит о задаче, закрытой три месяца назад — посторонний читатель видит неверное состояние проекта.</p>
+<p><b>Предлагаем:</b> Читать два поля из памяти простым разбором строк, без дополнительной библиотеки для чтения памяти проекта (YAML) — как это уже делают другие скрипты плагина; если библиотека всё же нужна — заметное предупреждение владельцу вместо тихого выхода.</p>
+</div>
+<h3>🟡 Средние — держать в поле зрения</h3>
+<div class="risk mid"><div class="rt"><span class="rc">R24</span>Плагин не говорит, что ему нужно на компьютере, и молча отключает части, когда чего-то нет</div>
+<p>Установка обещана двумя командами, но плагин зависит от четырёх внешних программ. Когда чего-то нет, часть отключается молча: владелец видит «GitHub не обновляется» или «PDF не появился» и не понимает, что это не поломка. Хуже всего с защитой от опасных команд: при сломанном Python она сознательно пропускает всё, а предупреждение уходит только в отладочные логи, которые никто не читает.</p>
+<p><b>Предлагаем:</b> Раздел «что должно быть на компьютере» в описании плагина (Python — язык скриптов плагина; библиотека YAML — для связи с GitHub; утилита gh — для GitHub; Chrome — для PDF) и одна проверка при старте сессии: если Python не запускается или при включённом GitHub чего-то нет — сказать во вводной строке простыми словами, чего не хватает и как поставить.</p>
+</div>
+<div class="risk mid"><div class="rt"><span class="rc">R11</span>Тесты запускаются только если про них вспомнить руками</div>
+<p>Сейчас все 122 проверки зелёные, но узнать, что очередная правка что-то сломала, можно, только вспомнив запустить их. Владелец правит через Клода: сломанный хук (защита от опасных команд, загрузка памяти, напоминание о гайде) доедет до установленного плагина незамеченным.</p>
+<p><b>Предлагаем:</b> Один запускатор всех быстрых тестов и автозапуск на GitHub при каждом изменении: шесть наборов проверок служебных скриптов (без сети и без вызова Клода) плюс проверка сборки; медленные тесты с вызовом Клода оставить ручными.</p>
+</div>
+<div class="risk mid"><div class="rt"><span class="rc">R15</span>Часть тестов невозможно запустить на маке — не хватает системной утилиты</div>
+<p>Владелец, решив «прогнать все тесты», по инструкции попадёт в набор, который на маке падает на первой строке, и решит, что плагин сломан. Записано в журнал как «следующее» ещё 6 июля.</p>
+<p><b>Предлагаем:</b> Либо доделать запасной вариант без утилиты timeout в старом наборе тестов (в наборе проверки навыков по фразам уже сделано), либо объявить три старых набора архивом «только Linux» в описании проекта и убрать их из инструкции по тестам.</p>
+</div>
+<div class="risk mid"><div class="rt"><span class="rc">R10</span>Самый большой скрипт плагина трогает настоящие задачи на GitHub — и не проверен ничем (→ O1)</div>
+<p>Это 444 строки, которые своими руками создают, правят и закрывают задачи в репозитории. Ошибка портит настоящие данные, и ни один из шести наборов тестов её не поймает. Один обрыв сети или лимит GitHub на третьем шаге — и в списке задач появятся повторы, среди которых не разобрать настоящие.</p>
+<p><b>Предлагаем:</b> Написать тесты на синхронизацию с GitHub с подставным GitHub (разбор аргументов, поиск маркеров задач, оба генератора текста) и первым делом закрыть найденный случай: при обрыве посреди создания шагов плана соответствие «шаг → подкарточка» теряется, и повтор даст дубли.</p>
+</div>
+<div class="risk mid"><div class="rt"><span class="rc">R14</span>Настройки этого проекта дважды подключают хук памяти, один раз — по адресу с домашнего Linux</div>
+<p>На маке при каждом сообщении запускается хук по несуществующему пути и завершается ошибкой; на домашнем Linux память проекта вставляется в каждый запрос дважды — экономия объёма чата, ради которой переписывали подкладку памяти, здесь не работает.</p>
+<p><b>Предлагаем:</b> Убрать из настроек проекта блок ручной регистрации хука целиком — тот же скрипт уже подключает сам плагин.</p>
+</div>
+<div class="risk mid"><div class="rt"><span class="rc">R13</span>Проверено, что включаются, только 10 навыков из 35 (→ O2)</div>
+<p>Навык включается по фразе владельца. Не совпало — плагин молча работает «как обычно», без своего процесса, и владелец об этом не узнаёт. Про 25 навыков сейчас никто не знает, срабатывают ли они; ни одного сохранённого прогона нет.</p>
+<p><b>Предлагаем:</b> Дописать короткие фразы-проверки хотя бы для ключевых непокрытых: разбор идеи, сохранение памяти, завершение ветки, диагностика проблемы; результаты прогонов сохранять в репозитории.</p>
+</div>
+<div class="risk mid"><div class="rt"><span class="rc">R8</span>Руководство пользователя отстало на две версии и ведёт на чужой адрес (→ O2)</div>
+<p>Это единственный подробный документ «как этим пользоваться». Любой, кому дадут плагин, получит по нему ошибку установки и команды, которых больше нет. Текущая задача правит в нём только имя пятой фазы — остальное останется.</p>
+<p><b>Предлагаем:</b> Обновить руководство: версию в заголовке, команду установки (сейчас клонирует чужой репозиторий), описания трёх удалённых команд и папку тупиков, которой в таком виде нет.</p>
+</div>
+<div class="risk mid"><div class="rt"><span class="rc">R9</span>Человек, зашедший на страницу плагина, не поймёт ни что это, ни как поставить (→ O2)</div>
+<p>Корневой README — семь строк служебного блока с застывшим статусом, а именно его первым показывает страница репозитория (это и есть адрес из описания плагина). Единственная картинка конвейера в описании плагина — схема четырёх фаз без навигатора, разбора идеи и гайда.</p>
+<p><b>Предлагаем:</b> Написать README в корне: что плагин делает, как подключить, что нужно на машине; в описании плагина заменить ссылку на «историческую схему на 4 фазы» из папки черновиков на актуальную схему из семи фаз.</p>
+</div>
+<div class="risk mid"><div class="rt"><span class="rc">R17</span>В репозитории 27 давно влитых веток</div>
+<p>Плагин обещает убирать за собой, а в его собственном репозитории ветки с апреля.</p>
+<p><b>Предлагаем:</b> Удалить влитые ветки (27 локальных и три на GitHub) и проверить, почему шаг уборки в навыке завершения не отрабатывает.</p>
+</div>
+<div class="risk mid"><div class="rt"><span class="rc">R18</span>Полоска с текущей фазой у владельца не включена</div>
+<p>Плагин умеет показывать, на каком шаге он находится (включая «Фаза 5: Гайд по проекту»), но у владельца этой полоски нет вовсе — настройка требует вписать путь руками.</p>
+<p><b>Предлагаем:</b> Либо подключить её в личные настройки владельца, либо убрать обещание из описания плагина.</p>
+</div>
+<div class="risk mid"><div class="rt"><span class="rc">R19</span>Нет быстрой проверки, что плагин собран правильно</div>
+<p>Съедет одна строка в заголовке навыка — Claude Code просто не зарегистрирует его без предупреждения. Встроенная проверка Claude Code есть и сегодня проходит, но в тесты она не включена, а именно такой тест поймал бы пустой адрес скриптов (R16) и упоминания команды, которой больше нет (так было с гайдом до переименования).</p>
+<p><b>Предлагаем:</b> Дымовой тест в общем запускаторе: у каждого навыка есть заголовок с именем и описанием, все пути из настроек существуют, описания плагина читаются; подключить к нему встроенную команду проверки плагина Claude Code.</p>
+</div>
+<div class="risk mid"><div class="rt"><span class="rc">R23</span>Ни одна версия плагина не отмечена меткой — откатиться не к чему</div>
+<p>За 129 изменений вышло семь крупных версий, но ни одна не отмечена меткой или релизом на GitHub. Если после очередного обновления плагин «сломался», откатиться на известно-рабочую версию не к чему; номер версии дублируется в четырёх файлах и держится только на ручной синхронности.</p>
+<p><b>Предлагаем:</b> В шаг подъёма версии добавить создание метки версии (git-тега) и её отправку на GitHub вместе с веткой; задним числом поставить метку v7.7.0 на текущий выпуск.</p>
+</div>
+<div class="risk mid"><div class="rt"><span class="rc">R25</span>Память проекта называет оценку качества работающей — а это пустой каркас</div>
+<p>Клод при загрузке памяти считает, что оценка качества уже есть, и не предложит её собрать; на вопрос «что работает» владелец получает неправду, а урок про фазы записан со ссылкой на анализ, которого не было.</p>
+<p><b>Предлагаем:</b> Перенести строку про оценку качества в памяти проекта из «работает» в честное «каркас, ни одного прогона» и поправить источник урока, который ссылается на анализ пустой таблицы.</p>
+</div>
+<div class="risk mid"><div class="rt"><span class="rc">R26</span>Шпаргалки по частям плагина отстали на два месяца, а Клоду велено читать их раньше кода</div>
+<p>По инструкции Клод сначала смотрит в шпаргалку, а там нет ни отчёта, ни гайда, ни половины новых частей — он ищет вслепую или делает выводы по устаревшей картине, и каждая задача начинается с лишнего расследования.</p>
+<p><b>Предлагаем:</b> После слияния гайда пересобрать шпаргалки по частям плагина командой обновления документации, чтобы в них появились фаза 5, новые навыки и тесты; либо снять правило «сначала шпаргалка, потом код», пока они не обновляются сами.</p>
+</div>
+<div class="risk mid"><div class="rt"><span class="rc">R27</span>Описание проекта и реестр решений расходятся с кодом: 33 навыка вместо 35, две версии конвейера</div>
+<p>Описание проекта — первое, что Клод читает в каждой сессии, а реестр решений — источник «почему так устроено». Когда там одновременно «4 фазы» и «7 фаз», он может объяснить владельцу не то устройство; неверные цифры подрывают доверие к остальному.</p>
+<p><b>Предлагаем:</b> Исправить число навыков в описании проекта (или убрать число вовсе, чтобы не устаревало) и пометить в реестре решений запись о четырёхфазном конвейере как заменённую семифазным.</p>
+</div>
+<div class="risk mid"><div class="rt"><span class="rc">R28</span>Меню для Linux предлагает команды, которых в плагине нет</div>
+<p>Мышкой из этого меню владелец скопирует команду, которой нет, и получит ошибку вместо шага конвейера.</p>
+<p><b>Предлагаем:</b> Обновить список команд в версии меню для Linux по образцу маковской: убрать три давно удалённые команды, добавить фазы 0, 1.5 и 5.</p>
+</div>
+<div class="risk mid done"><div class="rt"><span class="rc">R12</span>Кнопочное меню в трее не знает про новую фазу и про сохранение памяти</div>
+</div>
+<p class="gt">Отложено — 2: Карта файлов в памяти считает содержимое папок неточно; Кусок работы над треем лежит в «кармане» git.</p>
+<h2><span class="no">07</span>План</h2>
+<div class="rmap">
+<div class="rcol now"><div class="rh">Сейчас · эта неделя</div><ul><li>Влить гайд в основную ветку и выложить 7.8.0 (R22, задача project-guide)</li><li>Адрес скриптов в навыках — чтобы память и гайд обновлялись не на догадке (R16)</li><li>Связь с GitHub на маке: флаг, цели, шапка README (R1, R2, R3) — или ответ по O1</li></ul></div>
+<div class="rcol next"><div class="rh">Дальше · 2–4 недели</div><ul><li>Ответ по O2 — личный инструмент или продукт для других (открывает R8, R9, R13, R24)</li><li>Что нужно на компьютере и проверка при старте сессии (R24)</li><li>Автозапуск тестов, старые наборы на маке, дымовой тест сборки (R11, R15, R19)</li><li>Тесты на синхронизацию с GitHub — если O1 = «оставить» (R10)</li><li>Настройки проекта и проверка навыков по фразам (R14, R13)</li></ul></div>
+<div class="rcol later"><div class="rh">Позже</div><ul><li>Ответы по O3–O6: оценка качества, навигатор, задача о доверии к памяти, черновики</li><li>Метки версий, чистка веток, полоска фазы (R23, R17, R18)</li><li>Порядок в памяти проекта: шпаргалки, честный статус, реестр решений (R25, R26, R27)</li><li>Меню для Linux и отложенное: карта файлов, правки трея (R28, R20, R21)</li></ul></div>
+</div>
+<h2><span class="no">08</span>Словарик</h2>
+<dl class="gl">
+<dt>Плагин</dt><dd>Надстройка над программой Claude Code, которая задаёт Клоду правила работы и добавляет команды.</dd>
+<dt>Навык (скилл)</dt><dd>Инструкция для Клода на конкретную ситуацию; включается сама по вашим словам или командой.</dd>
+<dt>Хук</dt><dd>Маленький скрипт, который срабатывает автоматически в момент события: старт сессии, ваше сообщение, запуск команды.</dd>
+<dt>Фаза (шаг конвейера)</dt><dd>Один из семи этапов пути от сырой идеи до готового кода; у каждого свой вход, выход и файл-результат.</dd>
+<dt>Контрольная точка (чекпоинт)</dt><dd>Место в плане, где Клод останавливается и показывает результат, прежде чем идти дальше.</dd>
+<dt>Субагент (помощник)</dt><dd>Отдельный экземпляр Клода, запущенный для одной подзадачи параллельно с основным разговором.</dd>
+<dt>Git, ветка и мерж</dt><dd>Git — хранилище кода с историей изменений; ветка — отдельная копия кода под одну задачу; мерж («мержим») — вливание готовой работы обратно в основную версию.</dd>
+<dt>GitHub: репозиторий, README, Issue</dt><dd>Сайт, где лежит копия кода проекта (репозиторий) с первой страницей описания (README) и карточками-задачами (Issue), куда плагин может зеркалить задачи и их шаги.</dd>
+</dl>
+<footer>forge-plugin · гайд v1.0 от 2026-09-06 · Собрано из: код проекта, память .forge, журнал 04.06–06.09.2026</footer>
+</body>
+</html>

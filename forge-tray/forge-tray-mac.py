@@ -9,7 +9,7 @@ import subprocess
 import rumps
 import AppKit
 
-VERSION = "7.7.0"
+VERSION = "7.8.0"
 
 COMMANDS = [
     # Инициализация и старт
@@ -24,7 +24,7 @@ COMMANDS = [
     ("forge:plan", "Phase 2 — построить план"),
     ("forge:critique", "Phase 3 — критика плана (4 персоны)"),
     ("forge:execute", "Phase 4 — реализация"),
-    ("forge:status-report", "Phase 5 — отчёт «Что дальше»"),
+    ("forge:guide", "Phase 5 — гайд по проекту"),
     # Разблокировка и качество
     ("forge:investigate", "Разбор проблемы (до фикса)"),
     ("forge:cleanup", "Качество кода"),
@@ -58,7 +58,7 @@ SKILLS = [
     ("forge:plan", "Phase 2 — план с чеклистами"),
     ("forge:critique", "Phase 3 — 4 персоны + confidence"),
     ("forge:execute", "Phase 4 — реализация через субагентов"),
-    ("forge:status-report", "Phase 5 — отчёт «Что дальше» (что чиню / что решаешь)"),
+    ("forge:project-guide", "Phase 5 — гайд по проекту (версии в docs/guide)"),
     # Разработка
     ("forge:test-driven-development", "TDD (RED-GREEN-REFACTOR)"),
     ("forge:problem-investigation", "Разобраться до фикса"),
