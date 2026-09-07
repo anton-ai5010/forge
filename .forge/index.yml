@@ -53,8 +53,8 @@ session:
   goal: "Гайд по проекту — фаза 5 становится версионным документом, v7.8.0"
   done:
     - "skills/project-guide (SKILL.md + render.py bump/render/pdf/verdict/merged/link/summary), /forge:guide, docs/guide/ версии, отчёт этого репо мигрирован в v1.0"
-  now: "Живой прогон гайда v1.0 на этом репо, затем мерж и релиз 7.8.0"
+  now: "Влито в master, версия 7.8.0 выложена"
   next: "Собрать гайд на чужом проекте (веб + Telegram-бот)"
   errors: []
 
-last_session: "2026-09-06 — v7.8.0: гайд по проекту (фаза 5): версии docs/guide/, коды решений, ответы в чате, PDF через Chrome"
+last_session: "2026-09-07 — v7.8.0: гайд по проекту (фаза 5): версии docs/guide/, коды решений, ответы в чате, PDF через Chrome"
