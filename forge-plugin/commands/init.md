@@ -420,6 +420,7 @@ working:
   - "FORGE documentation initialized"
 broken: []
 blocked: []
+drift: []   # расхождения код/доки; пишет drift-check.py --write (what / found / truth)
 ```
 
 ## Step 10: Generate .forge/decisions.yml (L1)

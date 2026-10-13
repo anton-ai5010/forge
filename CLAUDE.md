@@ -17,7 +17,7 @@ forge-plugin/              — корневая директория плаги�
   hooks/                   — bash хуки (session-start, context-inject, bash-safety, statusline)
   agents/                  — промпт-шаблоны субагентов
   commands/                — slash-команды (MD файлы)
-  skills/                  — 33 скилла (SKILL.md + поддержка)
+  skills/                  — 35 скиллов (SKILL.md + поддержка)
   output-styles/           — нативный Output Style "Forge Concise" (auto-activated)
   evals/                   — каркас Hamel-style eval-сетапа (корпус пуст, ни одного прогона)
   sounds/                  — mp3 для Stop / PermissionRequest хуков

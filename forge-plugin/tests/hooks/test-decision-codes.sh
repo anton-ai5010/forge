@@ -58,4 +58,23 @@ python3 "$SCRIPT" "$G" >/dev/null 2>&1
 [ "$(grep -A1 'id: new' "$G" | tail -1)" = "    code: DEC-08" ] && [ "$(grep -c 'DEC-07' "$G")" = 1 ]
 check "в: после DEC-07 новая получает DEC-08" $?
 
+# (д) записи, начинающиеся с `- date:`
+H="$TMP/h.yml"
+cat > "$H" <<'Y'
+decisions:
+  - date: 2026-07-25
+    what: "один"
+
+  - date: 2026-07-26
+    what: >
+      два
+      продолжение
+    why: "z"
+Y
+cp "$H" "$TMP/h0.yml"
+python3 "$SCRIPT" "$H" >/dev/null 2>&1
+[ "$(grep -c '^    code: DEC-0[12]$' "$H")" = 2 ] && [ "$(grep -A1 'date: 2026-07-25' "$H" | tail -1)" = "    code: DEC-01" ] \
+  && diff <(grep -v '^    code: DEC-' "$H") "$TMP/h0.yml" >/dev/null
+check "д: записи с '- date:' получают DEC-NN, остальное байт-в-байт" $?
+
 [ "$fails" -eq 0 ] || exit 1

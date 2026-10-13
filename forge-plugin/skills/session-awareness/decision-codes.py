@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Проставляет стабильные коды DEC-NN записям .forge/decisions.yml (stdlib, без PyYAML).
 
-Запись списка: строка `  - id: <x>`. Если в записи нет `code:` — после строки id
+Запись списка: строка `  - <любой ключ>: ...`. Если в записи нет `code:` — после первой строки
 вставляется `    code: DEC-NN` (следующий номер после максимального). Остальное не трогается.
 Использование: decision-codes.py [путь к decisions.yml]  (по умолчанию .forge/decisions.yml)
 """
@@ -12,11 +12,13 @@ path = sys.argv[1] if len(sys.argv) > 1 else ".forge/decisions.yml"
 with open(path, encoding="utf-8", newline="") as f:
     lines = f.read().split("\n")
 
-ID_RE = re.compile(r"^(\s*)- id:\s")
+ID_RE = re.compile(r"^(\s*)- [A-Za-z_][\w-]*:")
 CODE_RE = re.compile(r"^\s*code:\s*[\"']?DEC-(\d+)")
 
 # границы записей: от строки id до следующей записи или строки с меньшим отступом
-starts = [i for i, l in enumerate(lines) if ID_RE.match(l)]
+cand = [(i, len(ID_RE.match(l).group(1))) for i, l in enumerate(lines) if ID_RE.match(l)]
+top = min((n for _, n in cand), default=0)  # записи списка — самый левый отступ; вложенные списки глубже
+starts = [i for i, n in cand if n == top]
 entries = []
 for n, s in enumerate(starts):
     indent = len(ID_RE.match(lines[s]).group(1))
@@ -49,7 +51,11 @@ for (s, _, indent), ok in zip(entries, has_code):
         inserts.append((s, " " * (indent + 2) + "code: DEC-%02d" % nxt))
 
 for s, text in reversed(inserts):
-    lines.insert(s + 1, text)
+    at = s + 1
+    # многострочное значение первого ключа (`- date: >`) — код после него, не посреди
+    while at < len(lines) and lines[at].strip() and len(lines[at]) - len(lines[at].lstrip()) > len(text) - len(text.lstrip()):
+        at += 1
+    lines.insert(at, text)
 
 if inserts:
     with open(path, "w", encoding="utf-8", newline="") as f:

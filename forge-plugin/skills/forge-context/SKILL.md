@@ -71,6 +71,12 @@ Dead-ends: websockets (use polling instead)
 Ready.
 ```
 
+## Большие файлы и журнал
+
+- L1-файл больше 20 000 символов не грузи целиком: `python3 $CLAUDE_PLUGIN_ROOT/skills/forge-context/toc.py <file>` даёт оглавление (код/id · дата · начало).
+- Нужную запись бери дословно: `toc.py <file> --get <код|id>`.
+- Журнал читай только так: `toc.py --journal .forge [N]` (последние N итогов, новые первыми) — не открывай journal.yml целиком.
+
 ## Иерархия правды
 
 При расхождении фактов верь старшему: код > тесты > `.forge` decisions / status > map / conventions > journal / notes.
