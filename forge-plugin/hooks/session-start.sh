@@ -111,6 +111,8 @@ ${header}
 
 ROUTING: Match .forge/index.yml catalog[].tags with current task to decide which L1 files to load. Do NOT load all L1 files — only what matches.
 
+WORKFLOWS: пишешь воркфлоу (Workflow tool, в т.ч. ультракод) — у КАЖДОГО agent() явные model и effort по $plugin_root/docs/model-roles.md (иначе помощник наследует модель чата); метки impl:/review:/verify:/final-review:/fix:; шаг с кодом проверяется по схеме skills/requesting-code-review (дифф в промпт, Sonnet-углы, Codex, Opus только для денег/прода/удаления), находки — пачкой, не скептик на каждую.
+
 DOC DISCIPLINE: If you just made a technical decision — record in .forge/decisions.yml. If an approach failed — record in .forge/dead-ends.yml. If you learned something non-obvious — record in .forge/learnings.yml. Do it NOW, not later.
 
 Для глубокого введения — Skill tool: forge:using-forge.

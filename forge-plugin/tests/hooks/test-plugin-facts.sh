@@ -22,5 +22,11 @@ N_DECL="$(grep -oE '[0-9]+ скилл[а-я]*' "$ROOT/../CLAUDE.md" | head -1 | 
 N_REAL="$(ls "$ROOT"/skills/*/SKILL.md | wc -l | tr -d ' ')"
 check "CLAUDE.md: число скиллов ($N_DECL) = числу SKILL.md ($N_REAL)" "[ '$N_DECL' = '$N_REAL' ]"
 
+# каждый скрипт, который hooks.json вызывает напрямую, должен быть исполняемым (иначе хук падает на каждом событии)
+for f in $(grep -oE '\$\{CLAUDE_PLUGIN_ROOT\}/hooks/[a-z0-9_-]+\.sh' "$ROOT/hooks/hooks.json" | sed 's|${CLAUDE_PLUGIN_ROOT}/||' | sort -u); do
+  check "$f исполняемый (вызывается из hooks.json)" "[ -x '$ROOT/$f' ]"
+done
+check "в git у hooks/*.sh стоит бит запуска" "[ -z \"\$(git -C '$ROOT' ls-files -s hooks/*.sh | awk '\$1 != \"100755\"')\" ]"
+
 echo; [ $FAIL -eq 0 ] && echo OK || echo "$FAIL FAIL"
 exit $FAIL
