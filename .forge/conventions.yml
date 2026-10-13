@@ -10,7 +10,6 @@ naming:
   skills: kebab-case (директория + SKILL.md внутри)
   commands: kebab-case (init.md, brainstorm.md)
 structure:
-  forge-plugin/lib/: "JS утилиты (ядро плагина)"
   forge-plugin/hooks/: "Конфигурация хуков"
   forge-plugin/agents/: "Промпт-шаблоны субагентов"
   forge-plugin/commands/: "Описания команд (MD)"

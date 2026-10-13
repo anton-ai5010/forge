@@ -255,6 +255,7 @@ python3 "$CLAUDE_PLUGIN_ROOT/skills/project-guide/render.py" bump major    # «�
 3. .forge/decisions.yml против кода: решения, которые код нарушает — находкой.
 4. .forge/tasks/*.md без влитого результата (slug не встречается в git log) — открытые задачи; секции «## Открытые вопросы» в .forge/plans/*.md — вопросы владельцу.
 5. .forge/direction.yml: backlog и map[].status risk/unknown — что из отложенного стало срочным.
+6. Вывод `python3 $CLAUDE_PLUGIN_ROOT/skills/forge-context/drift-check.py` (мёртвые пути в map/conventions/CLAUDE.md, доки без правки дольше кода) и секция `drift:` в .forge/status.yml — каждое расхождение находкой в риски («доки врут: …»), правда — по иерархии правды (forge-context).
 Не больше 12 находок. Один и тот же вопрос владельцу — либо решение группы O в «## Решения» ниже, либо находка owner: decision — никогда оба.
 
 Вторая часть — решения проекта (раздел 05 гайда). Источники: .forge/decisions.yml (id/date/decision/why), .forge/direction.yml (directions/backlog/goal_shift), открытые задачи и «## Открытые вопросы» планов, README (обещания).

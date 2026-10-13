@@ -141,6 +141,39 @@ ctx=$(context_of "$out")
 check "should hint to migrate a legacy status-report.json into the guide («собери гайд»)" $?
 cd / && rm -rf "$WORK"
 
+# --- (7–9) расхождения код/доки (drift-check, раз в сутки, отметка вне репо) — в той же строке, что гайд ---
+
+run_hook_home() { HOME="$1" CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" bash "$HOOK" </dev/null 2>/dev/null; }
+FAKE_HOME=$(mktemp -d)
+
+new_project
+printf 'structure:\n  app: src/missing.py\n' > .forge/map.yml
+cat > "$GUIDE" <<'EOF2'
+{"meta": {"version": "1.0"}, "built_at": "2026-09-01", "stale_tasks": 0,
+ "decisions": [{"code": "A1", "group": "A", "status": "open"}], "findings": []}
+EOF2
+out=$(run_hook_home "$FAKE_HOME")
+ctx=$(context_of "$out")
+valid_json "$out" && printf '%s' "$ctx" | grep "📖 Гайд" | grep -q "доки: 1 расхождение"
+check "should merge guide reminder and docs drift into one line" $?
+ls "$FAKE_HOME"/.claude/forge-state/*/drift-checked >/dev/null 2>&1
+check "should keep the once-a-day drift mark outside the repo (~/.claude/forge-state)" $?
+
+rm -rf .forge/guide
+rm -rf "$FAKE_HOME"/.claude/forge-state
+out=$(run_hook_home "$FAKE_HOME")
+ctx=$(context_of "$out")
+valid_json "$out" && printf '%s' "$ctx" | grep -q "📌 Доки: 1 расхождение с кодом"
+check "should report docs drift alone when there is no guide" $?
+
+rm -f .forge/map.yml
+rm -rf "$FAKE_HOME"/.claude/forge-state
+out=$(run_hook_home "$FAKE_HOME")
+ctx=$(context_of "$out")
+valid_json "$out" && ! printf '%s' "$ctx" | grep -qi "доки:"
+check "should stay silent when there is no drift and no guide" $?
+cd / && rm -rf "$WORK" "$FAKE_HOME"
+
 echo "---"
 if [ "$fails" -gt 0 ]; then
     echo "$fails test(s) FAILED"

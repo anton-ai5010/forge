@@ -7,10 +7,6 @@ directories:
     files: 2
     about: "Plugin manifest (plugin.json, marketplace.json)"
 
-  forge-plugin/lib/:
-    files: 1
-    about: "skills-core.js — legacy JS-ядро (используется только OpenCode тестами)"
-
   forge-plugin/hooks/:
     files: "session-start.sh, context-inject.sh, bash-safety.sh, statusline.sh, hooks.json"
     about: "Bash-хуки для SessionStart, UserPromptSubmit, PreToolUse, PermissionRequest, Stop"

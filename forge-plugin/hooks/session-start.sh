@@ -52,15 +52,45 @@ fi
 # Напоминание про гайд по проекту (Фаза 5): одна строка и только когда есть что напомнить
 # (render.py summary молчит, если открытых решений нет и гайд не устарел). Без PyYAML — JSON.
 # Гайд есть, если лежит хоть одна версия .forge/guide/vX.Y.json (последняя = максимум по имени).
+# Расхождения код/доки (drift-check.py) — раз в сутки на проект; отметка и число — вне репо,
+# в ~/.claude/forge-state/<путь проекта>/drift-checked (строка 1 — дата, строка 2 — число)
+drift_part=""
+if [ -d .forge ]; then
+    top=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+    mark="$HOME/.claude/forge-state/${top//\//-}/drift-checked"
+    today=$(date +%F)
+    if [ "$(sed -n 1p "$mark" 2>/dev/null)" = "$today" ]; then
+        drift_n=$(sed -n 2p "$mark")
+    else
+        drift_n=$(python3 "$plugin_root/skills/forge-context/drift-check.py" --count 2>/dev/null || true)
+        mkdir -p "$(dirname "$mark")" 2>/dev/null && printf '%s\n%s\n' "$today" "$drift_n" > "$mark" 2>/dev/null || true
+    fi
+    if [ "${drift_n:-0}" -gt 0 ] 2>/dev/null; then
+        case "$drift_n" in
+            *1[1-4]) word="расхождений" ;;
+            *1) word="расхождение" ;;
+            *[2-4]) word="расхождения" ;;
+            *) word="расхождений" ;;
+        esac
+        drift_part="доки: $drift_n $word"
+    fi
+fi
+
 report_warn=""
 if ls .forge/guide/v*.json >/dev/null 2>&1; then
     line=$(python3 "$plugin_root/skills/project-guide/render.py" summary 2>/dev/null || true)
+    if [ -n "$line" ] && [ -n "$drift_part" ]; then
+        line="$line · $drift_part (список — python3 $plugin_root/skills/forge-context/drift-check.py)"
+    fi
     if [ -n "$line" ]; then
         report_warn=$'\n\n'"$line — напомни пользователю одной строкой; вопросы по решениям задавай по одному и только по его слову. Если владелец отвечает на решение из гайда (кодом или словами) — разбери, что он имел в виду, и примени по одному коду: \`python3 $plugin_root/skills/project-guide/render.py verdict <КОД> <accepted|changed|discuss|works|dropped|agreed|done|up|down|deferred> [текст]\`; принятое запиши в .forge/decisions.yml; рендерер сам перерисует guide-latest.html, новую версию не заводит"
     fi
 elif [ -f ".forge/status-report.json" ]; then
     # Гайда ещё нет, но лежит старый отчёт «Что дальше» — по слову «собери гайд» он станет версией 1.0 гайда
     report_warn=$'\n\n'"📖 Найден старый отчёт «Что дальше» (.forge/status-report.json), гайда по проекту ещё нет — скажи владельцу одной строкой: «скажи «собери гайд» — перенесу находки в гайд по проекту»."
+fi
+if [ -z "$report_warn" ] && [ -n "$drift_part" ]; then
+    report_warn=$'\n\n'"📌 Доки: ${drift_part#доки: } с кодом (список — python3 $plugin_root/skills/forge-context/drift-check.py) — скажи владельцу одной строкой; правь по иерархии правды (forge-context)."
 fi
 
 # Короткое введение — что есть forge и как им пользоваться
