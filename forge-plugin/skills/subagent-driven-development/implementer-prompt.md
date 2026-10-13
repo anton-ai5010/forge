@@ -28,6 +28,7 @@ If no matching hint exists, omit the section entirely.
 
 ```
 Agent tool (general-purpose):
+  model: "sonnet"   ("opus" if the task is marked [важное]: prices, payments, orders, purchases, prod server, data deletion)
   description: "Implement Task N: [task name]"
   prompt: |
     You are implementing Task N: [task name]

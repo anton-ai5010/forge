@@ -2,6 +2,7 @@
 name: forge-documenter
 description: Updates FORGE project documentation after code changes — maintains .forge/library/ spec.yml (or spec.json) and README.md files, and .forge/map.yml (or map.json)
 model: sonnet
+effort: low
 tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 

@@ -49,6 +49,7 @@ ls -d .kiro/ 2>/dev/null
 ## Step 1: Scan Project (PARALLEL — dispatch subagents)
 
 Launch 3-4 subagents simultaneously to scan the project. Do NOT scan sequentially — it's too slow.
+Models: Agents 1–3 — `subagent_type: forge:scout` (cheap scout: find / list / count); Agent 4 (extracts purpose — conclusions) and Agent 5 (runs graphify — writes files) — `model: "sonnet"`. See `$CLAUDE_PLUGIN_ROOT/docs/model-roles.md`.
 
 **Agent 1: Project structure + code analysis**
 ```bash
@@ -460,6 +461,7 @@ goal_shift: []   # лёгкая история смещения цели (date, 
 
 If Agent 4 from Step 1 already read source files — use its results.
 Otherwise, dispatch parallel subagents: one per source directory (max 5 concurrent).
+Model: `model: "sonnet"` in every Agent call (role "documentation", see `$CLAUDE_PLUGIN_ROOT/docs/model-roles.md`).
 
 For each source directory:
 

@@ -60,6 +60,7 @@ If no `.forge/` exists, tell user: "Проект не инициализиров
 Flows are how data/requests/events move through the system. Think of the project as a machine — what goes in, what happens inside, what comes out.
 
 **Dispatch 2 subagents in parallel:**
+Model: pass `model: "sonnet"` in every Agent call (role "research with conclusions", see `$CLAUDE_PLUGIN_ROOT/docs/model-roles.md`).
 
 **Subagent 1 — Flow Extractor:**
 ```

@@ -139,6 +139,7 @@ Read the output file to verify extraction worked. Note the SLUG value for Phase 
 ### Phase 2: Parallel Analysis
 
 Dispatch 4 agents simultaneously (single message, 4 Agent tool calls). Each agent receives the extracted messages via the task prompt — paste the full extraction output into each agent's prompt.
+Model: pass `model: "sonnet"` in every Agent call (role "research with conclusions", see `$CLAUDE_PLUGIN_ROOT/docs/model-roles.md`).
 
 **Agent A — Pain Points & Frustrations:**
 ```

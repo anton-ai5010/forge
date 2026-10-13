@@ -4,11 +4,11 @@ goal: "Плагин для Claude Code, автоматизирующий раб�
 stage: maintenance
 progress: 100%
 blocked: нет
-version: "7.8.0"
+version: "7.9.0"
 stack: [python, bash, markdown, claude-code-plugin]
 
 now:
-  task: "v7.8.0 на GitHub — гайд по проекту доступен как /forge:guide"
+  task: "v7.9.0 — модели по ролям и новая схема проверки (Sonnet-углы + Codex + Opus по правилу); дальше пилот на integration"
   branch: master
 
 catalog:

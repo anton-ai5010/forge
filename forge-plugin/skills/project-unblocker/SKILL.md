@@ -79,6 +79,8 @@ EOF
 - Агент 3: инфраструктура (Docker, тесты, CI/CD, .env)
 - Агент 4: документация (.forge/, README) + попытка запуска проекта
 
+Модели: агенты 1–3 — `subagent_type: forge:scout` (дешёвый разведчик: найти / перечислить / посчитать); агент 4 (запуск проекта — не только чтение) — `model: "sonnet"`. Таблица `$CLAUDE_PLUGIN_ROOT/docs/model-roles.md`.
+
 **Разведка окружения:** Serena MCP (символьный анализ), Playwright (UI), Docker/SSH (что работает), Context7 (доки зависимостей).
 
 ## Workflow

@@ -12,85 +12,48 @@ Dispatch forge:code-reviewer subagent to catch issues before they cascade.
 
 **Core principle:** Review early, review often.
 
+## Схема проверки шага
+
+Модели и потолки — по таблице `$CLAUDE_PLUGIN_ROOT/docs/model-roles.md`. Чеклист один на всех — `review-checklist.md`.
+
+**1. Вход — в промпт, а не «изучи проект».** Дифф шага (`git diff <base>..HEAD` или `git diff` несохранённого) + секции «Задача» / «Критерий готовности» из `.forge/tasks/...` + «Как проверим» шага из плана. Шаблон — `code-reviewer.md`.
+
+**2. Параллельно, одним сообщением:**
+- пять Agent `subagent_type: forge:code-reviewer` (sonnet, effort medium, потолок 30 шагов) — промпт по шаблону, углы `логика` / `надёжность` / `тексты` / `интерфейс` / `тесты` (раздел «Углы» чеклиста). Нет страниц и шаблонов в диффе — без `интерфейс`; нет ничего, что читает владелец, — без `тексты`;
+- Bash (фоном): дифф и задачу — во временные файлы, затем `bash $CLAUDE_PLUGIN_ROOT/skills/requesting-code-review/codex-review.sh review <diff-file> <task-file>` → JSON находок или `SKIP: <причина>`.
+
+**3. Сверка находок.** Совпали у двух источников (тот же файл ± 5 строк и та же суть) — подтверждены. Критичные, которые нашёл только один источник, — **один** проверяющий пачкой: Agent `model: "sonnet"`, в промпте дифф + весь список спорных находок, вердикт «настоящая / нет» по каждой одним заходом. Никогда — отдельный помощник на каждую находку.
+
+**3а. Второй круг — только для шагов `[важное]`.** Те же углы, свежие помощники, тот же полный дифф + список всего найденного в первом круге (Sonnet и Codex) с просьбой искать пропущенное (шаблон, раздел «Второй круг»). Codex второй раз не зовётся. Зачем: проверяющие от прогона к прогону находят разное, а «ищи, что пропустили» добирает хвост — на integration второй круг старой схемы давал находки, которых не было в первом.
+
+**4. Финальный Opus** — Agent `subagent_type: forge:code-reviewer`, `model: "opus"`, `effort: "high"`, тот же промпт + подтверждённые находки. Получает всё найденное в обоих кругах. Зови, только если:
+- шаг помечен `[важное]` (цены, оплаты, заказы, закупки, боевой сервер, удаление данных); нет метки — запасной признак: такие пути или слова в диффе;
+- Sonnet и Codex разошлись по критичной находке, а пачечная проверка не сняла спор;
+- проверяющий упёрся в потолок (ответ неполный) — сначала один повтор, если снова — Opus;
+- Codex не сработал (SKIP «не ответил» / «не установлен») на шаге `[важное]` — днём и ночью одинаково, сам, сообщив об этом в отчёте.
+
+**5. Исправление → повторная проверка только диффа фикса**, тем же Sonnet (шаблон, в `{DIFF}` — дифф фикса). Codex и Opus повторно не зовутся, если фикс не меняет логику денег / прода / удаления.
+
+**6. Отчёт владельцу — одной строкой по смыслу, без цифр:**
+- «проверка: чисто»;
+- «проверка: нашла 2 проблемы — могло задвоить заказ; цена могла уйти ниже закупки — исправлено» (по фразе `в жизни` из каждой находки);
+- «проверка не уложилась — позвал Opus»;
+- деградация — в той же строке: «проверял один Sonnet: Codex не ответил»;
+- «Codex выключен в проекте / не установлен» — один раз за сессию, дальше молча.
+
+Подробности (кто что нашёл, вердикты) — в `.forge/notes/<slug>.md`, не в чат.
+
+**Codex в проекте** включается строкой `codex_review: on` в `.forge/index.yml` (по умолчанию выключен). Он получает только дифф и задачу: запуск в пустой временной папке, с отдельной папкой настроек (без глобальных инструкций `~/.codex/AGENTS.md`), в песочнице, которая не пускает в личные папки; куски `.env*` / `*.pem` / `*secret*` вырезаются, при похожем на секрет — `SKIP`, ничего не отправляется.
+
+**Воркфлоу** (схема для многих шагов разом) — правила в разделе «Если пишешь воркфлоу» скилла execute.
+
 ## When to Request Review
 
-**Mandatory:**
-- After each task in subagent-driven development
-- After completing major feature
-- Before merge to main
+- После каждого шага с кодом в execute и в subagent-driven-development
+- Перед мержем
+- Когда застрял (свежий взгляд)
 
-**Optional but valuable:**
-- When stuck (fresh perspective)
-- Before refactoring (baseline check)
-- After fixing complex bug
-
-## How to Request
-
-**1. Get git SHAs:**
-```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
-HEAD_SHA=$(git rev-parse HEAD)
-```
-
-**2. Dispatch code-reviewer subagent:**
-
-Use Agent tool with forge:code-reviewer type, fill template at `code-reviewer.md`
-
-**Placeholders:**
-- `{WHAT_WAS_IMPLEMENTED}` - What you just built
-- `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
-- `{DESCRIPTION}` - Brief summary
-
-**3. Act on feedback:**
-- Fix Critical issues immediately
-- Fix Important issues before proceeding
-- Note Minor issues for later
-- Push back if reviewer is wrong (with reasoning)
-
-## Example
-
-```
-[Just completed Task 2: Add verification function]
-
-You: Let me request code review before proceeding.
-
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
-
-[Dispatch forge:code-reviewer subagent]
-  WHAT_WAS_IMPLEMENTED: Verification and repair functions for conversation index
-  PLAN_OR_REQUIREMENTS: Task 2 from .forge/plans/deployment-plan.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
-  DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-
-[Subagent returns]:
-  Strengths: Clean architecture, real tests
-  Issues:
-    Important: Missing progress indicators
-    Minor: Magic number (100) for reporting interval
-  Assessment: Ready to proceed
-
-You: [Fix progress indicators]
-[Continue to Task 3]
-```
-
-## Integration with Workflows
-
-**Subagent-Driven Development:**
-- Review after EACH task
-- Catch issues before they compound
-- Fix before moving to next task
-
-**Executing Plans:**
-- Review after each batch (3 tasks)
-- Get feedback, apply, continue
-
-**Ad-Hoc Development:**
-- Review before merge
-- Review when stuck
+**Act on feedback:** critical — чинить сразу; important — до следующего шага; minor — записать. Проверяющий неправ — возразить с доказательством (код, тест).
 
 ## Red Flags
 
@@ -99,6 +62,8 @@ You: [Fix progress indicators]
 - Ignore Critical issues
 - Proceed with unfixed Important issues
 - Argue with valid technical feedback
+- Отдельный помощник-скептик на каждую находку (в integration это давало до 36 помощников на одну проверку) — только пачкой
+- «Изучи проект» вместо диффа в промпте проверяющему
 
 **If reviewer wrong:**
 - Push back with technical reasoning
