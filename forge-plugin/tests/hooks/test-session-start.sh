@@ -63,6 +63,8 @@ ctx=$(context_of "$out")
   && printf '%s' "$ctx" | grep -q "forge:guide" \
   && printf '%s' "$ctx" | grep -q "forge:execute"
 check "intro should list the whole pipeline including Phase 5 (guide)" $?
+printf '%s' "$ctx" | grep -q "WORKFLOWS:.*model.*effort.*model-roles.md" && printf '%s' "$ctx" | grep -q "requesting-code-review"
+check "intro should carry the workflow rule (model+effort per agent, review scheme) for ultracode" $?
 
 # --- (2) без гайда — ни слова про него ---
 
