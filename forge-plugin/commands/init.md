@@ -267,7 +267,14 @@ naming:
 structure:
   {dir}: "{purpose}"
 patterns: {}
+update_map: []
+# пример записи (что изменил -> что обновить):
+# update_map:
+#   - changed: "новый скилл"
+#     update: ["CLAUDE.md", "skills/using-forge/SKILL.md"]
 ```
+
+Иерархия правды при расхождении фактов: код > тесты > decisions / status > map / conventions > journal / notes; один факт — одно место, расхождение пишется в `status.yml` → `drift:`.
 
 ## Step 6.5: Generate .forge/structure.md
 
@@ -341,6 +348,7 @@ This is the CRITICAL file — auto-injected every prompt (~200 tokens).
 ```yaml
 project: {project_name}
 goal: "{цель проекта из Step 7}"
+dont: []   # жёсткие «никогда» проекта — доходят до Claude целиком
 stage: init
 progress: 0%
 blocked: нет

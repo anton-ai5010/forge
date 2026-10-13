@@ -71,6 +71,13 @@ Dead-ends: websockets (use polling instead)
 Ready.
 ```
 
+## Иерархия правды
+
+При расхождении фактов верь старшему: код > тесты > `.forge` decisions / status > map / conventions > journal / notes.
+- Один факт — одно место, в остальных — ссылка.
+- При расхождении верим старшему и записываем в `status.yml` → `drift:` (что / где нашли / где правда).
+- Что обновлять после правки — `update_map:` в `.forge/conventions.yml`.
+
 ## Token Budget
 
 | Level | Tokens | When |

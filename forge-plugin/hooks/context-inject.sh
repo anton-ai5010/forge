@@ -14,7 +14,25 @@ if [ -f ".forge/index.yml" ]; then
     # Обрезка по границе символа: head -c режет байты и разваливает кириллицу
     # посередине буквы (битый UTF-8 уезжает в JSON). python3 выкидывает
     # неполный хвостовой символ; fallback на head -c если python3 сломан.
-    index_content=$(python3 -c "import sys; sys.stdout.write(open('.forge/index.yml','rb').read()[:2500].decode('utf-8','ignore'))" 2>/dev/null \
+    # Секция dont:/constraints: (жёсткие «никогда») идёт первой и целиком,
+    # остальное режется в оставшийся бюджет 2500 байт.
+    index_content=$(python3 -c "
+import re
+raw = open('.forge/index.yml','rb').read().decode('utf-8','ignore')
+lines = raw.splitlines(keepends=True)
+sec, rest, inside = [], [], False
+for l in lines:
+    if re.match(r'(dont|constraints):', l):
+        inside = True
+    elif inside and re.match(r'[^\\s#-]', l):
+        inside = False
+    (sec if inside else rest).append(l)
+head = ''.join(sec)
+budget = max(2500 - len(head.encode('utf-8')), 0)
+tail = ''.join(rest).encode('utf-8')[:budget].decode('utf-8','ignore')
+import sys
+sys.stdout.write(head + tail)
+" 2>/dev/null \
         || head -c 2500 .forge/index.yml 2>/dev/null || echo "")
     index_size=$(wc -c < .forge/index.yml 2>/dev/null || echo 0)
     if [ "$index_size" -gt 2500 ]; then

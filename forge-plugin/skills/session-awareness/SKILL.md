@@ -30,6 +30,8 @@ description: "Use proactively when work produces a fact future sessions need —
 | Сменил ветку | обнови `now.branch` |
 | Итог сессии («итог сессии», конец работы) | **обязательно:** `last_session` (одна строка «дата — что сделали»), проверь `now.task`/`now.branch`, и `version` — если поднимал версию проекта, подними и тут |
 
+**Жёсткие «никогда» проекта** пишутся в ту секцию верхнего уровня `index.yml` (`dont:` или `constraints:`), что уже есть в проекте (нет ни одной — заведи `dont:`). Хук доставляет её целиком, поэтому ≤7 строк; длиннее — в `decisions.yml`, в секции только ссылка.
+
 ### .forge/dead-ends.yml → при провале подхода
 
 Когда подход не сработал (2+ попытки):
@@ -61,6 +63,11 @@ description: "Use proactively when work produces a fact future sessions need —
     tags: [architecture, relevant, keywords]
     detail: null  # или путь к L2 если решение сложное
 ```
+
+Коды решений: у каждой записи есть стабильный `code: DEC-NN`. После записи запусти
+`python3 skills/session-awareness/decision-codes.py` — новая запись получит следующий код (существующие не меняются).
+Префикс именно `DEC-` (в гайде по проекту уже есть группа D — «дэ семь» голосом не различить).
+Устаревшее решение не удаляется: пометь `status: superseded` + `superseded_by: DEC-XX`.
 
 ### .forge/status.yml → при изменении состояния
 
