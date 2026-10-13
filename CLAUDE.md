@@ -171,6 +171,14 @@ Projects v2 board не используется — Pinned Issue + README пок
 - **Codex** (`skills/requesting-code-review/codex-review.sh`) — включается в проекте строкой `codex_review: on` в `.forge/index.yml` (по умолчанию выкл). Получает только дифф/план и задачу: пустая временная папка, отдельный CODEX_HOME без глобальных инструкций, песочница `codex.sb` закрывает домашнюю папку, секреты → SKIP.
 - **Мера «по делу»** — `forge-plugin/docs/delivery-bar.md`.
 
+## Порядок в памяти (по Прорабу, v7.10.0)
+
+- **Иерархия правды** (`skills/forge-context`): код > тесты > decisions / status > map / conventions > journal / notes; расхождения — в `status.yml` → `drift:`. Таблица «что изменил → что обновить» — `update_map` в `.forge/conventions.yml`.
+- **«Не делать»** (`dont:` или `constraints:` в index.yml) — инжектится первой и целиком (`hooks/context-inject.sh`).
+- **Коды решений DEC-NN** — `skills/session-awareness/decision-codes.py`; устаревшее — `status: superseded` + `superseded_by`.
+- **Большие файлы памяти** (>20 000 символов) — оглавлением: `skills/forge-context/toc.py <file>` / `--get <код|#N>`; журнал — фрагментами в `.forge/journal.d/`, читается `toc.py --journal .forge`.
+- **Расхождения код/доки** — `skills/forge-context/drift-check.py` (в `/forge:validate` и раз в сутки при старте сессии: одна строка «гайд · доки: N расхождений»).
+
 ## Native Claude Code features used
 
 - **Output Style "Forge Concise"** (`output-styles/forge-concise.md`) — нативный механизм Claude Code для правил вывода. `force-for-plugin: true` — авто-активация при включении плагина. Заменяет ручной STYLE-блок в хуке.
