@@ -4,11 +4,11 @@ goal: "Плагин для Claude Code, автоматизирующий раб�
 stage: maintenance
 progress: 100%
 blocked: нет
-version: "7.8.0"
+version: "7.9.0"
 stack: [python, bash, markdown, claude-code-plugin]
 
 now:
-  task: "v7.8.0 на GitHub — гайд по проекту доступен как /forge:guide"
+  task: "v7.9.0 — модели по ролям и новая схема проверки (Sonnet-углы + Codex + Opus по правилу); дальше пилот на integration"
   branch: master
 
 catalog:
@@ -54,7 +54,7 @@ session:
   done:
     - "skills/project-guide (SKILL.md + render.py bump/render/pdf/verdict/merged/link/summary), /forge:guide, docs/guide/ версии, отчёт этого репо мигрирован в v1.0"
   now: "Влито в master, версия 7.8.0 выложена"
-  next: "Собрать гайд на чужом проекте (веб + Telegram-бот)"
+  next: "Новый чат: хвосты → экономия лимита (Fable, таблица ролей, быстрый путь) → Telegram-плагин → страница офиса (см. direction.yml backlog)"
   errors: []
 
-last_session: "2026-09-07 — v7.8.0: гайд по проекту (фаза 5): версии docs/guide/, коды решений, ответы в чате, PDF через Chrome"
+last_session: "2026-10-12 — разбор экономии лимита, тест локальных моделей, Прораб, офис/Daintree/Telegram; решения и backlog в decisions.yml/direction.yml, кода не меняли"

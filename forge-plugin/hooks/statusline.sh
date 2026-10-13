@@ -5,10 +5,20 @@
 
 input=$(cat)
 
-# Парсим JSON от Claude Code
-model=$(printf '%s' "$input" | sed -n 's/.*"display_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
-pct=$(printf '%s' "$input" | sed -n 's/.*"used_percentage"[[:space:]]*:[[:space:]]*\([0-9.]*\).*/\1/p' | cut -d. -f1)
-pct=${pct:-0}
+# Парсим JSON от Claude Code: used_percentage встречается и в context_window, и в rate_limits —
+# поэтому каждое поле берём по своему пути, а не первое попавшееся
+IFS=$'\x1f' read -r model pct week < <(printf '%s' "$input" | python3 -c '
+import json, sys
+try: d = json.load(sys.stdin)
+except Exception: d = {}
+def g(*keys):
+    v = d
+    for k in keys:
+        v = v.get(k) if isinstance(v, dict) else None
+    return v
+num = lambda v: str(int(v)) if isinstance(v, (int, float)) else ""
+print((g("model", "display_name") or "") + "\x1f" + num(g("context_window", "used_percentage")) + "\x1f" + num(g("rate_limits", "seven_day", "used_percentage")))
+' 2>/dev/null)
 
 # Текущая ветка git
 branch=$(git branch --show-current 2>/dev/null)
@@ -42,9 +52,10 @@ parts=()
 [ -n "$phase_icon" ] && parts+=("$phase_icon")
 [ -n "$task" ] && parts+=("\"$task\"")
 [ -n "$branch" ] && parts+=("🌿$branch")
-[ "$pct" -gt 0 ] && parts+=("${pct}%")
+[ -n "$pct" ] && parts+=("чат ${pct}%")
+[ -n "$week" ] && parts+=("неделя ${week}%")
 
 # Соединяем через " | " (явный join — IFS-трюк брал только первый символ)
 out=""
 for p in "${parts[@]}"; do out="${out:+$out | }$p"; done
-printf '%s\n' "$out"
+printf '%s\n' "${out:-forge}"

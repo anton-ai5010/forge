@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["findings", "summary"],
+  "properties": {
+    "summary": {"type": "string"},
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "file", "line", "what", "evidence", "fix", "in_life", "confidence"],
+        "properties": {
+          "severity": {"type": "string", "enum": ["critical", "important", "minor"]},
+          "file": {"type": "string"},
+          "line": {"type": "integer"},
+          "what": {"type": "string"},
+          "evidence": {"type": "string"},
+          "fix": {"type": "string"},
+          "in_life": {"type": "string"},
+          "confidence": {"type": "integer"}
+        }
+      }
+    }
+  }
+}

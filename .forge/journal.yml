@@ -1,4 +1,15 @@
 entries:
+  - date: "2026-10-12"
+    summary: "Разбор экономии лимита: расходы integration (~$3.3k по ценам API: 62% помощники воркфлоу без модели, 32% основной чат 400–700k), тест локальных моделей (Qwen 3.8 на маке лучше Haiku), сравнение с Прорабом (роли→модели, уборщик памяти, промпты ролей, git), Jev, Codex, Daintree, Telegram, визуальный офис"
+    result: "Решения: no-jev-model-router, fast-path-small-changes, cost-plan-order (decisions.yml); 4 направления в direction.yml backlog; урок local-model-log-summary-bench. Кода не меняли"
+    next: "Новый чат: хвосты (ветка fix-four-bugs пустая, 6 решений гайда) → экономия лимита (Fable, таблица ролей, быстрый путь) → Telegram-плагин (bun) → простая страница офиса"
+
+  - date: "2026-09-07"
+    summary: "Закрыта задача: Гайд по проекту — фаза 5 становится живым версионным документом (project-guide)"
+    milestone: "—"
+    slug: "project-guide"
+    result: "Done"
+
   - date: "2026-09-04"
     summary: "Закрыта задача: Отчёт «Что дальше» — Фаза 5 плагина (status-report)"
     milestone: "—"

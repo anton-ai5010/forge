@@ -48,6 +48,7 @@ Complete each phase before proceeding to the next.
    For EACH component boundary: log data in, log data out, verify config propagation, check state at each layer. Run once to see WHERE it breaks, THEN investigate that component.
 
    **Parallelize:** if 3+ components, dispatch one subagent per boundary simultaneously.
+   Model: pass `model: "sonnet"` in every Agent call (role "research with conclusions", see `$CLAUDE_PLUGIN_ROOT/docs/model-roles.md`).
 
    Full bash example: see `references/deep-dive.md`.
 

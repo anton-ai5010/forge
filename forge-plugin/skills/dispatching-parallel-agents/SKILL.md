@@ -66,6 +66,8 @@ Each agent gets:
 
 ### 3. Dispatch in Parallel
 
+Model: pass `model: "sonnet"` in every Agent call (role "code executor", see `$CLAUDE_PLUGIN_ROOT/docs/model-roles.md`).
+
 ```typescript
 // In Claude Code / AI environment
 Task("Fix agent-tool-abort.test.ts failures")

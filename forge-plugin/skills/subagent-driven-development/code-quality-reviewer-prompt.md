@@ -7,14 +7,14 @@ Use this template when dispatching a code quality reviewer subagent.
 **Only dispatch after spec compliance review passes.**
 
 ```
-Agent tool (forge:code-reviewer):
+Agent tool (subagent_type: forge:code-reviewer):
+  model: "sonnet"   (тип уже на sonnet; Opus — только по правилу схемы проверки в requesting-code-review)
   Use template at requesting-code-review/code-reviewer.md
 
-  WHAT_WAS_IMPLEMENTED: [from implementer's report]
-  PLAN_OR_REQUIREMENTS: Task N from [plan-file]
-  BASE_SHA: [commit before task]
-  HEAD_SHA: [current commit]
-  DESCRIPTION: [task summary]
+  TASK_TEXT: [FULL TEXT of task requirements]
+  STEP_CRITERION: [acceptance criterion of Task N from plan-file]
+  DESCRIPTION: [from implementer's report, 1–3 lines]
+  DIFF: [output of `git diff <commit before task>..HEAD` — pasted, not "go look"]
 ```
 
-**Code reviewer returns:** Strengths, Issues (Critical/Important/Minor), Assessment
+**Code reviewer returns:** findings in the checklist format (`requesting-code-review/review-checklist.md`) + one line per checklist item. Re-review after a fix — same template, DIFF = only the fix.

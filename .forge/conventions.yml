@@ -23,3 +23,5 @@ patterns:
   frontmatter: "YAML frontmatter с name и description в SKILL.md"
   stack_hints: "skills/*/stack-hints/{language}.md"
   hook_format: "hooks.json с matcher и command"
+  agent_model: "у каждого помощника явная модель по forge-plugin/docs/model-roles.md (frontmatter agents/*.md или model в вызове); новая роль — строка в таблице + строка инвентаря (тест test-model-roles.sh)"
+  codex_review: "Codex-проверка включается в проекте ключом `codex_review: on` в .forge/index.yml; по умолчанию выключена"

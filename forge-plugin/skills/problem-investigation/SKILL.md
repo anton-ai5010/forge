@@ -67,6 +67,7 @@ If multiple areas might be involved, dispatch subagents in parallel:
 - One checks recent git changes in the affected area
 - One reads the relevant code to understand current behavior
 
+Models: logs and git changes — `subagent_type: forge:scout` (cheap scout: find / list / count); reading code to understand behavior — `model: "sonnet"` (conclusions, not a list). See `$CLAUDE_PLUGIN_ROOT/docs/model-roles.md`.
 Read to understand, not to edit.
 
 ### Step 5: Present diagnosis

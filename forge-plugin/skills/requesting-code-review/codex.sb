@@ -1,0 +1,10 @@
+; Песочница вокруг Codex. Своя песочница Codex внутри чужой не запускается
+; (sandbox_apply: Operation not permitted), поэтому Codex идёт без неё, а изоляцию даёт эта:
+; домашняя папка закрыта целиком (чтение и запись), писать можно только во временную папку проверки.
+; Параметры: -D HOME=$HOME -D WORK=<временная папка>
+(version 1)
+(allow default)
+(deny file-read* file-write* (subpath (param "HOME")))
+(allow file-read-metadata (literal (param "HOME")))
+(deny file-write* (subpath "/Users") (subpath "/opt") (subpath "/usr") (subpath "/Library") (subpath "/Applications") (subpath "/etc") (subpath "/private/etc"))
+(allow file-read* file-write* (subpath (param "WORK")))

@@ -2,6 +2,7 @@
 name: structure-enforcer
 description: Checks project structure against conventions and fixes violations — moves files, creates missing directories, updates imports
 model: sonnet
+effort: low
 tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 

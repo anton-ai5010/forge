@@ -153,6 +153,8 @@ Projects v2 board не используется — Pinned Issue + README пок
 
 **Goal-driven execution:** Transform vague requests into testable objectives. Not "add validation" but "write tests for invalid inputs, then make them pass". Define success criteria, loop until verified.
 
+**Мера «по делу»** уточняет эти принципы (не дублирует): признаки перебора, нижняя планка качества и вопрос-решатель «что сломается, если не сделать?» — `forge-plugin/docs/delivery-bar.md`. Действует в plan / critique / execute и в чеклисте проверяющего.
+
 ## Conventions
 
 - **Файлы/директории:** kebab-case
@@ -162,10 +164,17 @@ Projects v2 board не используется — Pinned Issue + README пок
 - **Скиллы:** директория + SKILL.md внутри
 - **Команды:** kebab-case MD файлы
 
+## Модели помощников и проверка кода
+
+- **Таблица ролей** — `forge-plugin/docs/model-roles.md`: роль → модель + effort + потолок шагов. Ни один помощник не запускается без явной модели (тест `tests/hooks/test-model-roles.sh`). Механика — Haiku (`agents/scout.md`), проверка/исследование/документация — Sonnet, Скептик/Архитектор/финальная проверка денег и прода — Opus. Fable плагин не назначает.
+- **Схема проверки шага** (`skills/requesting-code-review`): проверяющим — дифф + задача + критерий, а не «изучи проект»; до пяти Sonnet-углов (логика / надёжность / тексты / интерфейс / тесты), на шагах `[важное]` — второй круг «ищи пропущенное»; Codex — второй взгляд другой семьи; находки — пачкой; финальный Opus — только для денег/прода/удаления/споров. Сравнение на 2 старых шагах integration (2026-10-13): в 6–12 раз дешевле старой Opus-схемы, критичных пропусков 0.
+- **Codex** (`skills/requesting-code-review/codex-review.sh`) — включается в проекте строкой `codex_review: on` в `.forge/index.yml` (по умолчанию выкл). Получает только дифф/план и задачу: пустая временная папка, отдельный CODEX_HOME без глобальных инструкций, песочница `codex.sb` закрывает домашнюю папку, секреты → SKIP.
+- **Мера «по делу»** — `forge-plugin/docs/delivery-bar.md`.
+
 ## Native Claude Code features used
 
 - **Output Style "Forge Concise"** (`output-styles/forge-concise.md`) — нативный механизм Claude Code для правил вывода. `force-for-plugin: true` — авто-активация при включении плагина. Заменяет ручной STYLE-блок в хуке.
-- **Statusline** (`hooks/statusline.sh`) — показывает фазу пайплайна, ветку, % контекста. Активируется через `~/.claude/settings.json` пользователя.
+- **Statusline** (`hooks/statusline.sh`) — показывает фазу пайплайна, ветку, «чат N% | неделя M%» (недельный лимит). Активируется через `~/.claude/settings.json` пользователя.
 - **PreToolUse bash safety** (`hooks/bash-safety.sh`) — блокирует опасные паттерны (`rm -rf /`, `git push --force main`, etc.) до выполнения.
 
 ## Commands Reference

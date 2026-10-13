@@ -59,6 +59,8 @@ Split the project into independent areas (by directory, module, or layer). Dispa
 - Agent 2: Naming inconsistencies + convention violations
 - Agent 3: Duplication + complexity (functions >50 lines, nesting >3 levels)
 
+Model: pass `model: "sonnet"` in every Agent call (role "research with conclusions", see `$CLAUDE_PLUGIN_ROOT/docs/model-roles.md`).
+
 Aggregate findings into a single report before presenting to user.
 
 Each agent gets this prompt template:
@@ -133,6 +135,7 @@ After presenting the report, ask the user:
 - "Cherry-pick?" — user selects specific issues
 
 When fixing, dispatch parallel agents again — one per directory/module. Each agent:
+Model: pass `model: "sonnet"` in every Agent call (role "code executor", see `$CLAUDE_PLUGIN_ROOT/docs/model-roles.md`).
 1. Gets the specific issues to fix in their area
 2. Makes minimal changes — fix the issue, nothing else
 3. Reports what was changed

@@ -102,6 +102,15 @@ digraph process {
 - `./forge-documenter-prompt.md` - Dispatch documentation updater subagent
 - `./stack-hints/*.md` - Language/framework-specific patterns (Python, TypeScript, Go, React, SQL)
 
+## Модели помощников
+
+Две проверки на задачу остаются — это суть скилла. Модели — явно в каждом вызове (таблица `$CLAUDE_PLUGIN_ROOT/docs/model-roles.md`):
+- Исполнитель — `model: "sonnet"`; `model: "opus"`, если задача помечена `[важное]` (цены, оплаты, заказы, закупки, боевой сервер, удаление данных).
+- Spec reviewer и code quality reviewer — оба `model: "sonnet"`. Им — дифф задачи в промпт, а не «изучи проект».
+- Повторная проверка после фикса — тем же проверяющим и только дифф фикса.
+- Финальный проверяющий всей реализации — `forge:code-reviewer` (sonnet); Opus — по правилу «когда звать Opus» из `requesting-code-review` (схема проверки шага).
+- forge-documenter — его тип уже на sonnet.
+
 ### Stack Hints
 
 Before dispatching an implementer, read `.forge/conventions.yml` → detect language/framework → inject matching `stack-hints/*.md` into the prompt. This gives the subagent idiomatic patterns for the project's stack without maintaining separate agents per language. See `implementer-prompt.md` for matching rules.
