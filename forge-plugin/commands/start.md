@@ -28,7 +28,7 @@ description: "Полная загрузка контекста проекта в
 
 ### Последние сессии
 
-!`cat .forge/journal.yml 2>/dev/null || head -30 .forge/journal.md 2>/dev/null || echo "нет journal"`
+!`python3 $CLAUDE_PLUGIN_ROOT/skills/forge-context/toc.py --journal .forge 5 2>/dev/null || echo "нет journal"`
 
 ### Git контекст
 

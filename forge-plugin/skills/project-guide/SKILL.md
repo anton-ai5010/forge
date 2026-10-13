@@ -81,7 +81,7 @@ python3 "$CLAUDE_PLUGIN_ROOT/skills/project-guide/render.py" bump major    # «�
 | `.forge/decisions.yml` | Принятые решения → `status: accepted` с «Почему» из `why`; Аналитик 4 сверит их с кодом |
 | `.forge/direction.yml` | `directions`/`backlog` → план «дальше/позже»; `map[].status: risk|unknown` → кандидаты в риски; `goal_shift` → `meta.eyebrow` |
 | `.forge/dead-ends.yml` | Чего НЕ предлагать в «Предлагаем» — уже пробовали |
-| `.forge/journal.yml` (последние 5) | `next` → что считалось следующим; даты → период в `meta.built_from` |
+| `toc.py --journal .forge 5` (последние 5 итогов, фрагменты `journal.d/`) | `next` → что считалось следующим; даты → период в `meta.built_from` |
 | `.forge/learnings.yml` | Где раньше обжигались — туда агентам смотреть внимательнее |
 | `.forge/tasks/*.md` + `.forge/plans/*.md` | Открытые задачи (есть task, нет мержа) → план «сейчас»; «## Открытые вопросы» планов → кандидаты в группу O |
 | `.forge/product-map.json` (если есть) | Подсказка картографам (потоки/сущности), не истина — код свежее |
@@ -255,6 +255,7 @@ python3 "$CLAUDE_PLUGIN_ROOT/skills/project-guide/render.py" bump major    # «�
 3. .forge/decisions.yml против кода: решения, которые код нарушает — находкой.
 4. .forge/tasks/*.md без влитого результата (slug не встречается в git log) — открытые задачи; секции «## Открытые вопросы» в .forge/plans/*.md — вопросы владельцу.
 5. .forge/direction.yml: backlog и map[].status risk/unknown — что из отложенного стало срочным.
+6. Вывод `python3 $CLAUDE_PLUGIN_ROOT/skills/forge-context/drift-check.py` (мёртвые пути в map/conventions/CLAUDE.md, доки без правки дольше кода) и секция `drift:` в .forge/status.yml — каждое расхождение находкой в риски («доки врут: …»), правда — по иерархии правды (forge-context).
 Не больше 12 находок. Один и тот же вопрос владельцу — либо решение группы O в «## Решения» ниже, либо находка owner: decision — никогда оба.
 
 Вторая часть — решения проекта (раздел 05 гайда). Источники: .forge/decisions.yml (id/date/decision/why), .forge/direction.yml (directions/backlog/goal_shift), открытые задачи и «## Открытые вопросы» планов, README (обещания).

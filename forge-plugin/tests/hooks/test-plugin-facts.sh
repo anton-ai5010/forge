@@ -18,5 +18,9 @@ check "шаблон проверяющего: дифф в промпте ({DIFF}
 check "агент code-reviewer ссылается на чеклист" "grep -q 'review-checklist.md' '$ROOT/agents/code-reviewer.md'"
 check "шаблон двойной проверки (SDD) — на новом шаблоне с диффом" "grep -q 'DIFF:' '$ROOT/skills/subagent-driven-development/code-quality-reviewer-prompt.md' && ! grep -q 'BASE_SHA' '$ROOT/skills/subagent-driven-development/code-quality-reviewer-prompt.md'"
 
+N_DECL="$(grep -oE '[0-9]+ скилл[а-я]*' "$ROOT/../CLAUDE.md" | head -1 | grep -oE '^[0-9]+')"
+N_REAL="$(ls "$ROOT"/skills/*/SKILL.md | wc -l | tr -d ' ')"
+check "CLAUDE.md: число скиллов ($N_DECL) = числу SKILL.md ($N_REAL)" "[ '$N_DECL' = '$N_REAL' ]"
+
 echo; [ $FAIL -eq 0 ] && echo OK || echo "$FAIL FAIL"
 exit $FAIL

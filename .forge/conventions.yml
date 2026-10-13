@@ -10,7 +10,6 @@ naming:
   skills: kebab-case (директория + SKILL.md внутри)
   commands: kebab-case (init.md, brainstorm.md)
 structure:
-  forge-plugin/lib/: "JS утилиты (ядро плагина)"
   forge-plugin/hooks/: "Конфигурация хуков"
   forge-plugin/agents/: "Промпт-шаблоны субагентов"
   forge-plugin/commands/: "Описания команд (MD)"
@@ -25,3 +24,14 @@ patterns:
   hook_format: "hooks.json с matcher и command"
   agent_model: "у каждого помощника явная модель по forge-plugin/docs/model-roles.md (frontmatter agents/*.md или model в вызове); новая роль — строка в таблице + строка инвентаря (тест test-model-roles.sh)"
   codex_review: "Codex-проверка включается в проекте ключом `codex_review: on` в .forge/index.yml; по умолчанию выключена"
+update_map:
+  - changed: "скилл (новый, переименованный, удалённый)"
+    update: ["CLAUDE.md (корень)", "Commands Reference в CLAUDE.md", "forge-plugin/skills/using-forge/SKILL.md"]
+  - changed: "хук (hooks/*.sh)"
+    update: ["forge-plugin/tests/hooks/", "forge-plugin/hooks/hooks.json"]
+  - changed: "команда (commands/*.md)"
+    update: ["Commands Reference в CLAUDE.md", "forge-plugin/COMMANDS.md"]
+  - changed: "версия плагина"
+    update: ["forge-plugin/.claude-plugin/plugin.json", ".claude-plugin/marketplace.json", "forge-plugin/.claude-plugin/marketplace.json"]
+  - changed: "роль помощника (agents/*.md, модель)"
+    update: ["forge-plugin/docs/model-roles.md (таблица + инвентарь)"]

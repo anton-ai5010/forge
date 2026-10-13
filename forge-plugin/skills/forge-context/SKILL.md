@@ -45,7 +45,7 @@ Match the user's request against `catalog[].tags`:
 | Check project health | working, broken, blocked | `.forge/status.yml` |
 | Understand past choices | why, architecture | `.forge/decisions.yml` |
 | Avoid failed approaches | failed, tried, avoid | `.forge/dead-ends.yml` |
-| Resume previous work | history, last-session | `.forge/journal.yml` |
+| Resume previous work | history, last-session | `toc.py --journal .forge 5` (фрагменты `.forge/journal.d/` + хвост `journal.yml`) |
 | Apply past lessons | lesson, learning, insight | `.forge/learnings.yml` |
 | Check infra/Docker/DB/server | docker, server, database, infra | `.forge/infrastructure.yml` |
 
@@ -70,6 +70,19 @@ Task: Adding MACD indicator
 Dead-ends: websockets (use polling instead)
 Ready.
 ```
+
+## Большие файлы и журнал
+
+- L1-файл больше 20 000 символов не грузи целиком: `python3 $CLAUDE_PLUGIN_ROOT/skills/forge-context/toc.py <file>` даёт оглавление (код/id · дата · начало).
+- Нужную запись бери дословно: `toc.py <file> --get <код|id>`.
+- Журнал читай только так: `toc.py --journal .forge [N]` (последние N итогов, новые первыми) — не открывай журнал целиком (`journal.d/*.yml` + старый `journal.yml`).
+
+## Иерархия правды
+
+При расхождении фактов верь старшему: код > тесты > `.forge` decisions / status > map / conventions > journal / notes.
+- Один факт — одно место, в остальных — ссылка.
+- При расхождении верим старшему и записываем в `status.yml` → `drift:` (что / где нашли / где правда).
+- Что обновлять после правки — `update_map:` в `.forge/conventions.yml`.
 
 ## Token Budget
 

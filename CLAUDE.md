@@ -17,7 +17,7 @@ forge-plugin/              — корневая директория плаги�
   hooks/                   — bash хуки (session-start, context-inject, bash-safety, statusline)
   agents/                  — промпт-шаблоны субагентов
   commands/                — slash-команды (MD файлы)
-  skills/                  — 33 скилла (SKILL.md + поддержка)
+  skills/                  — 35 скиллов (SKILL.md + поддержка)
   output-styles/           — нативный Output Style "Forge Concise" (auto-activated)
   evals/                   — каркас Hamel-style eval-сетапа (корпус пуст, ни одного прогона)
   sounds/                  — mp3 для Stop / PermissionRequest хуков
@@ -170,6 +170,14 @@ Projects v2 board не используется — Pinned Issue + README пок
 - **Схема проверки шага** (`skills/requesting-code-review`): проверяющим — дифф + задача + критерий, а не «изучи проект»; до пяти Sonnet-углов (логика / надёжность / тексты / интерфейс / тесты), на шагах `[важное]` — второй круг «ищи пропущенное»; Codex — второй взгляд другой семьи; находки — пачкой; финальный Opus — только для денег/прода/удаления/споров. Сравнение на 2 старых шагах integration (2026-10-13): в 6–12 раз дешевле старой Opus-схемы, критичных пропусков 0.
 - **Codex** (`skills/requesting-code-review/codex-review.sh`) — включается в проекте строкой `codex_review: on` в `.forge/index.yml` (по умолчанию выкл). Получает только дифф/план и задачу: пустая временная папка, отдельный CODEX_HOME без глобальных инструкций, песочница `codex.sb` закрывает домашнюю папку, секреты → SKIP.
 - **Мера «по делу»** — `forge-plugin/docs/delivery-bar.md`.
+
+## Порядок в памяти (по Прорабу, v7.10.0)
+
+- **Иерархия правды** (`skills/forge-context`): код > тесты > decisions / status > map / conventions > journal / notes; расхождения — в `status.yml` → `drift:`. Таблица «что изменил → что обновить» — `update_map` в `.forge/conventions.yml`.
+- **«Не делать»** (`dont:` или `constraints:` в index.yml) — инжектится первой и целиком (`hooks/context-inject.sh`).
+- **Коды решений DEC-NN** — `skills/session-awareness/decision-codes.py`; устаревшее — `status: superseded` + `superseded_by`.
+- **Большие файлы памяти** (>20 000 символов) — оглавлением: `skills/forge-context/toc.py <file>` / `--get <код|#N>`; журнал — фрагментами в `.forge/journal.d/`, читается `toc.py --journal .forge`.
+- **Расхождения код/доки** — `skills/forge-context/drift-check.py` (в `/forge:validate` и раз в сутки при старте сессии: одна строка «гайд · доки: N расхождений»).
 
 ## Native Claude Code features used
 

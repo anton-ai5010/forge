@@ -97,6 +97,42 @@ def update_readme(readme: Path, block: str) -> None:
         readme.write_text(new_text, encoding="utf-8")
 
 
+def last_journal_summary(forge: Path) -> str:
+    """Summary свежей записи: фрагменты journal.d/*.yml + хвост journal.yml (как toc.py --journal)."""
+    items = []  # (date, tier, name, summary)
+
+    def summary_of(lines):
+        for l in lines:
+            m = re.match(r"^\s*(?:- )?summary:\s*(.*)$", l)
+            if m:
+                return m.group(1).strip().strip("\"'")
+        return ""
+
+    def date_of(lines):
+        for l in lines:
+            m = re.match(r"^\s*(?:- )?date:\s*[\"']?([0-9-]+)", l)
+            if m:
+                return m.group(1)
+        return ""
+
+    old = forge / "journal.yml"
+    if old.is_file():
+        blocks, cur = [], None
+        for l in old.read_text(encoding="utf-8").split("\n"):
+            if re.match(r"^\s*- \w+:", l):
+                cur = [l]
+                blocks.append(cur)
+            elif cur is not None:
+                cur.append(l)
+        for i, b in enumerate(blocks):
+            items.append((date_of(b), 0, f"{i:08d}", summary_of(b)))
+    for p in (forge / "journal.d").glob("*.yml"):
+        lines = p.read_text(encoding="utf-8").split("\n")
+        items.append((date_of(lines) or p.name[:10], 1, p.name, summary_of(lines)))
+    items.sort(key=lambda t: t[:3], reverse=True)
+    return next((t[3] for t in items if t[3]), "")
+
+
 def main() -> int:
     cwd = Path.cwd()
     index_path = cwd / ".forge" / "index.yml"
@@ -147,18 +183,10 @@ def main() -> int:
 
     # Last summary from journal
     last_summary = DASH
-    journal_path = cwd / ".forge" / "journal.yml"
-    if journal_path.exists():
-        try:
-            with journal_path.open(encoding="utf-8") as f:
-                journal = yaml.safe_load(f) or {}
-            entries = journal.get("entries") or []
-            if entries and isinstance(entries[0], dict):
-                s = (entries[0].get("summary") or "").strip()
-                if s:
-                    last_summary = s
-        except (yaml.YAMLError, OSError) as e:
-            warn(f"failed to parse journal.yml: {e}")
+    try:
+        last_summary = last_journal_summary(cwd / ".forge") or DASH
+    except OSError as e:
+        warn(f"failed to read journal: {e}")
 
     block = build_block(now_line, next_text, last_summary)
 

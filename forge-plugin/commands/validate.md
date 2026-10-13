@@ -305,6 +305,16 @@ done
    Action: Remove from red_zones or restore file
 ```
 
+## Step 5.5: Drift Check
+
+Запусти автопроверку расхождений код/доки и покажи результат:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/forge-context/drift-check.py"
+```
+
+Выведи все строки расхождений (мёртвые пути в map.yml / conventions.yml / CLAUDE.md, «доки без правки N дней») и итог `расхождений: N`. Записать их в `.forge/status.yml` → `drift:` — флаг `--write` (только если пользователь согласен).
+
 ## Step 6: Summary Report
 
 Combine all findings into final report:

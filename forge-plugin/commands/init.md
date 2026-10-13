@@ -267,7 +267,14 @@ naming:
 structure:
   {dir}: "{purpose}"
 patterns: {}
+update_map: []
+# пример записи (что изменил -> что обновить):
+# update_map:
+#   - changed: "новый скилл"
+#     update: ["CLAUDE.md", "skills/using-forge/SKILL.md"]
 ```
+
+Иерархия правды при расхождении фактов: код > тесты > decisions / status > map / conventions > journal / notes; один факт — одно место, расхождение пишется в `status.yml` → `drift:`.
 
 ## Step 6.5: Generate .forge/structure.md
 
@@ -341,6 +348,7 @@ This is the CRITICAL file — auto-injected every prompt (~200 tokens).
 ```yaml
 project: {project_name}
 goal: "{цель проекта из Step 7}"
+dont: []   # жёсткие «никогда» проекта — доходят до Claude целиком
 stage: init
 progress: 0%
 blocked: нет
@@ -372,7 +380,7 @@ catalog:
     tags: [failed, tried, broken, doesnt-work, avoid, mistake]
 
   journal:
-    path: .forge/journal.yml
+    path: .forge/journal.d/  # старый .forge/journal.yml читается как хвост
     tags: [history, last-session, previous, yesterday, when, resume]
 
   learnings:
@@ -412,6 +420,7 @@ working:
   - "FORGE documentation initialized"
 broken: []
 blocked: []
+drift: []   # расхождения код/доки; пишет drift-check.py --write (what / found / truth)
 ```
 
 ## Step 10: Generate .forge/decisions.yml (L1)

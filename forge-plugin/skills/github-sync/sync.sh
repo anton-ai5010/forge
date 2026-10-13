@@ -302,7 +302,7 @@ close_step() {
     [ -n "$sub_num" ] && gh issue close "$sub_num" 2>/dev/null || true
 }
 
-# close-task <task-slug>: закрыть Issue + journal.yml update
+# close-task <task-slug>: закрыть Issue + фрагмент журнала в .forge/journal.d/
 close_task() {
     check_enabled || return 0
     local task_slug="$1"
@@ -313,30 +313,24 @@ close_task() {
     relabel_phase "$parent" done
     gh issue close "$parent" 2>/dev/null || true
 
-    # Запись в .forge/journal.yml (критерий №4 готовности)
+    # Запись итога фрагментом в .forge/journal.d/ (критерий №4 готовности)
     local issue_title milestone_title
     issue_title=$(gh issue view "$parent" --json title -q .title 2>/dev/null || echo "$task_slug")
     milestone_title=$(gh issue view "$parent" --json milestone -q '.milestone.title // "—"' 2>/dev/null || echo "—")
     python3 - "$task_slug" "$issue_title" "$milestone_title" <<'PYEOF'
-import sys, datetime, pathlib
+import sys, datetime, pathlib, re
 slug, title, milestone = sys.argv[1:4]
-p = pathlib.Path('.forge/journal.yml')
-date = datetime.date.today().isoformat()
-entry = f"""\n  - date: "{date}"
-    summary: "Закрыта задача: {title}"
-    milestone: "{milestone}"
-    slug: "{slug}"
-    result: "Done"
+now = datetime.datetime.now()
+d = pathlib.Path('.forge/journal.d')
+d.mkdir(parents=True, exist_ok=True)
+safe = re.sub(r'[^A-Za-z0-9._-]+', '-', slug).strip('-') or 'task'
+entry = f"""- date: "{now.date().isoformat()}"
+  summary: "Закрыта задача: {title}"
+  milestone: "{milestone}"
+  slug: "{slug}"
+  result: "Done"
 """
-if p.exists():
-    c = p.read_text()
-    if 'entries:' in c:
-        c = c.replace('entries:', f'entries:{entry}', 1)
-    else:
-        c = f'entries:{entry}\n' + c
-else:
-    c = f'entries:{entry}\n'
-p.write_text(c)
+(d / f"{now.strftime('%Y-%m-%d-%H%M')}-{safe}.yml").write_text(entry, encoding='utf-8')
 PYEOF
 }
 

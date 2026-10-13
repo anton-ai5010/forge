@@ -125,6 +125,38 @@ assert 'truncated' in ctx, 'нет пометки об обрезке'
 check "should truncate large Cyrillic index.yml at char boundary (no broken UTF-8)" $?
 mv .forge/index.yml.bak .forge/index.yml
 
+# --- (9б) секция dont:/constraints: в конце длинного index.yml доходит целиком ---
+
+for key in dont constraints; do
+    rm -f .forge/.inject-state
+    mv .forge/index.yml .forge/index.yml.bak
+    python3 - "$key" <<'PY'
+import sys
+key = sys.argv[1]
+body = 'goal: "x"\nnotes:\n' + ''.join('  - заметка номер %d, длинная строка для объёма\n' % i for i in range(150))
+body += key + ':\n' + ''.join('  - НИКОГДА-правило-%d\n' % i for i in range(1, 6))
+open('.forge/index.yml', 'w').write(body)
+PY
+    out=$(run_hook "$PAYLOAD")
+    printf '%s' "$out" | python3 -c "
+import json,sys
+ctx = json.load(sys.stdin)['hookSpecificOutput']['additionalContext']
+for i in range(1, 6):
+    assert 'НИКОГДА-правило-%d' % i in ctx, i
+" 2>/dev/null
+    check "should deliver all 5 lines of '$key:' section at the end of a ~6KB index.yml" $?
+    mv .forge/index.yml.bak .forge/index.yml
+done
+
+# --- (9в) без секции dont/constraints старое поведение (обрезка) сохраняется ---
+
+rm -f .forge/.inject-state
+mv .forge/index.yml .forge/index.yml.bak
+python3 -c "open('.forge/index.yml','w').write('goal: \"x\"\n' + 'note: \"' + 'a'*4000 + '\"\n')"
+out=$(run_hook "$PAYLOAD")
+printf '%s' "$out" | grep -q "truncated" && is_json "$out"; check "should truncate as before when no dont/constraints section" $?
+mv .forge/index.yml.bak .forge/index.yml
+
 # --- (9) битый JSON на входе не роняет хук ---
 
 rm -f .forge/.inject-state
