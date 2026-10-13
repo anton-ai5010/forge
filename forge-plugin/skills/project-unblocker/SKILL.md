@@ -16,7 +16,7 @@ L0 (index.yml) уже в промпте через хук. Подгрузи на
 !`cat .forge/status.yml 2>/dev/null || cat .forge/status.md 2>/dev/null || echo "нет status"`
 !`cat .forge/dead-ends.yml 2>/dev/null || cat .forge/dead-ends/*.md 2>/dev/null || echo "нет dead-ends"`
 !`cat .forge/decisions.yml 2>/dev/null || cat .forge/decisions.md 2>/dev/null || echo "нет decisions"`
-!`cat .forge/journal.yml 2>/dev/null || head -30 .forge/journal.md 2>/dev/null || echo "нет journal"`
+!`python3 $CLAUDE_PLUGIN_ROOT/skills/forge-context/toc.py --journal .forge 5 2>/dev/null || echo "нет journal"`
 !`cat .forge/learnings.yml 2>/dev/null || echo "нет learnings"`
 !`cat .forge/direction.yml 2>/dev/null || echo "нет direction (новый проект — создашь в Фазе 5)"`
 !`ls .forge/library/*/spec.yml 2>/dev/null && echo "(спеки модулей — читай по нужде в Фазе 1)" || echo "нет library specs"`
@@ -101,7 +101,7 @@ EOF
 **При смещении цели** — синхронизация односторонняя, `index.yml ← навигатор`:
 1. Обнови `index.yml` → `goal:` (канон в L0).
 2. Допиши `goal_shift` в `.forge/direction.yml` (date, from, to, why).
-3. Строку в `.forge/journal.yml`.
+3. Запись-фрагмент в `.forge/journal.d/YYYY-MM-DD-HHMM-<slug>.yml` (`- date/summary/result`, без верхнего ключа).
 
 ### Фаза 1: Глубокое сканирование (молча, параллельно)
 
@@ -248,7 +248,7 @@ EOF
 1. Прочитай его (и последний `.forge/guide/vX.Y.json`, если есть — там статусы находок/рисков open/done и решений с кодами).
 2. Покажи цель-якорь + текущие направления.
 3. «Что из этого сделано / сдвинулось?» — человек отметит.
-4. Сделанное → убрать из `directions` (дата и что сделано — строкой в `journal.yml`).
+4. Сделанное → убрать из `directions` (дата и что сделано — фрагментом в `.forge/journal.d/`).
 5. Направления кончились → Фаза 3 (извлечение новых).
 6. Цель достигнута → помоги сформулировать новую (это `goal_shift`).
 7. Обнови `index.yml`, `status.yml`, `direction.yml`.

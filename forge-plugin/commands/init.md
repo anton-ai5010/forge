@@ -380,7 +380,7 @@ catalog:
     tags: [failed, tried, broken, doesnt-work, avoid, mistake]
 
   journal:
-    path: .forge/journal.yml
+    path: .forge/journal.d/  # старый .forge/journal.yml читается как хвост
     tags: [history, last-session, previous, yesterday, when, resume]
 
   learnings:

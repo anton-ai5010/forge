@@ -191,19 +191,19 @@ If yes — add entry to `.forge/decisions.yml`:
     tags: [{keywords}]
 ```
 
-## Step 7: Update journal.yml (or journal.md)
+## Step 7: Write journal fragment
 
-Add entry at TOP of `entries:`:
+`mkdir -p .forge/journal.d` and write a new file `.forge/journal.d/YYYY-MM-DD-HHMM-<slug>.yml` with one entry (no top-level key):
 
 ```yaml
-  - date: {date}
-    summary: "{что делали}"
-    result: "{итог}"
-    next: "{что дальше}"
-    files: [{key files}]
+- date: {date}
+  summary: "{что делали}"
+  result: "{итог}"
+  next: "{что дальше}"
+  files: [{key files}]
 ```
 
-If entries >7 — remove oldest.
+Old entries are never deleted; `journal.yml` is not edited.
 
 ## Step 7.5: Extract Learnings (Compound)
 
@@ -260,7 +260,7 @@ Updated:
 - .forge/status.yml ({updated|no changes})
 - .forge/dead-ends.yml ({new entries|no changes})
 - .forge/decisions.yml ({new entries|no changes})
-- .forge/journal.yml (new entry)
+- .forge/journal.d/ (new fragment)
 - .forge/learnings.yml ({new entries|no changes|created})
 
 Graph: {updated N nodes|no graphify|no graph}

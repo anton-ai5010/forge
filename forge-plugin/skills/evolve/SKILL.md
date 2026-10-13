@@ -20,7 +20,7 @@ description: "Use when user says 'эволюция', 'evolve', 'кластери
 Прочитай **все доступные источники**:
 
 - `.forge/learnings.yml` — что записывал session-awareness skill
-- `.forge/journal.yml` — история сессий
+- журнал — история сессий: `python3 $CLAUDE_PLUGIN_ROOT/skills/forge-context/toc.py --journal .forge 30` (фрагменты `.forge/journal.d/` + хвост `journal.yml`)
 - `.forge/dead-ends.yml` — провальные подходы
 - `.forge/decisions.yml` — архитектурные решения (для понимания трендов)
 - `~/.claude/projects/-run-media-anton-Kingston4TB-plugin/memory/project_pain_patterns.md` — сквозные боли через 116+ сессий

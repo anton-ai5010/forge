@@ -244,7 +244,7 @@ bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh close-task <task-slug>
 bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh sync-all
 ```
 
-- `close-task` — закрывает родительский Issue, ставит label `forge:done`, добавляет запись в `.forge/journal.yml`
+- `close-task` — закрывает родительский Issue, ставит label `forge:done`, пишет фрагмент-запись в `.forge/journal.d/`
 - `sync-all` — обновляет шапку README.md и тело Pinned Issue (карта проекта)
 
 Одной строкой в чат: "Карта проекта обновлена" (если sync включён).
@@ -289,4 +289,4 @@ bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh sync-all
 
 Реализованная задача. Файлы изменены / созданы. Критерий готовности подтверждён.
 
-Опционально (с подтверждения пользователя): мерж через finishing-a-development-branch (хэндофф выше), обновление `.forge/journal.yml`, переход к следующей задаче.
+Опционально (с подтверждения пользователя): мерж через finishing-a-development-branch (хэндофф выше), запись итога фрагментом в `.forge/journal.d/`, переход к следующей задаче.

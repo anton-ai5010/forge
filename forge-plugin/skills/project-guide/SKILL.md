@@ -81,7 +81,7 @@ python3 "$CLAUDE_PLUGIN_ROOT/skills/project-guide/render.py" bump major    # «�
 | `.forge/decisions.yml` | Принятые решения → `status: accepted` с «Почему» из `why`; Аналитик 4 сверит их с кодом |
 | `.forge/direction.yml` | `directions`/`backlog` → план «дальше/позже»; `map[].status: risk|unknown` → кандидаты в риски; `goal_shift` → `meta.eyebrow` |
 | `.forge/dead-ends.yml` | Чего НЕ предлагать в «Предлагаем» — уже пробовали |
-| `.forge/journal.yml` (последние 5) | `next` → что считалось следующим; даты → период в `meta.built_from` |
+| `toc.py --journal .forge 5` (последние 5 итогов, фрагменты `journal.d/`) | `next` → что считалось следующим; даты → период в `meta.built_from` |
 | `.forge/learnings.yml` | Где раньше обжигались — туда агентам смотреть внимательнее |
 | `.forge/tasks/*.md` + `.forge/plans/*.md` | Открытые задачи (есть task, нет мержа) → план «сейчас»; «## Открытые вопросы» планов → кандидаты в группу O |
 | `.forge/product-map.json` (если есть) | Подсказка картографам (потоки/сущности), не истина — код свежее |
