@@ -7,7 +7,7 @@ input=$(cat)
 
 # Парсим JSON от Claude Code: used_percentage встречается и в context_window, и в rate_limits —
 # поэтому каждое поле берём по своему пути, а не первое попавшееся
-IFS=$'\x1f' read -r model pct week < <(printf '%s' "$input" | python3 -c '
+IFS=$'\x1f' read -r model pct week sid < <(printf '%s' "$input" | python3 -c '
 import json, sys
 try: d = json.load(sys.stdin)
 except Exception: d = {}
@@ -17,8 +17,16 @@ def g(*keys):
         v = v.get(k) if isinstance(v, dict) else None
     return v
 num = lambda v: str(int(v)) if isinstance(v, (int, float)) else ""
-print((g("model", "display_name") or "") + "\x1f" + num(g("context_window", "used_percentage")) + "\x1f" + num(g("rate_limits", "seven_day", "used_percentage")))
+print((g("model", "display_name") or "") + "\x1f" + num(g("context_window", "used_percentage")) + "\x1f" + num(g("rate_limits", "seven_day", "used_percentage")) + "\x1f" + (str(d.get("session_id") or "")))
 ' 2>/dev/null)
+
+# Расход для подсказок context-inject.sh: ~/.claude/forge-state/usage-<session_id>.txt (сбой не мешает строке)
+if [ -n "$sid" ] && { [ -n "$pct" ] || [ -n "$week" ]; }; then
+    case "$sid" in *[!A-Za-z0-9_.-]*) ;; *)
+        { mkdir -p "$HOME/.claude/forge-state" \
+            && printf 'ctx=%s\nweek=%s\n' "$pct" "$week" > "$HOME/.claude/forge-state/usage-$sid.txt"; } 2>/dev/null || true ;;
+    esac
+fi
 
 # Текущая ветка git
 branch=$(git branch --show-current 2>/dev/null)

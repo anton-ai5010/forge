@@ -23,5 +23,10 @@ echo "$out" | grep -q "неделя 55%" && ! echo "$out" | grep -q "чат" ; c
 out=$(run 'не json')
 [ -n "$out" ] ; check "мусор на входе — строка всё равно печатается, без падения" $?
 
+# usage-файл для context-inject
+H=$(mktemp -d)
+(cd "$(mktemp -d)" && printf '%s' '{"session_id":"abc","rate_limits":{"seven_day":{"used_percentage":31.2}},"context_window":{"used_percentage":64.9}}' | HOME="$H" bash "$SL" >/dev/null)
+[ "$(cat "$H/.claude/forge-state/usage-abc.txt" 2>/dev/null)" = "$(printf 'ctx=64\nweek=31')" ] ; check "usage-файл с ctx и week записан" $?
+
 echo; [ $fails -eq 0 ] && echo OK || echo "$fails FAIL"
 exit $fails
