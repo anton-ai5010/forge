@@ -171,6 +171,13 @@ Projects v2 board не используется — Pinned Issue + README пок
 - **Codex** (`skills/requesting-code-review/codex-review.sh`) — включается в проекте строкой `codex_review: on` в `.forge/index.yml` (по умолчанию выкл). Получает только дифф/план и задачу: пустая временная папка, отдельный CODEX_HOME без глобальных инструкций, песочница `codex.sb` закрывает домашнюю папку, секреты → SKIP.
 - **Мера «по делу»** — `forge-plugin/docs/delivery-bar.md`.
 
+## Расход основного чата (v7.11.0)
+
+- **Сжиматель длинного вывода** (`hooks/log-compress.sh`, PostToolUse Bash) — выключен по умолчанию, включается `log_compressor: on` в `.forge/index.yml`. Вывод > 12 000 символов → пересказ (Ollama `qwen3.8:27b`, иначе / при неответе — Haiku), полный вывод — `~/.claude/forge-logs/<проект>/` (вне репо, только владельцу); с секретами — только локально или «грубо» голова+хвост.
+- **Гигиена чата**: статуслайн пишет память чата и недельный лимит в `~/.claude/forge-state/usage-<session>.txt`; при памяти > 60 % `context-inject.sh` один раз предлагает продолжить в новом чате.
+- **Сколько думать**: new-task / refine-idea / plan / critique — `high`, execute — `medium`, `max` и ultracode — только для денег / прода / удаления данных (одна строка раз за сессию).
+- Вложенные вызовы `claude` из хуков помечаются `FORGE_NESTED=1` — все хуки плагина при нём молчат.
+
 ## Порядок в памяти (по Прорабу, v7.10.0)
 
 - **Иерархия правды** (`skills/forge-context`): код > тесты > decisions / status > map / conventions > journal / notes; расхождения — в `status.yml` → `drift:`. Таблица «что изменил → что обновить» — `update_map` в `.forge/conventions.yml`.
