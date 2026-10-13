@@ -164,6 +164,36 @@ out=$(run_hook 'не json вообще')
 rc=$?
 [ "$rc" -eq 0 ] && is_json "$out"; check "should survive malformed stdin and still emit valid JSON" $?
 
+# --- (10) гигиена чата: подсказки по расходу из usage-<session>.txt ---
+
+REAL_HOME="$HOME"
+export HOME=$(mktemp -d)
+mkdir -p "$HOME/.claude/forge-state"
+U="$HOME/.claude/forge-state"
+P2='{"session_id":"sess-u","prompt":"x"}'
+
+printf 'ctx=65\nweek=10\n' > "$U/usage-sess-u.txt"
+out=$(run_hook "$P2")
+printf '%s' "$out" | grep -q "Чат разросся (память 65%)" && is_json "$out"; check "should hint to start new chat when ctx > 60" $?
+out=$(run_hook "$P2")
+printf '%s' "$out" | grep -q "Чат разросся"; check "should not repeat ctx hint twice in a session" $((1-$?))
+
+printf 'ctx=40\nweek=10\n' > "$U/usage-sess-low.txt"
+out=$(run_hook '{"session_id":"sess-low","prompt":"x"}')
+printf '%s' "$out" | grep -q "Чат разросся"; check "should not hint when ctx <= 60" $((1-$?))
+
+out=$(run_hook '{"session_id":"sess-none","prompt":"x"}')
+printf '%s' "$out" | grep -q "не включена строка внизу экрана" && is_json "$out"; check "should hint about missing statusline when no usage file" $?
+out=$(run_hook '{"session_id":"sess-none","prompt":"x"}')
+printf '%s' "$out" | grep -q "не включена строка внизу экрана"; check "should not repeat statusline hint twice" $((1-$?))
+
+printf '{"statusLine": {"type": "command", "command": "x"}}' > "$HOME/.claude/settings.json"
+out=$(run_hook '{"session_id":"sess-fresh","prompt":"x"}')
+printf '%s' "$out" | grep -q "не включена строка внизу экрана"; check "should not claim statusline is off when it is configured but has not run yet" $((1-$?))
+rm -f "$HOME/.claude/settings.json"
+
+export HOME="$REAL_HOME"
+
 cd / && rm -rf "$workdir"
 
 echo "---"

@@ -2,6 +2,7 @@
 # SessionStart hook — лёгкое введение в forge plugin
 # Не дампим весь using-forge skill — Claude подгрузит через Skill tool когда нужно.
 # Содержимое using-forge становится lazy-load по trigger через description match.
+[ -n "$FORGE_NESTED" ] && exit 0   # вложенный вызов claude из сжимателя логов — молчим
 
 set -euo pipefail
 

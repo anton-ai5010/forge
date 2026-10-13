@@ -9,6 +9,7 @@
 #   message: "..."              # объяснение Claude почему правило сработало
 #
 # Hook читает все .forge/hookrules/*.md и применяет совпадения.
+[ -n "$FORGE_NESTED" ] && exit 0   # вложенный вызов claude из сжимателя логов — молчим
 
 set -euo pipefail
 

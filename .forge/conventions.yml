@@ -24,6 +24,8 @@ patterns:
   hook_format: "hooks.json с matcher и command"
   agent_model: "у каждого помощника явная модель по forge-plugin/docs/model-roles.md (frontmatter agents/*.md или model в вызове); новая роль — строка в таблице + строка инвентаря (тест test-model-roles.sh)"
   codex_review: "Codex-проверка включается в проекте ключом `codex_review: on` в .forge/index.yml; по умолчанию выключена"
+  log_compressor: "сжиматель длинного вывода включается ключом `log_compressor: on` в .forge/index.yml; по умолчанию выключен"
+  nested_claude: "вложенный вызов claude из хуков — с FORGE_NESTED=1; каждый хук плагина первой строкой молчит при нём"
 update_map:
   - changed: "скилл (новый, переименованный, удалённый)"
     update: ["CLAUDE.md (корень)", "Commands Reference в CLAUDE.md", "forge-plugin/skills/using-forge/SKILL.md"]

@@ -5,6 +5,7 @@
 # Skill discovery → relies on skill descriptions (Claude auto-triggers)
 # Дедупликация: полный блок — только при новой сессии / изменении контента /
 # каждом 16-м промпте (страховка после /compact); иначе короткая строка-маркер.
+[ -n "$FORGE_NESTED" ] && exit 0   # вложенный вызов claude из сжимателя логов — молчим
 
 set -euo pipefail
 
@@ -106,6 +107,24 @@ if [ "$prev_session" = "$session_id" ] && [ "$prev_hash" = "$ctx_hash" ] && [ "$
     context="FORGE L0: без изменений (полный контекст выше; файл .forge/index.yml)"
 else
     printf '%s %s %s\n' "$session_id" "$ctx_hash" 0 > "$state_file" 2>/dev/null || true
+fi
+
+# ============ ГИГИЕНА ЧАТА ============
+# Подсказки по расходу — по разу за сессию. usage-файл пишет statusline.sh.
+fstate="$HOME/.claude/forge-state"
+case "$session_id" in *[!A-Za-z0-9_.-]*) sid_safe="" ;; *) sid_safe="$session_id" ;; esac
+if [ -n "$sid_safe" ]; then
+    usage_file="$fstate/usage-$sid_safe.txt"
+    if [ -f "$usage_file" ]; then
+        ctx_pct=$(sed -n 's/^ctx=\([0-9]*\)$/\1/p' "$usage_file" 2>/dev/null | head -1)
+        if [ -n "$ctx_pct" ] && [ "$ctx_pct" -gt 60 ] && [ ! -e "$fstate/hint-ctx-$sid_safe" ]; then
+            context="${context}"$'\n'"--- Чат разросся (память ${ctx_pct}%) — продолжать в новом чате дешевле. Скажи владельцу одной строкой: «чат разросся — дешевле продолжить в новом, сказать «передай» — дам текст для нового чата?»; работу не останавливай."
+            touch "$fstate/hint-ctx-$sid_safe" 2>/dev/null || true
+        fi
+    elif [ ! -e "$fstate/hint-nostatus-$sid_safe" ] && ! grep -q '"statusLine"' "$HOME/.claude/settings.json" 2>/dev/null; then
+        context="${context}"$'\n'"--- подсказки про расход не работают — не включена строка внизу экрана (statusLine → forge-plugin/hooks/statusline.sh)"
+        { mkdir -p "$fstate" && touch "$fstate/hint-nostatus-$sid_safe"; } 2>/dev/null || true
+    fi
 fi
 
 escaped=$(escape_for_json "$context")
