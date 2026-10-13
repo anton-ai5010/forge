@@ -25,8 +25,9 @@ cwd="$(printf '%s' "$input" | python3 -c 'import json,sys; print(json.load(sys.s
 root="$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null)"; [ -z "$root" ] && root="$cwd"
 slug="$(printf '%s' "$root" | tr '/' '-')"
 logdir="$HOME/.claude/forge-logs/$slug"
+umask 077   # сырой вывод может содержать секреты — файлы и папки только владельцу
 errlog="$logdir/compress-errors.log"
-logerr() { mkdir -p "$logdir" 2>/dev/null; echo "$(date '+%F %T') $*" >> "$errlog" 2>/dev/null; }
+logerr() { mkdir -p -m 700 "$logdir" 2>/dev/null; echo "$(date '+%F %T') $*" >> "$errlog" 2>/dev/null; }
 fail() { logerr "$@"; exit 0; }
 
 # достаём вывод в файлы (stdout+stderr), команду отдельно
@@ -47,7 +48,8 @@ open(t+"/code.txt","w").write(str(r.get("exit_code",0)))
 size="$(wc -m < "$tmp/out.txt" | tr -d ' ')"
 [ "${size:-0}" -lt 12000 ] && exit 0
 
-mkdir -p "$logdir" 2>/dev/null || exit 0
+mkdir -p -m 700 "$logdir" 2>/dev/null || exit 0
+chmod 700 "$logdir" 2>/dev/null
 raw="$logdir/$(date +%Y%m%d-%H%M%S)-$$.txt"
 cp "$tmp/out.txt" "$raw" || fail "не смог сохранить сырой вывод в $raw"
 

@@ -77,6 +77,10 @@ out="$(long | FAKE_OLLAMA= run)"
 p="$(printf '%s' "$out" | python3 -c 'import json,sys,re; s=json.load(sys.stdin)["hookSpecificOutput"]["updatedToolOutput"]["stdout"]; print(re.search(r"полный вывод: (\S+)",s).group(1))' 2>/dev/null)"
 printf '%s' "$out" | grep -q 'HAIKU-SUMMARY' && [ -f "$p" ] && ok "длинный + haiku — пересказ, файл есть" || bad "длинный + haiku"
 
+# 7б сырой вывод (может содержать секреты) — только владельцу: файл 600, папка 700
+m_file=$(stat -f %Lp "$p" 2>/dev/null || stat -c %a "$p"); m_dir=$(stat -f %Lp "$(dirname "$p")" 2>/dev/null || stat -c %a "$(dirname "$p")")
+[ "$m_file" = 600 ] && [ "$m_dir" = 700 ] && ok "сырой вывод: файл 600, папка 700" || bad "права сырого вывода: файл $m_file, папка $m_dir"
+
 # 8 пересказчик упал
 rm -f "$LOGS/compress-errors.log"
 out="$(long | FAKE_OLLAMA= FAKE_CLAUDE=fail run)"
