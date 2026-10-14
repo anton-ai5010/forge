@@ -164,33 +164,50 @@ out=$(run_hook 'не json вообще')
 rc=$?
 [ "$rc" -eq 0 ] && is_json "$out"; check "should survive malformed stdin and still emit valid JSON" $?
 
-# --- (10) гигиена чата: подсказки по расходу из usage-<session>.txt ---
+# --- (10) гигиена чата: размер контекста из transcript_path ---
 
 REAL_HOME="$HOME"
 export HOME=$(mktemp -d)
 mkdir -p "$HOME/.claude/forge-state"
-U="$HOME/.claude/forge-state"
-P2='{"session_id":"sess-u","prompt":"x"}'
+TD=$(mktemp -d)
 
-printf 'ctx=65\nweek=10\n' > "$U/usage-sess-u.txt"
-out=$(run_hook "$P2")
-printf '%s' "$out" | grep -q "Чат разросся (память 65%)" && is_json "$out"; check "should hint to start new chat when ctx > 60" $?
-out=$(run_hook "$P2")
+mk_tr() { # файл, input_tokens, cache_read, cache_creation
+    python3 - "$1" "$2" "$3" "$4" <<'PY'
+import json,sys
+f,i,r,c=sys.argv[1],int(sys.argv[2]),int(sys.argv[3]),int(sys.argv[4])
+with open(f,'w') as o:
+    o.write(json.dumps({"type":"user","message":{"content":"привет"}})+"\n")
+    o.write(json.dumps({"type":"assistant","message":{"usage":{"input_tokens":5,"cache_read_input_tokens":1,"cache_creation_input_tokens":1}}})+"\n")
+    o.write(json.dumps({"type":"assistant","message":{"usage":{"input_tokens":i,"cache_read_input_tokens":r,"cache_creation_input_tokens":c}}})+"\n")
+    o.write(json.dumps({"type":"user","message":{"content":"ещё"}})+"\n")
+PY
+}
+mk_tr "$TD/big.jsonl" 10 290000 10000
+mk_tr "$TD/small.jsonl" 10 90000 10000
+
+out=$(run_hook "{\"session_id\":\"sess-big\",\"prompt\":\"x\",\"transcript_path\":\"$TD/big.jsonl\"}")
+printf '%s' "$out" | grep -q "Чат разросся (~300 тыс." && is_json "$out"; check "should hint when transcript usage is 300k" $?
+out=$(run_hook "{\"session_id\":\"sess-big\",\"prompt\":\"x\",\"transcript_path\":\"$TD/big.jsonl\"}")
 printf '%s' "$out" | grep -q "Чат разросся"; check "should not repeat ctx hint twice in a session" $((1-$?))
 
-printf 'ctx=40\nweek=10\n' > "$U/usage-sess-low.txt"
-out=$(run_hook '{"session_id":"sess-low","prompt":"x"}')
-printf '%s' "$out" | grep -q "Чат разросся"; check "should not hint when ctx <= 60" $((1-$?))
+out=$(run_hook "{\"session_id\":\"sess-small\",\"prompt\":\"x\",\"transcript_path\":\"$TD/small.jsonl\"}")
+printf '%s' "$out" | grep -q "Чат разросся"; check "should not hint at 100k" $((1-$?))
 
-out=$(run_hook '{"session_id":"sess-none","prompt":"x"}')
-printf '%s' "$out" | grep -q "не включена строка внизу экрана" && is_json "$out"; check "should hint about missing statusline when no usage file" $?
-out=$(run_hook '{"session_id":"sess-none","prompt":"x"}')
-printf '%s' "$out" | grep -q "не включена строка внизу экрана"; check "should not repeat statusline hint twice" $((1-$?))
+out=$(run_hook '{"session_id":"sess-nopath","prompt":"x"}')
+printf '%s' "$out" | grep -q "Чат разросся"; r1=$?
+printf '%s' "$out" | grep -q "не включена строка"; r2=$?
+[ "$r1" -ne 0 ] && [ "$r2" -ne 0 ] && is_json "$out"; check "should stay quiet with valid JSON without transcript_path" $?
+out=$(run_hook "{\"session_id\":\"sess-nofile\",\"prompt\":\"x\",\"transcript_path\":\"$TD/nope.jsonl\"}")
+printf '%s' "$out" | grep -q "Чат разросся"; r1=$?
+[ "$r1" -ne 0 ] && is_json "$out"; check "should stay quiet with valid JSON when transcript file is missing" $?
 
-printf '{"statusLine": {"type": "command", "command": "x"}}' > "$HOME/.claude/settings.json"
-out=$(run_hook '{"session_id":"sess-fresh","prompt":"x"}')
-printf '%s' "$out" | grep -q "не включена строка внизу экрана"; check "should not claim statusline is off when it is configured but has not run yet" $((1-$?))
-rm -f "$HOME/.claude/settings.json"
+# проект без .forge/ — подсказка всё равно работает
+NF=$(mktemp -d)
+out=$(cd "$NF" && printf '%s' "{\"session_id\":\"sess-nf\",\"prompt\":\"x\",\"transcript_path\":\"$TD/big.jsonl\"}" | "$HOOK" 2>/dev/null)
+printf '%s' "$out" | grep -q "Чат разросся" && is_json "$out"; check "should hint at 300k even in a project without .forge" $?
+out=$(cd "$NF" && printf '%s' '{"session_id":"sess-nf2","prompt":"x"}' | "$HOOK" 2>/dev/null)
+[ -z "$out" ]; check "should stay silent (no output) without .forge and without hint" $?
+rm -rf "$NF" "$TD"
 
 export HOME="$REAL_HOME"
 

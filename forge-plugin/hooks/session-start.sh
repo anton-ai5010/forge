@@ -94,6 +94,23 @@ if [ -z "$report_warn" ] && [ -n "$drift_part" ]; then
     report_warn=$'\n\n'"📌 Доки: ${drift_part#доки: } с кодом (список — python3 $plugin_root/skills/forge-context/drift-check.py) — скажи владельцу одной строкой; правь по иерархии правды (forge-context)."
 fi
 
+# Правила памяти — только если у проекта есть .forge; иначе один раз на проект предложить /forge:init
+routing=""; doc_discipline=""; init_warn=""
+if [ -d .forge ]; then
+    routing="ROUTING: Match .forge/index.yml catalog[].tags with current task to decide which L1 files to load. Do NOT load all L1 files — only what matches.
+
+"
+    doc_discipline="DOC DISCIPLINE: If you just made a technical decision — record in .forge/decisions.yml. If an approach failed — record in .forge/dead-ends.yml. If you learned something non-obvious — record in .forge/learnings.yml. Do it NOW, not later.
+"
+elif git rev-parse --show-toplevel >/dev/null 2>&1; then
+    top=$(git rev-parse --show-toplevel)
+    imark="$HOME/.claude/forge-state/${top//\//-}/init-offered"
+    if [ ! -e "$imark" ]; then
+        init_warn=$'\n\n'"🆕 У проекта нет памяти плагина (.forge/) — решения, задачи и журнал никуда не записываются. Предложи владельцу одной строкой: «завести память проекта? скажи «/forge:init» — буду помнить решения и ход работы между чатами». Один раз: отказался — не повторяй."
+        mkdir -p "$(dirname "$imark")" 2>/dev/null && touch "$imark" 2>/dev/null || true
+    fi
+fi
+
 # Короткое введение — что есть forge и как им пользоваться
 intro="<forge-plugin-loaded>
 ${header}
@@ -109,14 +126,13 @@ ${header}
 
 И 30+ поддерживающих скиллов (debugging, design, deployment, etc.) — триггерятся автоматически по описанию или вызываются явно через /forge:<name>.
 
-ROUTING: Match .forge/index.yml catalog[].tags with current task to decide which L1 files to load. Do NOT load all L1 files — only what matches.
+${routing}WORKFLOWS: пишешь воркфлоу (Workflow tool, в т.ч. ультракод) — у КАЖДОГО agent() явные model и effort по $plugin_root/docs/model-roles.md (иначе помощник наследует модель чата); метки impl:/review:/verify:/final-review:/fix:; шаг с кодом проверяется по схеме skills/requesting-code-review (дифф в промпт, Sonnet-углы, Codex, Opus только для денег/прода/удаления), находки — пачкой, не скептик на каждую.
 
-WORKFLOWS: пишешь воркфлоу (Workflow tool, в т.ч. ультракод) — у КАЖДОГО agent() явные model и effort по $plugin_root/docs/model-roles.md (иначе помощник наследует модель чата); метки impl:/review:/verify:/final-review:/fix:; шаг с кодом проверяется по схеме skills/requesting-code-review (дифф в промпт, Sonnet-углы, Codex, Opus только для денег/прода/удаления), находки — пачкой, не скептик на каждую.
+MODELS: любой вызов Agent — с явной model или типом из agents/ (поиск/перечисление — subagent_type forge:scout, проверка кода — forge:code-reviewer); встроенные Explore / Plan / general-purpose — только с model: \"haiku\" или \"sonnet\" (их inherit берёт Opus чата в обход страховки CLAUDE_CODE_SUBAGENT_MODEL). Помощник без модели — ошибка.
 
-DOC DISCIPLINE: If you just made a technical decision — record in .forge/decisions.yml. If an approach failed — record in .forge/dead-ends.yml. If you learned something non-obvious — record in .forge/learnings.yml. Do it NOW, not later.
-
+${doc_discipline}
 Для глубокого введения — Skill tool: forge:using-forge.
-$warning$mem_warn$report_warn
+$warning$mem_warn$report_warn$init_warn
 </forge-plugin-loaded>"
 
 # Escape для JSON
