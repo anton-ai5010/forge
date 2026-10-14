@@ -13,6 +13,8 @@ PLUGIN_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 HOOK="$PLUGIN_ROOT/hooks/session-start.sh"
 PLUGIN_REPO="$(cd "$PLUGIN_ROOT/.." && git rev-parse --show-toplevel 2>/dev/null || true)"
 fails=0
+# Хук пишет отметки в ~/.claude/forge-state — тесты не должны мусорить в настоящий HOME
+REAL_HOME="$HOME"; export HOME="$(mktemp -d)"
 
 guard_isolated() {
     local top
@@ -65,6 +67,21 @@ ctx=$(context_of "$out")
 check "intro should list the whole pipeline including Phase 5 (guide)" $?
 printf '%s' "$ctx" | grep -q "WORKFLOWS:.*model.*effort.*model-roles.md" && printf '%s' "$ctx" | grep -q "requesting-code-review"
 check "intro should carry the workflow rule (model+effort per agent, review scheme) for ultracode" $?
+printf '%s' "$ctx" | grep -q "MODELS:.*forge:scout.*Explore"
+check "intro should forbid helpers without a model (search via forge:scout, Explore only with model)" $?
+printf '%s' "$ctx" | grep -q "ROUTING:"
+check "project with .forge should get memory routing rules" $?
+
+# --- без .forge: нет правил памяти, один раз предложить /forge:init ---
+NOF=$(mktemp -d); ( cd "$NOF" && git init -q
+  out=$(run_hook); c=$(context_of "$out")
+  ! printf '%s' "$c" | grep -q "ROUTING:" && ! printf '%s' "$c" | grep -q "DOC DISCIPLINE" && printf '%s' "$c" | grep -q "/forge:init"
+  echo "rc1=$?"
+  out=$(run_hook); c=$(context_of "$out")
+  ! printf '%s' "$c" | grep -q "/forge:init"; echo "rc2=$?" ) > "$NOF/res"
+grep -q "rc1=0" "$NOF/res"; check "project without .forge: no memory rules, offers /forge:init" $?
+grep -q "rc2=0" "$NOF/res"; check "project without .forge: init offer only once" $?
+rm -rf "$NOF"
 
 # --- (2) без гайда — ни слова про него ---
 

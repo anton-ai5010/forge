@@ -8,6 +8,8 @@
 # с отдельной папкой настроек (CODEX_HOME) — без ~/.codex/config.toml и глобального AGENTS.md
 # (там личные данные), и в песочнице codex.sb: домашняя папка закрыта целиком, писать — только во
 # временную папку. Своя песочница Codex внутри чужой не стартует, поэтому она отключена флагом.
+# Вызывай как есть — без `timeout`/обёрток (на маке `timeout` нет; скрипт сам ограничен 10 мин) и из любой
+# папки проекта, включая соседние рабочие копии (git worktree).
 # Включается в проекте строкой `codex_review: on` в .forge/index.yml (по умолчанию выключен).
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -15,7 +17,15 @@ MODE="$1"; INPUT="$2"; TASK="$3"
 MODELS="gpt-6.1-sol gpt-6-astra"   # рабочая модель Codex; флагманская — запасная, если рабочая перегружена
 
 command -v codex >/dev/null || { echo "SKIP: Codex не установлен"; exit 0; }
-grep -qE '^codex_review:[[:space:]]*on' .forge/index.yml 2>/dev/null || { echo "SKIP: Codex выключен в этом проекте"; exit 0; }
+# index.yml ищем по порядку: ./.forge, корень git-репо, основная рабочая копия (если мы в git worktree)
+IDX=""
+for c in ".forge/index.yml" \
+         "$(git rev-parse --show-toplevel 2>/dev/null)/.forge/index.yml" \
+         "$(d=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) && dirname "$d")/.forge/index.yml"; do
+  case "$c" in /.forge/*) continue;; esac
+  [ -f "$c" ] && { IDX="$c"; break; }
+done
+[ -n "$IDX" ] && grep -qE '^codex_review:[[:space:]]*on' "$IDX" 2>/dev/null || { echo "SKIP: Codex выключен в этом проекте"; exit 0; }
 case "$MODE" in
   review)   PROMPT_FILE="$DIR/review-checklist.md" ;;
   critique) PROMPT_FILE="$DIR/../critique/codex-critic.md" ;;

@@ -28,5 +28,9 @@ for f in $(grep -oE '\$\{CLAUDE_PLUGIN_ROOT\}/hooks/[a-z0-9_-]+\.sh' "$ROOT/hook
 done
 check "в git у hooks/*.sh стоит бит запуска" "[ -z \"\$(git -C '$ROOT' ls-files -s hooks/*.sh | awk '\$1 != \"100755\"')\" ]"
 
+EX="$ROOT/skills/execute/SKILL.md"
+check "execute: схема проверки прямо в тексте (углы, Codex, второй круг, Opus после углов)" "grep -q 'Порядок проверки шага' '$EX' && grep -q 'логика' '$EX' && grep -q 'codex-review.sh review' '$EX' && grep -q 'Второй круг' '$EX' && grep -q 'Opus — никогда вместо углов' '$EX'"
+check "execute: обязательная строка отчёта «проверка: …»" "grep -q '«проверка: чисто»' '$EX'"
+
 echo; [ $FAIL -eq 0 ] && echo OK || echo "$FAIL FAIL"
 exit $FAIL

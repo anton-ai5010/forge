@@ -10,7 +10,7 @@
 set -euo pipefail
 
 # Check for FORGE docs (new format first, then legacy)
-truncate_note=""
+truncate_note=""; no_forge=""
 if [ -f ".forge/index.yml" ]; then
     # Обрезка по границе символа: head -c режет байты и разваливает кириллицу
     # посередине буквы (битый UTF-8 уезжает в JSON). python3 выкидывает
@@ -42,7 +42,8 @@ sys.stdout.write(head + tail)
 elif [ -f ".forge/index.md" ]; then
     index_content=$(cat .forge/index.md 2>/dev/null || echo "")
 else
-    exit 0
+    no_forge=1   # без .forge/ L0 не инжектим, но гигиена чата ниже работает
+    index_content=""
 fi
 
 # Читаем hook input — нужен session_id для дедупликации
@@ -53,19 +54,6 @@ if [ -z "$session_id" ]; then
     session_id="ppid-${PPID}-$(date +%Y%m%d)"
 fi
 
-# Current branch + last 3 commits
-branch=$(git branch --show-current 2>/dev/null || echo "unknown")
-git_log=$(git log --oneline -3 2>/dev/null || echo "no git")
-
-# ============ GRAPH HINT ============
-# Советуем graphify только если CLI реально установлен
-graph_hint=""
-if [ -f ".forge/graph.json" ] && command -v graphify >/dev/null 2>&1; then
-    node_count=$(python3 -c "import json; d=json.load(open('.forge/graph.json')); print(len(d.get('nodes',d.get('elements',{}).get('nodes',[]))))" 2>/dev/null || echo "?")
-    graph_hint=$'\n'"--- Graph: .forge/graph.json (${node_count} nodes). Before grep/find, try: graphify query/path/explain --graph .forge/graph.json"
-fi
-
-# ============ BUILD CONTEXT ============
 escape_for_json() {
     local s="$1"
     s="${s//\\/\\\\}"
@@ -76,56 +64,93 @@ escape_for_json() {
     printf '%s' "$s"
 }
 
-context="FORGE L0 CONTEXT (auto-injected):"$'\n\n'"${index_content}"$'\n\n'"--- Branch: ${branch}"$'\n'"--- Recent: ${git_log}${graph_hint}${truncate_note}"
+context=""
+if [ -z "$no_forge" ]; then
+    # Current branch + last 3 commits
+    branch=$(git branch --show-current 2>/dev/null || echo "unknown")
+    git_log=$(git log --oneline -3 2>/dev/null || echo "no git")
 
-# ============ ДЕДУПЛИКАЦИЯ ============
-# Состояние: .forge/.inject-state — одна строка "session_id hash счётчик_коротких".
-# Файл под .forge/ — в git не попадает (init игнорирует всю директорию).
-state_file=".forge/.inject-state"
-
-hash_context() {
-    if command -v shasum >/dev/null 2>&1; then
-        printf '%s' "$context" | shasum | cut -d' ' -f1
-    elif command -v md5sum >/dev/null 2>&1; then
-        printf '%s' "$context" | md5sum | cut -d' ' -f1
-    else
-        printf '%s' "$context" | cksum | cut -d' ' -f1
+    # ============ GRAPH HINT ============
+    # Советуем graphify только если CLI реально установлен
+    graph_hint=""
+    if [ -f ".forge/graph.json" ] && command -v graphify >/dev/null 2>&1; then
+        node_count=$(python3 -c "import json; d=json.load(open('.forge/graph.json')); print(len(d.get('nodes',d.get('elements',{}).get('nodes',[]))))" 2>/dev/null || echo "?")
+        graph_hint=$'\n'"--- Graph: .forge/graph.json (${node_count} nodes). Before grep/find, try: graphify query/path/explain --graph .forge/graph.json"
     fi
-}
-ctx_hash=$(hash_context 2>/dev/null || echo "nohash")
 
-prev_session=""; prev_hash=""; prev_count=0
-if [ -f "$state_file" ]; then
-    read -r prev_session prev_hash prev_count < "$state_file" 2>/dev/null || true
-fi
-# Битый счётчик → считаем что пора полную (fail-open в сторону полного контекста)
-case "$prev_count" in ''|*[!0-9]*) prev_count=99 ;; esac
+    # ============ BUILD CONTEXT ============
+    context="FORGE L0 CONTEXT (auto-injected):"$'\n\n'"${index_content}"$'\n\n'"--- Branch: ${branch}"$'\n'"--- Recent: ${git_log}${graph_hint}${truncate_note}"
 
-if [ "$prev_session" = "$session_id" ] && [ "$prev_hash" = "$ctx_hash" ] && [ "$prev_count" -lt 15 ]; then
-    # Ничего не изменилось — короткий маркер вместо полного блока (~30 токенов вместо ~800)
-    printf '%s %s %s\n' "$session_id" "$ctx_hash" $((prev_count + 1)) > "$state_file" 2>/dev/null || true
-    context="FORGE L0: без изменений (полный контекст выше; файл .forge/index.yml)"
-else
-    printf '%s %s %s\n' "$session_id" "$ctx_hash" 0 > "$state_file" 2>/dev/null || true
+    # ============ ДЕДУПЛИКАЦИЯ ============
+    # Состояние: .forge/.inject-state — одна строка "session_id hash счётчик_коротких".
+    # Файл под .forge/ — в git не попадает (init игнорирует всю директорию).
+    state_file=".forge/.inject-state"
+
+    hash_context() {
+        if command -v shasum >/dev/null 2>&1; then
+            printf '%s' "$context" | shasum | cut -d' ' -f1
+        elif command -v md5sum >/dev/null 2>&1; then
+            printf '%s' "$context" | md5sum | cut -d' ' -f1
+        else
+            printf '%s' "$context" | cksum | cut -d' ' -f1
+        fi
+    }
+    ctx_hash=$(hash_context 2>/dev/null || echo "nohash")
+
+    prev_session=""; prev_hash=""; prev_count=0
+    if [ -f "$state_file" ]; then
+        read -r prev_session prev_hash prev_count < "$state_file" 2>/dev/null || true
+    fi
+    # Битый счётчик → считаем что пора полную (fail-open в сторону полного контекста)
+    case "$prev_count" in ''|*[!0-9]*) prev_count=99 ;; esac
+
+    if [ "$prev_session" = "$session_id" ] && [ "$prev_hash" = "$ctx_hash" ] && [ "$prev_count" -lt 15 ]; then
+        # Ничего не изменилось — короткий маркер вместо полного блока (~30 токенов вместо ~800)
+        printf '%s %s %s\n' "$session_id" "$ctx_hash" $((prev_count + 1)) > "$state_file" 2>/dev/null || true
+        context="FORGE L0: без изменений (полный контекст выше; файл .forge/index.yml)"
+    else
+        printf '%s %s %s\n' "$session_id" "$ctx_hash" 0 > "$state_file" 2>/dev/null || true
+    fi
 fi
 
 # ============ ГИГИЕНА ЧАТА ============
-# Подсказки по расходу — по разу за сессию. usage-файл пишет statusline.sh.
+# Подсказка «чат разросся» — один раз за сессию. Размер контекста — из хвоста
+# transcript_path (последняя assistant-запись с usage); строка состояния не нужна.
 fstate="$HOME/.claude/forge-state"
 case "$session_id" in *[!A-Za-z0-9_.-]*) sid_safe="" ;; *) sid_safe="$session_id" ;; esac
-if [ -n "$sid_safe" ]; then
-    usage_file="$fstate/usage-$sid_safe.txt"
-    if [ -f "$usage_file" ]; then
-        ctx_pct=$(sed -n 's/^ctx=\([0-9]*\)$/\1/p' "$usage_file" 2>/dev/null | head -1)
-        if [ -n "$ctx_pct" ] && [ "$ctx_pct" -gt 60 ] && [ ! -e "$fstate/hint-ctx-$sid_safe" ]; then
-            context="${context}"$'\n'"--- Чат разросся (память ${ctx_pct}%) — продолжать в новом чате дешевле. Скажи владельцу одной строкой: «чат разросся — дешевле продолжить в новом, сказать «передай» — дам текст для нового чата?»; работу не останавливай."
-            touch "$fstate/hint-ctx-$sid_safe" 2>/dev/null || true
-        fi
-    elif [ ! -e "$fstate/hint-nostatus-$sid_safe" ] && ! grep -q '"statusLine"' "$HOME/.claude/settings.json" 2>/dev/null; then
-        context="${context}"$'\n'"--- подсказки про расход не работают — не включена строка внизу экрана (statusLine → forge-plugin/hooks/statusline.sh)"
-        { mkdir -p "$fstate" && touch "$fstate/hint-nostatus-$sid_safe"; } 2>/dev/null || true
+if [ -n "$sid_safe" ] && [ ! -e "$fstate/hint-ctx-$sid_safe" ]; then
+    ctx_tokens=$(printf '%s' "$hook_input" | python3 -c "
+import json, os, sys
+try:
+    path = json.load(sys.stdin).get('transcript_path') or ''
+    size = os.path.getsize(path)
+    with open(path, 'rb') as f:
+        f.seek(max(size - 2097152, 0))
+        tail = f.read().decode('utf-8', 'ignore')
+    for line in reversed(tail.splitlines()):
+        if '\"usage\"' not in line:
+            continue
+        try:
+            d = json.loads(line)
+        except Exception:
+            continue
+        u = (d.get('message') or {}).get('usage') if d.get('type') == 'assistant' else None
+        if u:
+            print(sum(int(u.get(k) or 0) for k in ('input_tokens', 'cache_read_input_tokens', 'cache_creation_input_tokens')))
+            break
+except Exception:
+    pass
+" 2>/dev/null || true)
+    case "$ctx_tokens" in ''|*[!0-9]*) ctx_tokens=0 ;; esac
+    if [ "$ctx_tokens" -gt 250000 ]; then
+        hint="--- Чат разросся (~$((ctx_tokens / 1000)) тыс. токенов в памяти на каждый ход) — продолжать в новом чате дешевле. Скажи владельцу одной строкой: «чат разросся — дешевле продолжить в новом, сказать «передай» — дам текст для нового чата?»; работу не останавливай."
+        context="${context:+${context}$'\n'}${hint}"
+        { mkdir -p "$fstate" && touch "$fstate/hint-ctx-$sid_safe"; } 2>/dev/null || true
     fi
 fi
+
+# Без .forge/ и без подсказки — молчим, как раньше
+[ -z "$context" ] && exit 0
 
 escaped=$(escape_for_json "$context")
 

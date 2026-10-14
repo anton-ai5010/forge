@@ -33,6 +33,19 @@ out=$(run "$T/bin" review "$T/clean.diff" "$T/task.md")
 echo "$out" | grep -q "^SKIP: Codex выключен" ; check "нет codex_review: on → SKIP ($out)" $?
 echo "codex_review: on" > "$T/proj/.forge/index.yml"
 
+# Поиск .forge/index.yml: соседняя рабочая копия (git worktree), подпапка, выключено в основной
+runin() { (cd "$1" && HOME="$T/home" PATH="$T/bin:/usr/bin:/bin:/usr/sbin" bash "$SCRIPT" "${@:2}"); }
+G="$T/main"; mkdir -p "$G/.forge" "$G/sub/dir"; echo "codex_review: on" > "$G/.forge/index.yml"
+( cd "$G" && git init -q && git -c user.email=a@b -c user.name=t commit -qm init --allow-empty && git worktree add -q "$T/wt" -b wtb ) >/dev/null 2>&1
+out=$(runin "$T/wt" review "$T/clean.diff" "$T/task.md")
+echo "$out" | grep -q "^SKIP: Codex выключен" ; check "worktree без .forge → берёт index.yml основной копии ($out)" $((1-$?))
+echo "$out" | grep -q '"findings"' ; check "worktree: дошло до Codex" $?
+out=$(runin "$G/sub/dir" review "$T/clean.diff" "$T/task.md")
+echo "$out" | grep -q "^SKIP: Codex выключен" ; check "подпапка основного репо → включено ($out)" $((1-$?))
+echo "codex_review: off" > "$G/.forge/index.yml"
+out=$(runin "$T/wt" review "$T/clean.diff" "$T/task.md")
+echo "$out" | grep -q "^SKIP: Codex выключен" ; check "в основной копии выключено → SKIP из worktree ($out)" $?
+
 i=0
 for s in '-----BEGIN RSA PRIVATE KEY-----' 'password = "hunter2hunter2xx"' 'token: y0_AgAAAAAbcdefghijklmnopqrstuv' 'BOT=1234567890:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw' 'AKIAABCDEFGHIJKLMNOP' 'OPENAI=sk-abcdefghijklmnopqrstuvwxyz' 'ghp_abcdefghijklmnopqrstuvwxyz0123456789'; do
   i=$((i+1)); printf 'diff --git a/x b/x\n+%s\n' "$s" > "$T/s$i.diff"
