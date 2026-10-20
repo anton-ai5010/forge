@@ -8,7 +8,7 @@ version: "7.13.0"
 stack: [python, bash, markdown, claude-code-plugin]
 
 now:
-  task: "v7.9.0 — модели по ролям и новая схема проверки (Sonnet-углы + Codex + Opus по правилу); дальше пилот на integration"
+  task: "v7.13.0 влита (три правила из Ponytail); дальше — разгрузка основного чата: тяжёлое помощникам с моделью и effort по роли и вне execute"
   branch: master
 
 catalog:
@@ -57,4 +57,4 @@ session:
   next: "Новый чат: хвосты → экономия лимита (Fable, таблица ролей, быстрый путь) → Telegram-плагин → страница офиса (см. direction.yml backlog)"
   errors: []
 
-last_session: "2026-10-12 — разбор экономии лимита, тест локальных моделей, Прораб, офис/Daintree/Telegram; решения и backlog в decisions.yml/direction.yml, кода не меняли"
+last_session: "2026-10-20 — v7.13.0: лесенка «лучший код — тот, который не написан», нагрузка в проверке кода, пометки «упрощено» → группа упрощений гайда (DEC-19); в backlog — программа в чёлке мака, сворачивание группы S"
