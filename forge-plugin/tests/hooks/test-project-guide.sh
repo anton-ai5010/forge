@@ -350,6 +350,128 @@ out=$(render summary); printf '%s' "$out" | grep -q 'ждут 5 решений �
 check "summary should ignore moved-out findings" $?
 cd / && rm -rf "$WORK"
 
+# ===== (17) пометки сознательных упрощений в коде → решения группы S =====
+# Слово пометки в этом файле целиком не пишем — иначе гайд самого плагина соберёт тестовые строки как настоящие
+M="упро""щено"
+SC_RE="(#|//|--|/\*)[[:space:]]*$M:"
+git_project() { new_project; git init -q .; }
+mark() { printf "$2 %s: %s\n" "$M" "$3" >> "$1"; }   # mark <файл> <знак комментария> <текст>
+S_COUNT="len([x for x in d['decisions'] if str(x['code']).startswith('S')])"
+
+git_project; cp "$GUIDE" "$JSON"
+printf 'x = 1\n' > app.py; mark app.py '#' 'кэш в памяти — переделать, когда процессов больше одного'
+mark bot.js '//' 'без повторов — переделать, когда пойдут платежи'
+mark notes.md '#' 'пример в доке — не собирать'
+git add -A
+out=$(render render)
+[ "$(dec "$JSON" S1 group)" = "S" ] && [ "$(dec "$JSON" S1 status)" = "default" ] && [ "$(dec "$JSON" S1 source)" = "app.py:2" ] \
+  && [ "$(dec "$JSON" S1 title)" = "кэш в памяти" ] && [ "$(dec "$JSON" S2 source)" = "bot.js:1" ] && [ "$(jget "$JSON" "$S_COUNT")" = "2" ] \
+  && grep -q '<h3>S — Упрощено сознательно</h3>' "$HTML" && grep -q '<span class="dt">кэш в памяти</span>' "$HTML" \
+  && grep -q 'где: app.py:2' "$HTML" && grep -q 'Решения S ответа не требуют' "$HTML" && grep -q '«S1 в работу»' "$HTML" && grep -q '<b>S\*</b> — упрощено сознательно' "$HTML" \
+  && ! grep -q 'пример в доке' "$HTML" && printf '%s' "$out" | grep -q 'упрощений 2' && printf '%s' "$out" | grep -q 'ждут ответа 5'
+check "render should collect code marks into S decisions (title, source, howto line), skip .md and not count S defaults as waiting" $?
+[ "$(grep -n '<h3>S — ' "$HTML" | cut -d: -f1)" -lt "$(grep -n '<h3>O — ' "$HTML" | cut -d: -f1)" ] \
+  && [ "$(grep -n '<h3>D — ' "$HTML" | cut -d: -f1)" -lt "$(grep -n '<h3>S — ' "$HTML" | cut -d: -f1)" ]
+check "group S should go after project letters and before O" $?
+
+n_pend=$(jget "$JSON" "len(d['pending_changes'])")
+render render >/dev/null
+[ "$(jget "$JSON" "$S_COUNT")" = "2" ] && [ "$(jget "$JSON" "len(d['pending_changes'])")" = "$n_pend" ]
+check "re-render should keep the same S codes without duplicates or new pending changes" $?
+printf '# шапка\n' | cat - app.py > app.tmp && mv app.tmp app.py && git add -A && render render >/dev/null
+[ "$(dec "$JSON" S1 source)" = "app.py:3" ] && [ "$(jget "$JSON" "$S_COUNT")" = "2" ] && grep -q 'где: app.py:3' "$HTML"
+check "a mark moved to another line should keep its code and update the source" $?
+
+out=$(render verdict S2 accepted)
+[ "$(dec "$JSON" S2 status)" = "accepted" ] && printf '%s' "$out" | grep -q 'S2 → принято' && grep -q '<span class="code">S2</span>.*<span class="acc">принято</span>' "$LATEST"
+check "verdict should answer an S code like any decision" $?
+
+printf 'x = 1\n' > app.py && git add -A && render render >/dev/null
+[ "$(dec "$JSON" S1 status)" = "dropped" ] && [ "$(dec "$JSON" S1 dropped_by)" = "scan" ] && ! grep -q '<span class="code">S1</span>' "$HTML" \
+  && [ "$(jget "$JSON" "len([p for p in d['pending_changes'] if 'S1' in p and 'убрано' in p])")" = "1" ]
+check "a mark removed from code should drop its S decision (dropped_by scan) and log it once" $?
+render render >/dev/null; [ "$(jget "$JSON" "len([p for p in d['pending_changes'] if 'S1' in p and 'убрано' in p])")" = "1" ]
+check "re-render after a removed mark should not log it again" $?
+mark app.py '#' 'кэш в памяти — переделать, когда процессов больше одного'; git add -A; render render >/dev/null
+[ "$(dec "$JSON" S1 status)" = "default" ] && [ "$(dec "$JSON" S1 dropped_by)" = "None" ] && grep -q '<span class="code">S1</span>' "$HTML"
+check "a mark that comes back (branch switch, revert) should revive the same S code" $?
+
+mark new.py '#' 'отчёт считается целиком — переделать, когда отчёт станет дольше минуты'; git add -A
+render merged some-task >/dev/null
+[ "$(dec "$JSON" S3 source)" = "new.py:1" ] && grep -q '<span class="code">S3</span>' "$LATEST"
+check "a new mark should get the next free code (not a dropped one) and show up after merged without a full build" $?
+
+out=$(render link S3 fix-report)
+[ "$(dec "$JSON" S3 task_slug)" = "fix-report" ] && printf '%s' "$out" | grep -q 'S3 → задача fix-report'
+check "link should attach a task slug to an S decision" $?
+rm new.py && git add -A && render merged fix-report >/dev/null
+[ "$(dec "$JSON" S3 status)" = "works" ] && grep -q '<span class="code">S3</span>.*уже работает' "$LATEST"
+check "merged should mark a linked S decision as works even when its mark is gone from code" $?
+
+render verdict S2 dropped >/dev/null; render render >/dev/null
+[ "$(dec "$JSON" S2 status)" = "dropped" ] && [ "$(dec "$JSON" S2 dropped_by)" = "None" ]
+check "an S decision dropped by the owner should stay dropped while its mark is still in code" $?
+cd / && rm -rf "$WORK"
+
+# не git: S не трогаются; git без пометок: группы S и фразы про неё нет
+new_project; cp "$GUIDE" "$JSON"
+python3 - <<'PY'
+import json; p='.forge/guide/v1.0.json'; d=json.load(open(p))
+d['decisions'].append({"code":"S1","group":"S","group_title":"Упрощено сознательно","title":"кэш","what":"кэш","status":"default","fire":False,"source":"app.py:2","shortcut_key":"app.py|кэш"})
+json.dump(d, open(p,'w'), ensure_ascii=False)
+PY
+out=$(render render); rc=$?
+[ "$rc" -eq 0 ] && [ "$(dec "$JSON" S1 status)" = "default" ] && grep -q '<span class="code">S1</span>' "$HTML"
+check "render outside git should leave S decisions untouched" $?
+cd / && rm -rf "$WORK"
+git_project; cp "$GUIDE" "$JSON"; git add -A; out=$(render render)
+! grep -q '<h3>S — ' "$HTML" && ! grep -q 'ответа не требуют' "$HTML" && printf '%s' "$out" | grep -q 'упрощений 0'
+check "no marks should mean no S group and no S howto line" $?
+cd / && rm -rf "$WORK"
+
+# отвеченное и «обсудить» сбор не снимает; разбор /* */, пустой пометки, дубля, двоеточия в имени, нового файла; длинный заголовок
+git_project; cp "$GUIDE" "$JSON"
+mark a.py '#' 'первое — переделать, когда вырастет'; mark b.py '#' 'второе — переделать, когда вырастет'; git add -A
+render render >/dev/null; render verdict S1 accepted >/dev/null; render verdict S2 discuss >/dev/null
+rm a.py b.py; git add -A; render render >/dev/null
+[ "$(dec "$JSON" S1 status)" = "accepted" ] && [ "$(dec "$JSON" S2 status)" = "discuss" ]
+check "a mark removed from code should not drop an S decision the owner accepted or wants to discuss" $?
+printf "/* %s: без кэша — переделать, когда тормозит */\n" "$M" > c.css
+printf "# %s:\n" "$M" >> c.css
+mark d.py '#' 'дубль — переделать, когда надо'; mark d.py '#' 'дубль — переделать, когда надо'
+mark 'e:f.py' '#' 'двоеточие в имени — переделать, когда надо'
+git add -A
+mark g.py '#' 'новый файл не в git — переделать, когда надо'
+mark h.py '#' "$(printf 'длинно%.0s' $(seq 1 30)) без разделителя"
+render render >/dev/null
+[ "$(jget "$JSON" "[x['title'] for x in d['decisions'] if x.get('source','').startswith('c.css')]")" = "['без кэша']" ] \
+  && [ "$(jget "$JSON" "len([x for x in d['decisions'] if x.get('source','').startswith('d.py')])")" = "1" ] \
+  && [ "$(jget "$JSON" "[x['source'] for x in d['decisions'] if x.get('title')=='двоеточие в имени']")" = "['e:f.py:1']" ] \
+  && [ "$(jget "$JSON" "len([x for x in d['decisions'] if x.get('source','').startswith('g.py')])")" = "1" ] \
+  && [ "$(jget "$JSON" "[len(x['title']) <= 80 and x['title'].endswith('…') and x['what'].endswith('без разделителя') for x in d['decisions'] if x.get('source','').startswith('h.py')]")" = "[True]" ] \
+  && [ "$(jget "$JSON" "len([x for x in d['decisions'] if x.get('shortcut_key')])")" = "7" ]
+check "parsing should strip */, skip empty marks, dedupe within a file, survive colons in names, see untracked files and cut long titles" $?
+cd / && rm -rf "$WORK"
+
+# буква S уже занята решениями проекта → упрощения берут первую свободную и запоминают её
+git_project; cp "$GUIDE" "$JSON"
+python3 - <<'PY'
+import json; p='.forge/guide/v1.0.json'; d=json.load(open(p))
+d['decisions'].append({"code":"S1","group":"S","group_title":"Сайт","title":"лендинг","what":"один экран","status":"accepted","fire":False})
+json.dump(d, open(p,'w'), ensure_ascii=False)
+PY
+mark app.py '#' 'кэш в памяти — переделать, когда процессов больше одного'; git add -A; render render >/dev/null
+[ "$(dec "$JSON" U1 group)" = "U" ] && [ "$(jget "$JSON" "d['meta']['shortcut_letter']")" = "U" ] \
+  && [ "$(dec "$JSON" S1 group_title)" = "Сайт" ] && grep -q '<h3>S — Сайт</h3>' "$HTML" && grep -q '<h3>U — Упрощено сознательно</h3>' "$HTML" \
+  && grep -q 'Решения U ответа не требуют' "$HTML" && ! grep -q 'где: ' <(grep -A3 '<span class="code">S1</span>' "$HTML")
+check "when the project already uses S, shortcuts should take the next free letter, remember it and leave project S alone" $?
+cd / && rm -rf "$WORK"
+
+# в самом репо плагина тестовых пометок нет (слово в тестах собирается из кусков)
+ROOT=$(git -C "$(dirname "$RENDER")" rev-parse --show-toplevel)
+git -C "$ROOT" grep -n -I --untracked -E "$SC_RE" -- . ':!*.md' ':!.forge' >/dev/null; [ $? -eq 1 ]
+check "the plugin repo itself should contain no shortcut marks" $?
+
 echo ""
 if [ "$fails" -eq 0 ]; then
     echo "All tests passed"

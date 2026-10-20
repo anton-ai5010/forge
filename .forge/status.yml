@@ -10,5 +10,8 @@ working:
   - "BM25 поиск для UI/UX дизайна (16 фреймворков CSV)"
   - "Звуковые уведомления (7 permission + 7 stop MP3)"
   - "Evals — Hamel-style error analysis на реальных трейсах"
-broken: []
+broken:
+  - what: "github-sync: create-task/reassign-task передают в `gh issue --milestone` номер цели, а gh ждёт название → «'21' not found», Issue не создаётся (skills/github-sync/sync.sh:201, :352; new-task передаёт номер по процедуре скилла)"
+    found: "2026-10-13"
+    workaround: "передавать название цели вместо номера"
 blocked: []

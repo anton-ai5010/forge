@@ -16,6 +16,8 @@
   merged  <task-slug>                после мержа: находка с task_slug → done, stale_tasks+1, пересобрать
   link    <id|R-код> <task-slug>     привязать находку к задаче (new-task)
   summary                            одна строка для session-start; пусто — если напоминать нечего
+Каждая перерисовка последней версии (render / verdict / merged / link) сперва собирает пометки сознательных
+упрощений из кода (git grep, docs/delivery-bar.md) в решения группы S — без помощников и полной сборки.
 Всегда exit 0 (кроме неверных аргументов) — гайд не должен ронять основной процесс.
 """
 
@@ -50,6 +52,20 @@ ANSWERED = {"accepted", "changed", "works", "dropped"}  # 🔥 гаснет
 CHIP = {"default": ("dflt", "дефолт"), "accepted": ("acc", "принято"), "changed": ("acc", "переделано"),
         "discuss": ("dsc", "обсудить"), "works": ("dflt", "уже работает"), "open": ("dsc", "открыто")}
 GROUP_BASE = {"P": "Процесс", "O": "Открытые вопросы"}
+# Группа сознательных упрощений: ведёт рендерер из пометок в коде, руками не пишется. Узнаётся по shortcut_key,
+# буква — S, а если S в этом гайде уже занята решениями проекта — первая свободная (запоминается в meta.shortcut_letter)
+SHORTCUT_WORD = "упрощено:"
+SHORTCUT_GREP = r"(#|//|--|/\*)[[:space:]]*" + SHORTCUT_WORD   # POSIX-класс: \s в git grep -E на маке не работает
+SHORTCUT_LETTERS = "SUZYXWVQ"
+S_TITLE = "Упрощено сознательно"
+S_TITLE_MAX = 80
+
+
+def s_howto(code):
+    """code — живое упрощение из этого гайда: пример ответа должен быть настоящим кодом."""
+    g = code[:1]
+    return (f"Решения {g} ответа не требуют: это места, где сделано проще нарочно, и записано, когда это начнёт мешать. "
+            f"Захотите вернуться к одному — «{code} в работу» (заведём задачу) или «{code} обсудить». ")
 TIER = {"crit": "crit", "biz": "warn", "imp": "mid", "pol": "mid"}
 TIER_HEAD = [("crit", "🔴 Критичные — закрыть в первую очередь"),
              ("warn", "🟠 Высокие — ближайший месяц"),
@@ -126,6 +142,7 @@ th{background:var(--accent-bg);font-weight:600}
 .dcs .what{font-size:9.8pt;margin:5pt 0 2pt}
 .dcs .why{font-size:9.3pt;color:var(--text2);margin:2pt 0 0}
 .dcs .why b,.dcs .what b{font-weight:600}
+.dcs .src{font-family:ui-monospace,Menlo,monospace;font-size:8.3pt;color:var(--muted);margin:2pt 0 0;overflow-wrap:anywhere}
 .gt{font-size:9pt;color:var(--muted);margin:2pt 0 8pt}
 /* риски */
 .risk{border:1pt solid var(--border);border-left:3pt solid var(--muted);border-radius:8pt;padding:7pt 10pt;margin:6pt 0;break-inside:avoid;background:var(--card)}
@@ -308,8 +325,13 @@ def moved_out(f):
             and any(re.match(r"^O\d+$", str(x)) for x in (f.get("links") or [])))
 
 
+def shortcut_group(decisions):
+    """Буква группы упрощений по живым решениям с shortcut_key; None — упрощений нет."""
+    return next((group_of(d) for d in decisions if d.get("shortcut_key") and d.get("status") != "dropped"), None)
+
+
 def groups(decisions):
-    """[(буква, заголовок)]: P первой, буквы проекта по алфавиту, O последней. P и O есть всегда, даже пустые."""
+    """[(буква, заголовок)]: P первой, буквы проекта по алфавиту, упрощения (если есть), O последней. P и O есть всегда, даже пустые."""
     seen = {}
     for d in decisions:
         if d.get("status") == "dropped":
@@ -318,7 +340,8 @@ def groups(decisions):
         seen.setdefault(g, d.get("group_title") or GROUP_BASE.get(g, g))
     for g, t in GROUP_BASE.items():
         seen.setdefault(g, t)
-    order = ["P"] + sorted(g for g in seen if g not in ("P", "O")) + ["O"]
+    sl = shortcut_group(decisions)
+    order = ["P"] + sorted(g for g in seen if g not in ("P", "O", sl)) + ([sl] if sl in seen else []) + ["O"]
     return [(g, seen[g]) for g in order]
 
 
@@ -363,7 +386,9 @@ def counts(data):
     st = lambda d: d.get("status") or "open"
     return {
         "decisions": len(ds),
-        "waiting": sum(1 for d in ds if st(d) in UNANSWERED),
+        # S «оставляем как есть» — не ждёт ответа: 40 пометок не должны раздувать счётчик
+        "waiting": sum(1 for d in ds if st(d) in UNANSWERED and not (d.get("shortcut_key") and st(d) == "default")),
+        "shortcuts": sum(1 for d in ds if d.get("shortcut_key")),
         "fire": sum(1 for d in ds if is_fire(d)),
         "risks": len(active),
         "crit": sum(1 for f in active if f.get("block") == "crit" and f.get("status") != "done"),
@@ -401,7 +426,8 @@ def render_howto(decisions, extra):
             "Метка «дефолт» — наша рекомендация: нет возражений — действуем (см. P1). "
             "Отвечайте списком кодов — так / не так / как переделать:"
             '<div class="ex">A2 — ок.&nbsp;&nbsp;B2 — переделать: …и как именно.&nbsp;&nbsp;D2 — обсудить.</div>'
-            f"{esc(extra or HOWTO_DEFAULT)}</div>")
+            + next((s_howto(str(d.get("code"))) for d in decisions if d.get("shortcut_key") and d.get("status") != "dropped"), "")
+            + f"{esc(extra or HOWTO_DEFAULT)}</div>")
 
 
 def render_decision(d):
@@ -420,6 +446,8 @@ def render_decision(d):
         out.append(f'<span class="was">было: {esc(d["was"])}</span>')
     if d.get("why"):
         out.append(f'<div class="why"><b>Почему:</b> {esc(d["why"])}</div>')
+    if d.get("shortcut_key") and d.get("source"):  # у прочих решений source — откуда взято, не место в коде
+        out.append(f'<div class="src">где: {esc(d["source"])}</div>')
     v = d.get("verdict") or {}
     if v.get("text"):
         out.append(f'<span class="vd">Ваш ответ {esc(v.get("date"))}: {esc(v["text"])}</span>')
@@ -619,6 +647,88 @@ def render_html(data, base):
     return "\n".join(out)
 
 
+# ---------- группа упрощений: пометки сознательных упрощений в коде ----------
+
+def scan_shortcuts():
+    """[(файл, строка, текст)] пометок из кода (и новых, ещё не добавленных в git, файлов);
+    None — не git или git сломан (тогда упрощения не трогаем)."""
+    try:
+        r = subprocess.run(["git", "-c", "core.quotePath=false", "grep", "-z", "-n", "-I", "--untracked", "-E", SHORTCUT_GREP,
+                            "--", ".", ":!*.md", ":!.forge"],
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=20)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if r.returncode not in (0, 1):  # 1 — ничего не нашлось
+        return None
+    out = []
+    for ln in r.stdout.split("\n"):  # -z: файл\0строка\0текст — двоеточие в имени файла не мешает
+        parts = ln.split("\0", 2)
+        if len(parts) != 3 or not parts[1].isdigit():
+            continue
+        f, n, rest = parts
+        text = re.sub(r"\s*\*/\s*$", "", rest.split(SHORTCUT_WORD, 1)[1]).strip()
+        if text:
+            out.append((f, int(n), text))
+    return out
+
+
+def shortcut_letter(data):
+    """S, а если S в гайде уже занята решениями проекта — первая свободная буква; выбирается один раз."""
+    meta = data["meta"]
+    if meta.get("shortcut_letter"):
+        return meta["shortcut_letter"]
+    taken = {group_of(d) for d in data["decisions"] if not d.get("shortcut_key")} | {"P", "O", "R"}
+    meta["shortcut_letter"] = next(g for g in SHORTCUT_LETTERS if g not in taken)
+    return meta["shortcut_letter"]
+
+
+def sync_shortcuts(data, today):
+    """Пометки в коде ↔ решения группы упрощений. Ключ — файл + текст (номер строки гуляет). True — data изменилась.
+    Код не переиспользуется; сбор снимает только «дефолт» без задачи (dropped_by: scan) и возвращает его,
+    когда пометка снова в коде; отвеченное владельцем, «обсудить» и взятое в задачу не трогает."""
+    found = scan_shortcuts()
+    if found is None:
+        return False
+    ds, log = data["decisions"], data["pending_changes"]
+    by_key = {d["shortcut_key"]: d for d in ds if d.get("shortcut_key")}
+    changed, seen = False, set()
+    for f, n, text in found:
+        key, src = f"{f}|{text}", f"{f}:{n}"
+        if key in seen:
+            continue
+        seen.add(key)
+        d = by_key.get(key)
+        if d is None:
+            g = shortcut_letter(data)
+            nums = [int(m.group(1)) for x in ds for m in [re.match(rf"^{g}(\d+)$", str(x.get("code", "")))] if m]
+            code = f"{g}{max(nums, default=0) + 1}"
+            title = re.split(r"\s+[—–-]+\s+переделать", text, maxsplit=1, flags=re.I)[0].strip() or text
+            if len(title) > S_TITLE_MAX:
+                title = title[:S_TITLE_MAX - 1].rstrip() + "…"
+            ds.append({"code": code, "group": g, "group_title": S_TITLE, "title": title,
+                       "what": text if text != title else "", "status": "default", "fire": False,
+                       "source": src, "shortcut_key": key})
+            log.append(f"{today}: {code} — новое упрощение: {title}")
+            changed = True
+            continue
+        if d.get("source") != src:
+            d["source"], changed = src, True
+        if d.get("status") == "dropped" and d.get("dropped_by") == "scan":
+            d["status"] = "default"
+            d.pop("dropped_by")
+            log.append(f"{today}: {d['code']} — упрощение снова в коде ({d.get('title')})")
+            changed = True
+    for key, d in by_key.items():
+        if key in seen or d.get("task_slug") or (d.get("status") or "default") != "default":
+            continue
+        d["status"], d["dropped_by"] = "dropped", "scan"
+        log.append(f"{today}: {d['code']} — упрощение убрано из кода ({d.get('title')})")
+        changed = True
+    if changed:
+        data["updated_at"] = today
+    return changed
+
+
 def ensure_gitignore(forge_dir):
     """Снимки регенерируются — в git им не место. Рождаются они здесь, значит и игнор — здесь
     (finishing делает git add -A раньше backup.sh — ждать его нельзя)."""
@@ -636,9 +746,15 @@ def ensure_gitignore(forge_dir):
 def do_render(jp, out_html=None):
     jp = Path(jp)
     data = load(jp)
-    fixed = normalize_blocks(data)
     rp = jp.resolve()
     in_guide = len(rp.parents) > 2 and rp.parent.name == "guide" and rp.parents[1].name == ".forge"
+    if in_guide and not out_html:  # до normalize_blocks — чтобы не сохранить в JSON её временные правки
+        try:
+            if sync_shortcuts(data, date.today().isoformat()):
+                save(jp, data)
+        except Exception as e:  # сбор пометок не должен мешать перерисовке
+            print(f"FORGE-GUIDE: ⚠ пометки «упрощено» не собраны: {e!r}")
+    fixed = normalize_blocks(data)
     base = rp.parents[2] if in_guide else rp.parent  # .forge/guide/vX.Y.json → корень проекта; макет — папка json
     text = render_html(data, base)
     ver = ver_of(data)
@@ -662,7 +778,8 @@ def do_render(jp, out_html=None):
     c = counts(data)
     shots = text.count('<figure class="shot"')
     print(f"FORGE-GUIDE: решений {c['decisions']} (ждут ответа {c['waiting']}, 🔥 {c['fire']}), "
-          f"рисков {c['risks']} (крит {c['crit']}), сделано {c['done']}, отложено {len(c['deferred'])}, снимков — {shots}")
+          f"рисков {c['risks']} (крит {c['crit']}), сделано {c['done']}, отложено {len(c['deferred'])}, снимков — {shots}, "
+          f"упрощений {c['shortcuts']}")
 
 
 def rerender(jp, data):
@@ -830,6 +947,7 @@ def do_verdict(jp, raw_code, status, text, today):
         if text and status in ("accepted", "changed"):
             d["was"], d["what"] = d.get("what", ""), text
         d["status"] = status
+        d.pop("dropped_by", None)  # ответ владельца сильнее сбора упрощений
         if status != "discuss":
             d["fire"] = False  # 🔥 остаётся только у неотвеченных
         d["verdict"] = {"date": today, "text": text or LABEL[status]}
@@ -943,6 +1061,12 @@ def run(argv):
                 title = f.get("title") or f.get("id")
                 hit.append(title)
                 data.setdefault("pending_changes", []).append(f"{today}: {risk_code(f)} — сделано: {title} (задача {slug})")
+        for d in data.get("decisions", []):  # пункт решения, взятый в задачу (S2 «в работу»)
+            if d.get("task_slug") == slug and d.get("status") not in ("works", "dropped"):
+                d["status"], d["fire"] = "works", False
+                title = d.get("title") or d.get("code")
+                hit.append(title)
+                data["pending_changes"].append(f"{today}: {d.get('code')} — уже работает: {title} (задача {slug})")
         data["stale_tasks"] = int(data.get("stale_tasks", 0) or 0) + 1
         data["updated_at"] = today
         save(jp, data)
@@ -962,12 +1086,16 @@ def run(argv):
             return 0
         data = load(jp)
         hit = [f for f in data.get("findings", []) if f.get("id") == fid or risk_code(f) == fid.upper()]
-        if not hit:
+        dhit = [] if hit else [d for d in data.get("decisions", []) if str(d.get("code")) == fid.upper()]
+        if not hit and not dhit:
             print(f"FORGE-GUIDE: карточки {fid} нет")
             return 0
         for f in hit:
             f["task_slug"] = slug
             print(f"FORGE-GUIDE: карточка {f.get('id')} → задача {slug}")
+        for d in dhit:
+            d["task_slug"] = slug
+            print(f"FORGE-GUIDE: решение {d.get('code')} → задача {slug}")
         data["updated_at"] = today
         save(jp, data)
         rerender(jp, data)
