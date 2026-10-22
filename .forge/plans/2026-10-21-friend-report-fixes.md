@@ -2,14 +2,14 @@
 
 **Задача:** см. `.forge/tasks/2026-10-21-friend-report-fixes.md`
 
-**Подход:** (1) Кто пользователь — в личном файле `~/.claude/forge-user.yml` (имя, уровень, заметки); `session-start.sh` вставляет строку `USER:`, а если файла нет — просьбу один раз спросить и записать. Стиль ответов и скиллы говорят «пользователь / владелец», без имени. (2) Init больше не пишет копию подсказки в проект; новая защита main — встроенной командой, смотрит путь файла. (3) Старые копии в уже настроенных проектах находит и чинит маленький скрипт `hooks/project-hooks-fix.sh` (check / apply / decline) — только то, что совпадает с нашим шаблоном; `session-start.sh` по нему пишет одну строку-предложение. (4) `context-inject.sh` всегда вставляет компактный каталог.
+**Подход:** (1) Кто пользователь — в личном файле `~/.claude/forge-user.yml` (имя, уровень, заметки); `session-start.sh` вставляет строку `USER:`; файла нет — один раз просьба спросить (с отметкой, без повторов), дальше нейтрально. Стиль и скиллы говорят «пользователь / владелец». (2) Одна правда для хуков проекта — скрипт `skills/forge-context/project-hooks-fix.sh` (`install | check | apply | decline`): init ставит через него защиту main и `deny`, сам больше не пишет копию подсказки; старые копии и старую защиту в настроенных проектах скрипт находит (только точное совпадение с нашим шаблоном) и чинит, правя только строки хуков, с резервной копией вне проекта. (3) `context-inject.sh` всегда вставляет компактный каталог из любого вида записи.
 
 **Что увидишь ты:**
-- У тебя — как раньше: «Антон», простой язык, голосовой ввод. Это теперь записано в твоём личном файле, а не в плагине.
-- В проектах со старыми копиями при старте чата — одна строка «нашёл старые копии хуков плагина (N) — убрать?»; ответ «да» — убрано (с резервной копией), «нет» — больше не предлагается.
-- В основной ветке Claude спокойно пишет память и настройки, а код — по-прежнему только в рабочей ветке.
-- Перед чисткой твоих 12 проектов — пауза: покажу список, что где поменяется.
-- Другу (и любому новому человеку) Claude в первом чате задаст один вопрос: как звать и объяснять попроще или по-техническому.
+- У тебя — как раньше: «Антон», простой язык, голосовой ввод, «не переспрашивать». Это теперь в твоём личном файле (на маке и на домашнем ПК), а не в плагине.
+- В проектах со старыми копиями при старте чата — одна строка понятными словами: «в .claude/settings.json лишний дубль подсказки плагина — она приходит дважды; уберу (копия сохранится вне проекта), ничего не ломается — да/нет?». Без ответа — не чаще раза в сутки; «нет» — больше не предлагается.
+- В основной ветке Claude пишет память и настройки, а код — только в рабочей ветке; если упрётся — сообщение назовёт файл и ветку и что делать.
+- Перед чисткой твоих 12 проектов — пауза с таблицей «проект · что сейчас · что сделаю / не трогаю», где копии и как откатить; можно исключить проекты.
+- Другу — в конце первого ответа один вопрос «как к вам обращаться и объяснять просто или по-техническому?»; не ответил — больше не спрашивает, говорит нейтрально.
 
 **Открытые вопросы:** нет.
 
@@ -20,79 +20,53 @@
 ## Шаг 1: Личный файл пользователя и строка USER (TDD)
 
 **Файлы:**
-- `forge-plugin/tests/hooks/test-session-start.sh` — сначала тесты (в фейковом HOME): есть `~/.claude/forge-user.yml` (`name: Антон`, `level: simple`, `notes: голосовой ввод — опечатки норма`) → в инжекте `USER: Антон · уровень: simple · голосовой ввод…`; нет файла → строка `USER: не задан — в этом чате один раз спроси …` с точной командой записи; `FORGE_NESTED=1` → ничего.
-- `forge-plugin/hooks/session-start.sh` — чтение файла (grep/sed по трём ключам, без PyYAML), строка `user_line` первой в `intro`:
-```bash
-uf="$HOME/.claude/forge-user.yml"
-if [ -f "$uf" ]; then
-  u_name=$(sed -n 's/^name:[[:space:]]*//p' "$uf" | head -1); u_level=$(sed -n 's/^level:[[:space:]]*//p' "$uf" | head -1)
-  u_notes=$(sed -n 's/^notes:[[:space:]]*//p' "$uf" | head -1)
-  user_line="USER: ${u_name:-пользователь} · уровень: ${u_level:-simple}${u_notes:+ · $u_notes} (simple — простой язык без жаргона; technical — термины можно)."
-else
-  user_line="USER: не задан. В этом чате один раз, коротко спроси: как обращаться и объяснять попроще или по-техническому. Ответ запиши: printf 'name: %s\nlevel: %s\n' '<имя>' '<simple|technical>' > ~/.claude/forge-user.yml — и больше не спрашивай."
-fi
-```
-- Создать: `~/.claude/forge-user.yml` владельца — `name: Антон`, `level: simple`, `notes: голосовой ввод — опечатки норма, не переспрашивать`.
+- `forge-plugin/tests/hooks/test-session-start.sh` — сначала тесты в фейковом HOME: (а) файл `name: Антон` / `level: simple` / `notes: …` → `USER: Антон · уровень: simple · …`; (б) файла нет, отметки нет → просьба спросить (в конце первого ответа) + точная безопасная команда записи; отметка `~/.claude/forge-state/user-asked` создана; (в) второй запуск без файла → вопроса нет, `USER: пользователь · уровень: technical (не задано — нейтрально, без упрощений и без имени)`; (г) `level: Простой` / мусор → нормализуется к `simple|technical`; (д) `FORGE_NESTED=1` → ничего.
+- `forge-plugin/hooks/session-start.sh` — чтение трёх ключей `sed` (без PyYAML), `user_line` первой в `intro`; просьба записать — через переменные, без подстановки имени в кавычки: `FORGE_NAME='…' FORGE_LEVEL=simple; printf 'name: %s\nlevel: %s\n' "$FORGE_NAME" "$FORGE_LEVEL" > ~/.claude/forge-user.yml`; не ответил — Claude пишет значения по умолчанию (`level: technical`, без имени).
+- Создать `~/.claude/forge-user.yml` владельца на маке и (если есть `~/.claude` на PC1) на PC1 по `ssh home`: `name: Антон`, `level: simple`, `notes:` — голосовой ввод (опечатки норма, не переспрашивать), визуал, портрет из навигатора (самоучка, ИП в России — коротко).
 
 **Как проверим:** `bash forge-plugin/tests/hooks/test-session-start.sh` — новые сначала FAIL, потом PASS.
 
-## Шаг 2: Убрать имя из стиля и скиллов
+## Шаг 2: Убрать имя и «не-кодера» из стиля и скиллов
 
-**Файлы** (по списку помощника, 2026-10-21):
-- `output-styles/forge-concise.md:10,18,23,38,49,53` — «You are talking to Anton — a non-coder…» → «You are talking to the user described in the `USER:` line of the forge session banner (name, level). Level `simple` (default): non-coder — plain language, no jargon, …; `technical`: terms are fine, still concise.» Голосовой ввод — «если в USER это указано».
-- «Антон / Anton» → «владелец» / «пользователь» (смысл тот же): `skills/project-unblocker/SKILL.md:42,61`, `skills/roadmap/SKILL.md` (9 мест), `skills/github-sync/SKILL.md:8,10,65,88`, `skills/github-sync/sync.sh:34`, `skills/hookify/SKILL.md` (9), `skills/evolve/SKILL.md` (9, включая путь `:26` `-run-media-anton-…` → «папка памяти проекта в `~/.claude/projects/`»), `skills/using-forge/SKILL.md:175`.
-- «пользователь — не-кодер» как факт → «если уровень пользователя simple (строка USER)»: только там, где это правило поведения (`new-task:19,39`, `plan:45,183`, `refine-idea:15,27`, `critique:164,180,204`, `execute:66`, `finishing:68,83,121`). Не трогаем: авторство в манифестах (`plugin.json`, `marketplace.json` — это автор, а не пользователь), README, данные (шрифт Anton, примеры JSON).
+**Файлы:**
+- `output-styles/forge-concise.md:10,18,23,38,49,53` — «You are talking to the user from the `USER:` line of the forge banner. `simple`: non-coder — plain language, no jargon, …; `technical`: terms fine, still concise. Voice input — if USER notes say so.»
+- «Антон / Anton» → «владелец» / «пользователь»: `project-unblocker/SKILL.md:40-48` (портрет «Кто перед тобой» → «см. строку USER; при simple — …»; сам портрет ушёл в notes владельца), `:61`; `roadmap/SKILL.md` (9); `github-sync/SKILL.md:8,10,65,88`; `github-sync/sync.sh:34`; `hookify/SKILL.md` (9); `evolve/SKILL.md` (9, путь `:26` → «папка памяти проекта в `~/.claude/projects/`»); `using-forge/SKILL.md:175`; `COMMANDS.md:745`; `evals/criteria/unblocker.yml:24`.
+- «пользователь — не-кодер» как факт → «если уровень пользователя simple»: `new-task:19,39`, `plan:45,183`, `refine-idea:15,27`, `critique:164,180,204`, `critique/codex-critic.md:12`, `execute:66`, `finishing:68,83,121`, `product-mapping:8,91`, `requesting-code-review/review-checklist.md:27,39`, `docs/delivery-bar.md:44`.
+- Помощники строку USER не видят: в `critique/SKILL.md` (общий список «Каждой персоне дай:») и `requesting-code-review/code-reviewer.md` (шаблон) — «Уровень пользователя: <из строки USER>», заполняет основной чат.
+- Не трогаем: авторство в манифестах, README, данные (шрифт Anton, примеры JSON).
 
-**Как проверим:** `grep -rn -E "Anton|Антон" forge-plugin/{output-styles,skills,hooks,commands,agents} | grep -v -E "ui-ux-design/data|api-patterns"` → пусто; `test-plugin-facts.sh`, `test-codex-review.sh` PASS.
+**Как проверим:** `grep -rn -i -E "Anton|Антон|не-кодер|non-coder|нетехнич" forge-plugin/{output-styles,skills,hooks,commands,agents,docs,evals} forge-plugin/COMMANDS.md | grep -v -E "ui-ux-design/data|api-patterns|уровень.*simple"` → пусто; `test-plugin-facts.sh`, `test-codex-review.sh`, `test-model-roles.sh` PASS.
 
 ---
 
 ### ✅ Чекпоинт A: имя и уровень
 
-Что показываем: строка `USER:` из инжекта для твоего файла и для пустого HOME (что увидит друг), новое начало стиля ответов.
+Что показываем: строка `USER:` для твоего файла, для пустого HOME (первый вопрос — что увидит друг) и для второго запуска без ответа; новое начало стиля ответов.
 Что подтверждает пользователь: «так ко мне и к другу обращаться».
 
 ---
 
-## Шаг 3: Скрипт чистки старых хуков (TDD)
+## Шаг 3: Скрипт хуков проекта, новая защита main, init, строка при старте (TDD)
 
 **Файлы:**
-- Создать: `forge-plugin/tests/hooks/test-project-hooks-fix.sh` — во временном проекте: (а) `UserPromptSubmit` с `bash …/forge/7.8.0/hooks/context-inject.sh` (рабочий путь и мёртвый) → `check` печатает «копий подсказки: 1»; (б) `PreToolUse` с дословной старой командой защиты (`commands/init.md:718`) → «старая защита: 1»; (в) переделанная защита (другой текст) → не считается; (г) чужие хуки и `permissions` остаются байт-в-байт; (д) `apply` → копия удалена, старая защита заменена на новую, резервная копия `settings.json.bak-forge`, JSON валиден; (е) `decline` → `check` молчит; (ж) нет `.claude/settings*.json` → молча rc=0.
-- Создать: `forge-plugin/hooks/project-hooks-fix.sh` — `check|apply|decline [project_dir]`; python3 (stdlib json) по `.claude/settings.json` и `.claude/settings.local.json`; копия подсказки = команда хука UserPromptSubmit содержит `/hooks/context-inject.sh` и `forge`; старая защита = команда ровно равна `OLD_GUARD`; новая = `NEW_GUARD` (шаг 4); отказ — маркер `~/.claude/forge-state/<проект>/hooks-fix-declined`; всегда rc=0.
+- Создать: `forge-plugin/tests/hooks/test-project-hooks-fix.sh` (сначала падает). Во временных проектах:
+  - `check`: копия подсказки (`bash …/forge/7.8.0/hooks/context-inject.sh`, рабочий и мёртвый путь; в `settings.json` и `settings.local.json`) → считается; дословная старая защита (`commands/init.md:718`) → считается; переделанная защита → нет; нет `.claude/` → молча, rc 0.
+  - `apply`: копия удалена, старая защита → новая; **меняются только эти записи**: чужие хуки, `permissions`, кириллица и отступы (образцы с 2 и 4 пробелами и с русскими строками) — байт-в-байт за пределами хуков; резервная копия в `~/.claude/forge-state/<ключ проекта>/settings.json.bak` (ключ — как у `init-offered`), путь печатается; в проекте нового файла нет.
+  - `decline` → `check` молчит; маркер по тому же ключу.
+  - `install` (для init): пустой проект → создан `.claude/settings.json` с новой защитой, `deny`, `language`; существующий settings.json → дописано без дублей, остальное нетронуто; JSON валиден.
+  - Защита: JSON на stdin в git-репо на master — `.forge/x.yml` → rc 0; `src/a.py` → rc 2 и сообщение с файлом и веткой; `/tmp/x` → rc 0; на ветке `feat/x` `src/a.py` → rc 0; не git → rc 0.
+- Создать: `forge-plugin/skills/forge-context/project-hooks-fix.sh` (+ python stdlib json): `NEW_GUARD`, `OLD_GUARD` — константы здесь и только здесь; запись `json.dumps(..., ensure_ascii=False, indent=<как в файле>)` + `\n`; всегда rc 0 (кроме самой защиты). Сообщение защиты: «BLOCKED: файл <путь> на основной ветке <ветка>. Код здесь не правим — заведи рабочую ветку (память .forge, .claude и CLAUDE.md можно). Если пользователь явно просит править прямо здесь — пусть скажет, тогда временно отключим защиту.»
+- `forge-plugin/commands/init.md` — 15a и шаблон 15b убрать; вместо них: найти скрипт (`find ~/.claude/plugins -path '*/forge*/skills/forge-context/project-hooks-fix.sh' | sort -V | tail -1`, как 16a ищет sync.sh) и `bash "$FIX" install`; 15e — проверка новой защиты (JSON на stdin → rc 2 / rc 0); отчёт `:894` — без «UserPromptSubmit hook».
+- `forge-plugin/hooks/session-start.sh` — `fix=$(bash "$plugin_root/skills/forge-context/project-hooks-fix.sh" check)`; непусто и не показывали сегодня (отметка-дата по ключу проекта) → строка понятными словами (см. «Что увидишь ты») с командами `apply` / `decline`; если файл под git — «правка будет в вашем diff». Тест в `test-session-start.sh`: строка есть; второй старт в тот же день — нет; после `decline` — нет.
+- `.forge/map.yml` — строка про скрипт.
 
-**Как проверим:** `bash forge-plugin/tests/hooks/test-project-hooks-fix.sh` → сначала FAIL, потом все PASS.
+**Как проверим:** `test-project-hooks-fix.sh`, `test-session-start.sh` — сначала FAIL, потом PASS.
 
-## Шаг 4: Новая защита main + init без копии подсказки
-
-**Файлы:**
-- `forge-plugin/commands/init.md` — 15a (поиск `context-inject.sh`) убрать; 15b: из шаблона убрать `UserPromptSubmit`, `PreToolUse` — новая команда (встроенный python3, без путей к плагину):
-```bash
-python3 -c 'import json,os,subprocess,sys
-p=(json.load(sys.stdin).get("tool_input") or {}).get("file_path","")
-top=subprocess.run(["git","rev-parse","--show-toplevel"],capture_output=True,text=True).stdout.strip()
-br=subprocess.run(["git","branch","--show-current"],capture_output=True,text=True).stdout.strip()
-ap=os.path.realpath(p) if p else ""
-rel=os.path.relpath(ap,top) if top and ap.startswith(top+os.sep) else None
-ok=br not in ("main","master") or rel is None or rel.split(os.sep)[0] in (".forge",".claude") or rel=="CLAUDE.md"
-ok or (print("BLOCKED: код на main/master не правим — заведи ветку задачи (память .forge, .claude, CLAUDE.md — можно)",file=sys.stderr),sys.exit(2))'
-```
-  Правило слияния: «есть копия хука подсказки или старая защита — `bash <plugin>/hooks/project-hooks-fix.sh apply`»; отчёт init (`:894`) — без «UserPromptSubmit hook».
-- Тот же `NEW_GUARD` — константой в `project-hooks-fix.sh` (одна правда: init.md ссылается на скрипт в комментарии).
-- Тест защиты (в `test-project-hooks-fix.sh`): JSON на stdin в git-репо на master — `.forge/x.yml` → rc 0; `src/a.py` → rc 2 + текст; `/tmp/x` → rc 0; на ветке `feat/x` `src/a.py` → rc 0.
-
-**Как проверим:** тесты шага 3 + 4 PASS.
-
-## Шаг 5: Строка-предложение при старте сессии
-
-**Файлы:** `forge-plugin/hooks/session-start.sh` — после `init_warn`: `fix=$(bash "$plugin_root/hooks/project-hooks-fix.sh" check)`; непусто → `hooks_warn="FORGE: в настройках проекта старые копии хуков плагина ($fix). Предложи пользователю одной строкой убрать; «да» → bash $plugin_root/hooks/project-hooks-fix.sh apply; «нет» → … decline."`; тест в `test-session-start.sh` (проект с копией → строка есть; после `decline` — нет).
-
-**Как проверим:** `test-session-start.sh` PASS.
-
-## Шаг 6: Каталог памяти в L0 всегда (TDD)
+## Шаг 4: Каталог памяти в L0 всегда (TDD)
 
 **Файлы:**
-- `forge-plugin/tests/hooks/test-context-inject.sh` — новый случай: index.yml с `now.task` на 3 КБ и `catalog:` (2 записи) в конце → в контексте строка `catalog: map(structure,files,…) · conventions(naming,…)`.
-- `forge-plugin/hooks/context-inject.sh:20-36` — в том же python: секция `catalog:` → компактно «`catalog: <имя>(<теги через запятую>) · …`» (путь не нужен: `.forge/<имя>.yml`, нестандартный путь — в скобках), идёт сразу за `dont:` и вычитается из бюджета; из основного текста секцию убрать, чтобы не дублировать.
+- `forge-plugin/tests/hooks/test-context-inject.sh` — новые случаи: (а) `now.task` на 3 КБ + `catalog:` в столбик → `catalog: map(structure,files,…) · …`; (б) формат mlfootball: секции `docs:` / `specs:` со строками `{ path: …, tags: […] }` после 2500-го байта → эти записи тоже в компактном каталоге.
+- `forge-plugin/hooks/context-inject.sh:20-36` — в том же python: записи из любой верхней секции, у которых есть `tags:` (столбиком или `{…}` в строку) → «`catalog: <имя>(<теги>) · …`» (нестандартный путь — в скобках), сразу за `dont:`, вычитается из бюджета; из основного текста эти секции убрать.
 
 **Как проверим:** `test-context-inject.sh` PASS (старые 9а–9в тоже).
 
@@ -100,19 +74,39 @@ ok or (print("BLOCKED: код на main/master не правим — завед�
 
 ### ✅ Чекпоинт B: перед чисткой твоих проектов
 
-Что показываем: `check` по 12 проектам — таблица «проект · копий подсказки · старая защита · переделанная (не трогаем)».
-Что подтверждает пользователь: «чисти».
+Что показываем: `check` по всем проектам с `.claude/settings*.json` в `~/Projects` (список — поиском, как 2026-10-21: 12 проектов) — таблица «проект · что сейчас простыми словами · что сделаю (уберу дубль / заменю защиту / не трогаю — твоя переделка)»; где лежат копии и как откатить одной командой.
+Что подтверждает пользователь: «чисти» (можно с исключениями).
 
 ---
 
-## Шаг 7: Чистка проектов владельца и этого репо
+## Шаг 5: Чистка проектов владельца и этого репо
 
-**Что делаем:** `apply` по списку из чекпоинта B (резервные копии рядом); в этом репо `.claude/settings.json` — тоже `apply` (там мёртвая копия `/home/anton` и старая защита); несохранённые правки разрешений в нём (с прошлых сессий) не трогаем — скрипт меняет только хуки.
+**Что делаем:** `apply` по согласованному списку; этот репо — тоже (`.claude/settings.json`: мёртвая копия `/home/anton` и старая защита; несохранённые правки разрешений в нём не трогаются — скрипт меняет только хуки).
 
-**Как проверим:** `check` по всем 12 → пусто; живой прогон в `Games/zombashnya`: `claude -p "ок" --output-format json` → в основном jsonl одна строка `FORGE L0` на промпт.
+**Как проверим:** `check` по всем → пусто; `git status` в проектах — нет новых файлов; живой прогон в `Games/zombashnya`: `claude -p "ок" --output-format json` → в основном jsonl одна строка `FORGE L0` на промпт.
 
-## Шаг 8: Выпуск 7.13.1
+## Шаг 6: Выпуск 7.13.1
 
-**Файлы:** версии в `forge-plugin/.claude-plugin/plugin.json`, `forge-plugin/.claude-plugin/marketplace.json`, `.claude-plugin/marketplace.json`, `.forge/index.yml`; `CLAUDE.md` (раздел Native features / FORGE Context) — строка про `~/.claude/forge-user.yml` и `project-hooks-fix.sh`; `.forge/decisions.yml` — DEC; в backlog «Фиксы по отзыву» — 4 пункта отмечены сделанными.
+**Файлы:** версии в `forge-plugin/.claude-plugin/plugin.json`, `forge-plugin/.claude-plugin/marketplace.json`, `.claude-plugin/marketplace.json`, `.forge/index.yml`; `CLAUDE.md` — строка про `~/.claude/forge-user.yml` и `project-hooks-fix.sh`; `.forge/decisions.yml` — DEC; backlog «Фиксы по отзыву» — 4 пункта сделаны.
 
 **Как проверим:** все `forge-plugin/tests/hooks/test-*.sh` зелёные.
+
+---
+
+## Execution Strategy
+
+### Последовательно
+- Шаг 1 → 2 → Чекпоинт A → 3 → 4 → Чекпоинт B → 5 → 6. Шаги 3 и 4 независимы, но оба трогают `session-start`/`context-inject` тесты — по очереди, чтобы не мешать.
+
+### Делегировать субагентам
+- Шаг 2 `[agent: sonnet]`: замены по списку файлов (механика, ~20 файлов) — вернуть дифф-сводку до 25 строк и вывод grep-проверки.
+- Шаг 5, таблица `check` по проектам `[agent: scout]` — до 5 пунктов на поручение; сама `apply` — в основной сессии после «чисти».
+
+### Делать в основной сессии
+- Шаги 1, 3, 4 (TDD, хуки — стыковка), чекпоинты, шаг 5 `apply`, шаг 6.
+
+### Проверка кода
+- После шагов 1, 3, 4 — схема `requesting-code-review`: углы логика / надёжность / тесты (+ тексты для шагов 1 и 3). Шагов `[важное]` нет, но шаг 3 правит чужие файлы настроек — угол надёжности обязателен.
+
+### Чекпоинты
+- После шага 2 — Чекпоинт A. После шага 4 — Чекпоинт B.

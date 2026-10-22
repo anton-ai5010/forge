@@ -8,7 +8,7 @@ version: "7.13.0"
 stack: [python, bash, markdown, claude-code-plugin]
 
 now:
-  task: "Два плана готовы, код не начат: friend-report-fixes (баги из отзыва друга, 7.13.1, #90) — план есть, ждёт /forge:critique; offload-main-chat (разгрузка основного чата, 7.14.0) — критика пройдена, ждёт /forge:execute. Порядок: сначала фиксы друга, потом разгрузка (рекомендация, Антон не подтвердил)"
+  task: "Два плана готовы, критика пройдена у обоих, код не начат: 1) friend-report-fixes (баги из отзыва друга, 7.13.1, #90) — первым, /forge:execute план .forge/plans/2026-10-21-friend-report-fixes.md; 2) offload-main-chat (разгрузка чата, 7.14.0, #83) — следом. Разрешения в ~/.claude/settings.json обновлены 2026-10-21 (бэкап .bak-2026-10-21)"
   branch: master
 
 catalog:
