@@ -32,5 +32,13 @@ EX="$ROOT/skills/execute/SKILL.md"
 check "execute: схема проверки прямо в тексте (углы, Codex, второй круг, Opus после углов)" "grep -q 'Порядок проверки шага' '$EX' && grep -q 'логика' '$EX' && grep -q 'codex-review.sh review' '$EX' && grep -q 'Второй круг' '$EX' && grep -q 'Opus — никогда вместо углов' '$EX'"
 check "execute: обязательная строка отчёта «проверка: …»" "grep -q '«проверка: чисто»' '$EX'"
 
+# глубина по фазам (DEC-22): фазы не просят «/effort high», критика пишет глубину реализации, execute её подсказывает
+for s in new-task refine-idea plan critique; do
+  check "$s: нет просьбы «/effort high»" "[ -f '$ROOT/skills/$s/SKILL.md' ] && ! grep -q '/effort high' '$ROOT/skills/$s/SKILL.md'"
+done
+check "critique: строка «Глубина реализации» в Execution Strategy" "grep -q 'Глубина реализации' '$ROOT/skills/critique/SKILL.md'"
+check "plan: effort: xhigh во frontmatter скилла и команды" "grep -q '^effort: xhigh' '$ROOT/skills/plan/SKILL.md' && grep -q '^effort: xhigh' '$ROOT/commands/plan.md'"
+check "execute: глубина из плана, без старого совета medium" "grep -q 'Глубина реализации' '$EX' && grep -q 'строки нет — молчи' '$EX' && ! grep -q 'хватит \`/effort medium\`' '$EX'"
+
 echo; [ $FAIL -eq 0 ] && echo OK || echo "$FAIL FAIL"
 exit $FAIL

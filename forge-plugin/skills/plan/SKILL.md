@@ -1,6 +1,7 @@
 ---
 name: plan
 description: "Use proactively right after the task file appears in .forge/tasks/ (after /new-task or /refine-idea), OR when the user says 'давай план', 'распиши шаги', 'построй план', 'разбей на этапы', 'как это сделать'. Phase 2 of the forge pipeline. Silently researches code/decisions/dead-ends, asks the user only about business logic (never tech), offloads distant blockers to a separate session, produces a plan with concrete file paths, inline code, and mandatory checkpoints. Hands off to /critique (Phase 3)."
+effort: xhigh
 ---
 
 # Plan — Phase 2: Building the route from A to B
@@ -58,7 +59,7 @@ started_at: $(date -Iseconds)
 EOF
 ```
 
-**Сколько думать** (не чаще раза за сессию — уже говорил в этом чате, молчи): для фазы «план» нужен effort `high`. Если видно, что чат на другом уровне (или не видно вовсе) — одной строкой владельцу: «для этой фазы лучше думать подольше — напиши `/effort high`». `max` и ultracode — только для задач про деньги, прод и удаление данных.
+**Сколько думать:** ход, в котором загрузился этот скилл, идёт на xhigh — это ставит frontmatter (`effort: xhigh`); следующие ходы (правки по ответу владельца) — снова high, так устроен Claude Code (замер 2026-10-24, DEC-22 в памяти плагина). Поэтому тихое исследование (шаг 2) и блокеры делай в первом ходе; вопросы по бизнес-логике задавай как обычно — не пиши план на догадках ради глубины. Владельца ничего переключать не проси. `max` и ultracode — только для задач про деньги, прод и удаление данных.
 
 ## Процесс
 
