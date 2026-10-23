@@ -30,7 +30,7 @@ L=~/.claude/forge-logs/forge-plugin; mkdir -p -m 700 $L
 for i in 0 1 2 3; do   # 0 — разогрев, не считается
   claude -p "$Q" --model opus --effort medium --max-turns 40 --output-format json \
     --plugin-dir "$PWD/forge-plugin" --settings '{"enabledPlugins":{"forge@forge-marketplace":false}}' > $L/offload-before-$i.json
-  python3 forge-plugin/tests/claude-code/analyze-token-usage.py --run $L/offload-before-$i.json --expect-version 7.13.0
+  python3 forge-plugin/tests/claude-code/analyze-token-usage.py --run $L/offload-before-$i.json --expect-version 7.14.0
 done
 ```
 Медиана прогонов 1–3 и разброс — в `.forge/notes/offload-main-chat.md` («Замер»). Сырые json — только в `~/.claude/forge-logs/` (не в репо).
@@ -69,7 +69,7 @@ check "session start should inject the delegation rule (when to hand off, visibl
 - Разведчик (`forge:scout`, без записи файлов): «Ответ — до 25 строк; не влезло — последней строкой «ещё N, сузь запрос»».
 ```
 - Изменить: `forge-plugin/agents/scout.md` — потолок ответа 50 → 25 строк + «не влезло — «ещё N, сузь запрос»» (вместе с `test-model-roles.sh`, если он проверяет это место).
-- Изменить: `forge-plugin/hooks/session-start.sh:131` — после MODELS:
+- Изменить: `forge-plugin/hooks/session-start.sh` — после строки «MODELS:»:
 ```
 ПОМОЩНИКИ: в любом разговоре (не только execute): материал больше ~300 строк — файл 300+ строк, 3+ файла, поиск по проекту, тесты/логи, интернет — отдай помощнику; мелочь делай сам; размер неизвестен — сначала wc -l. Модель — $plugin_root/docs/model-roles.md, раздел «Когда отдавать помощнику» (разведчику — до 5 пунктов). В чате — одна строка по-человечески «отдал помощнику (<модель>): <что>» (пачка — одной строкой), не уложился/повтор дороже — тоже строкой. Помощнику без своего формата — «ответ до 25 строк со ссылками файл:строка, длиннее — в ~/.claude/forge-logs/».
 ```
@@ -101,7 +101,7 @@ check "session start should inject the delegation rule (when to hand off, visibl
 
 ## Шаг 5: Замер «после» и живая проверка
 
-**Что делаем:** те же 4 прогона, что в шаге 1 (`offload-after-$i.json`, `--expect-version 7.13.0` + проверка `ПОМОЩНИКИ:`). Проверки — по основному jsonl, не по полю `result`: в текстовых блоках есть «отдал помощнику (»; у вызова Agent явная `model` / `subagent_type`; суммарный объём результатов инструментов по `render.py` в основном чате < ~300 строк (ловит и `Read` без `limit`, и `cat`/`sed`). Плюс 1 прогон «что делает forge-plugin/hooks/statusline.sh — одной фразой» → `subagent_stats.spawned == 0`.
+**Что делаем:** те же 4 прогона, что в шаге 1 (`offload-after-$i.json`, `--expect-version 7.14.0` + проверка `ПОМОЩНИКИ:`). Проверки — по основному jsonl, не по полю `result`: в текстовых блоках есть «отдал помощнику (»; у вызова Agent явная `model` / `subagent_type`; суммарный объём результатов инструментов по `render.py` в основном чате < ~300 строк (ловит и `Read` без `limit`, и `cat`/`sed`). Плюс 1 прогон «что делает forge-plugin/hooks/statusline.sh — одной фразой» → `subagent_stats.spawned == 0`.
 
 **Как проверим:** в notes — таблица до/после (медиана, разброс); короткий вопрос — помощников 0.
 
@@ -115,7 +115,7 @@ check "session start should inject the delegation rule (when to hand off, visibl
 
 ---
 
-## Шаг 6: Выпуск 7.14.0
+## Шаг 6: Выпуск 7.15.0
 
 **Файлы:** версии в `forge-plugin/.claude-plugin/plugin.json`, `forge-plugin/.claude-plugin/marketplace.json`, `.claude-plugin/marketplace.json`, `.forge/index.yml`; `.forge/decisions.yml` — DEC (decision-codes.py): правило «Когда отдавать помощнику» + цифры замера.
 

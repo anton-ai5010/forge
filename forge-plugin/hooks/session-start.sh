@@ -153,6 +153,24 @@ else
     fi
 fi
 
+# Голос уведомлений (voice/notify.py) — одна строка, только если голос установлен (voice/install.sh)
+voice_line=""
+vhome="$HOME/.claude/forge-voice"
+if [ -x "$vhome/venv/bin/python" ]; then
+    vnotify="$plugin_root/voice/notify.py"
+    vname=$(FORGE_VOICE_HOME="$vhome" CLAUDE_PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}" perl -e 'alarm 3; exec @ARGV' python3 "$vnotify" name 2>/dev/null | tr -d '\000-\037' || true)
+    if [ -f "$vhome/mute" ]; then
+        vstate="выключен («включи голос» → \`python3 '$vnotify' unmute\`)"
+    elif [ -f "$vhome/broken" ]; then
+        vstate="сломался: $(head -1 "$vhome/broken" 2>/dev/null | tr -d '\000-\037') — скажи владельцу одной строкой; «почини голос» → разберись по ~/.claude/forge-voice/voiced.log, переустановка — \`bash '$plugin_root/voice/install.sh'\`"
+    elif [ -f "$vhome/no-access" ]; then
+        vstate="не видит окна (у VS Code нет «Универсального доступа») — говорит после каждого ответа; скажи владельцу одной строкой"
+    else
+        vstate="работает"
+    fi
+    voice_line=$'\n\n'"🔊 Голос: ${vstate}. Этот проект он зовёт «${vname:-проект}»: «называй этот проект Y» → \`python3 '$vnotify' name 'Y'\`; «выключи голос» / «включи голос» → \`python3 '$vnotify' mute\` / \`python3 '$vnotify' unmute\`; «тише» / «громче» / «громкость N» (про голос) → \`python3 '$vnotify' volume тише|громче|N\`."
+fi
+
 # Короткое введение — что есть forge и как им пользоваться
 intro="<forge-plugin-loaded>
 ${user_line}
@@ -175,7 +193,7 @@ MODELS: любой вызов Agent — с явной model или типом и
 
 ${doc_discipline}
 Для глубокого введения — Skill tool: forge:using-forge.
-$warning$mem_warn$report_warn$init_warn$hooks_warn$user_ask
+$warning$mem_warn$report_warn$init_warn$hooks_warn$user_ask$voice_line
 </forge-plugin-loaded>"
 
 # Escape для JSON

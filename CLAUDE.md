@@ -20,7 +20,8 @@ forge-plugin/              — корневая директория плаги�
   skills/                  — 35 скиллов (SKILL.md + поддержка)
   output-styles/           — нативный Output Style "Forge Concise" (auto-activated)
   evals/                   — каркас Hamel-style eval-сетапа (корпус пуст, ни одного прогона)
-  sounds/                  — mp3 для Stop / PermissionRequest хуков
+  voice/                   — голос уведомлений: notify.py (хуки Stop / PermissionRequest), voiced.py (фоновый голос), install.sh
+  sounds/                  — mp3 — запасные звуки, если голос не установлен / сломан / не macOS
   docs/                    — спецификация, архитектура, runtime-flow
   tests/                   — prompt-based тесты + bash-тесты хуков
 ideas/                     — идеи и прототипы (pipeline-v2.html и др.)
@@ -187,6 +188,13 @@ Projects v2 board не используется — Pinned Issue + README пок
 - **Коды решений DEC-NN** — `skills/session-awareness/decision-codes.py`; устаревшее — `status: superseded` + `superseded_by`.
 - **Большие файлы памяти** (>20 000 символов) — оглавлением: `skills/forge-context/toc.py <file>` / `--get <код|#N>`; журнал — фрагментами в `.forge/journal.d/`, читается `toc.py --journal .forge`.
 - **Расхождения код/доки** — `skills/forge-context/drift-check.py` (в `/forge:validate` и раз в сутки при старте сессии: одна строка «гайд · доки: N расхождений»).
+
+## Голос уведомлений (v7.14.0, DEC-21, DEC-24)
+
+- **Что говорит:** «<проект>: жду разрешения — хочу запустить команду» (всегда), «<проект>: <первая фраза ответа, до 8 слов>», «<проект>: есть вопрос к тебе». Ответы — только если окно проекта не впереди (заголовок окна VS Code через «Универсальный доступ») или простой мыши/клавиатуры > 60 с. Молчит на ⏳ (правило в Output Style), на «тихо» / «ничего нового», пока у хода идут фоновые задачи, при `FORGE_NESTED`.
+- **Как устроено:** `voice/notify.py` (stdlib, хук) → очередь `~/.claude/forge-voice/queue/` → `voice/voiced.py` (фоновый, Chatterbox Multilingual — копия VASKO из `sounds/stop`, держит модель в памяти ~3 ГБ): разрешения первыми, у проекта — последняя фраза, старше 5 мин — вон, постоянные фразы — кэш + заготовка в простое на все имена из `names.json`. Нет голоса / не macOS / любая ошибка — старые mp3; голос не отвечает — метка `broken`, mp3 и раз в 3 ч Milena «голос сломался»; плагин обновился — старый голос доигрывает и уступает новому.
+- **Команды (строка 🔊 при старте сессии):** «называй этот проект Y», «выключи / включи голос», «тише / громче / громкость N», «почини голос» (лог — `~/.claude/forge-voice/voiced.log`). Установка — `bash forge-plugin/voice/install.sh` (точные версии — `voice/requirements.lock`).
+- **Проверять живьём:** `claude -p` обрывает async-хуки, а `--plugin-dir` с тем же именем плагина берёт путь установленного — хук голоса подключать синхронно через `--settings` (learnings `claude-p-async-hooks-and-plugin-dir`).
 
 ## Пользователь и хуки проекта (v7.13.1, DEC-23)
 

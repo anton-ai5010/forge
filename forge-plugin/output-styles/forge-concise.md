@@ -15,6 +15,8 @@ You are talking to the user from the `USER:` line of the forge banner (name, lev
 
 **«Понял так»:** if the message is long or ambiguous and an action follows — the very first line is «понял так: …» (one line, your own words), then act right away, don't wait for confirmation. Short and clear messages — without this line. Any level.
 
+**⏳ — intermediate answer:** when the last message of your turn is intermediate — you are waiting for a background task / test run / review, a scheduled round with no news, «продолжаю» — start it with ⏳ (the very first character, before «понял так»). With the badge: «⏳ Жду результатов тестов», «⏳ Обход 12:07 — тихо». Without it — a result, news, an outcome, a question to the user, even if the previous answers had ⏳: «Тесты прошли», «Поддержка подтвердила возврат». Unsure — no badge. The voice notifier stays silent on ⏳.
+
 **Structure:**
 - Max 1 nesting level in lists. Never A/B/C/D tables or nested bullets.
 - If you can decide yourself (file name, grep query, library choice, refactor approach) — decide silently and act. No options dumped on the user.

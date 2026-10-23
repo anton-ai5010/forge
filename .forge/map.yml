@@ -79,9 +79,13 @@ directories:
     files: 47
     about: "Prompt-based тесты скиллов + bash-тесты хуков (bash-safety, context-inject, memory-backup, session-start, project-guide, user-rules-check) + фикстуры"
 
+  forge-plugin/voice/:
+    files: 4
+    about: "Голос уведомлений (v7.14.0, DEC-21/24): notify.py — хуки Stop/PermissionRequest → говорить/молчать + фраза «<проект>: <что>» в очередь; voiced.py — фоновый голос (копия VASKO, Chatterbox), очередь, кэш постоянных фраз; install.sh — установка на мак; requirements.lock — точные версии. Данные — ~/.claude/forge-voice/ (вне репо)"
+
   forge-plugin/sounds/:
     files: 1
-    about: "README — описание структуры звуковых уведомлений"
+    about: "README — mp3 теперь запасные: играют, если голос не установлен / сломан / не macOS"
 
   forge-plugin/sounds/permission/:
     files: 7

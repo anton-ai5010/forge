@@ -260,6 +260,34 @@ ctx=$(context_of "$(run_hook_home "$HH")")
 check "should not offer the settings cleanup after the user declined" $?
 cd / && rm -rf "$WORK" "$HH"
 
+# --- (18–21) голос уведомлений: строка только при установленном голосе; имя проекта; выключен / сломался / нет доступа ---
+
+new_project
+VHH=$(mktemp -d); mkdir -p "$VHH/.claude"
+ctx=$(context_of "$(CLAUDE_PROJECT_DIR="$WORK" run_hook_home "$VHH")")
+! printf '%s' "$ctx" | grep -q "🔊"
+check "should not mention the voice when it is not installed" $?
+VV="$VHH/.claude/forge-voice"; mkdir -p "$VV/venv/bin"; : > "$VV/venv/bin/python"; chmod +x "$VV/venv/bin/python"
+printf '{"%s": "Дом"}' "$WORK" > "$VV/names.json"
+out=$(CLAUDE_PROJECT_DIR="$WORK" run_hook_home "$VHH"); ctx=$(context_of "$out")
+valid_json "$out" && printf '%s' "$ctx" | grep -q "🔊 Голос: работает" && printf '%s' "$ctx" | grep -q "зовёт «Дом»" \
+  && printf '%s' "$ctx" | grep -q "voice/notify.py' name 'Y'" && printf '%s' "$ctx" | grep -q "voice/notify.py' volume тише|громче|N" && printf '%s' "$ctx" | grep -q "voice/notify.py' mute"
+check "should show the voice line with the spoken project name and the commands" $?
+touch "$VV/mute"
+ctx=$(context_of "$(CLAUDE_PROJECT_DIR="$WORK" run_hook_home "$VHH")")
+printf '%s' "$ctx" | grep -q "🔊 Голос: выключен" && printf '%s' "$ctx" | grep -q "voice/notify.py' unmute"
+check "should say the voice is muted" $?
+rm -f "$VV/mute"; printf 'голос завис — не отвечает больше минуты\n' > "$VV/broken"
+out=$(CLAUDE_PROJECT_DIR="$WORK" run_hook_home "$VHH"); ctx=$(context_of "$out")
+valid_json "$out" && printf '%s' "$ctx" | grep -q "🔊 Голос: сломался: голос завис" && printf '%s' "$ctx" | grep -q "почини голос" \
+  && printf '%s' "$ctx" | grep -q "voiced.log"
+check "should report a broken voice with the reason and how to fix it" $?
+rm -f "$VV/broken"; touch "$VV/no-access"
+ctx=$(context_of "$(CLAUDE_PROJECT_DIR="$WORK" run_hook_home "$VHH")")
+printf '%s' "$ctx" | grep -q "🔊 Голос: не видит окна"
+check "should say the voice cannot see windows without accessibility access" $?
+cd / && rm -rf "$WORK" "$VHH"
+
 echo "---"
 if [ "$fails" -gt 0 ]; then
     echo "$fails test(s) FAILED"

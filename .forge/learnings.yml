@@ -46,3 +46,9 @@ entries:
     summary: "Локальный русский TTS на маке (arm64): piper-tts из pip падает — espeak-ng-data ищется по пути сборщика (/Users/runner/...), wav выходит пустым; Chatterbox Multilingual — perth.PerthImplicitWatermarker = None (подменить на perth.DummyWatermarker), torch.load нужен map_location под mps, ударения — пакет russian_text_stresser из git+https://github.com/Vuizur/add-stress-to-epub (в PyPI нет); скорость — 12–27 с на фразу 60–90 символов. Rubberband в brew-ffmpeg нет — тембр через asetrate+aresample+atempo"
     tags: [voice, tts, macos, learning]
     source: "Проба голосов для задачи voice-notifications, 2026-10-23"
+
+  - id: claude-p-async-hooks-and-plugin-dir
+    date: "2026-10-23"
+    summary: "Живые проверки хуков через `claude -p`: (1) асинхронные хуки (`async: true`) обрываются, когда `-p` завершается — их результата нет в журнале сессии; проверять такой хук — синхронной копией через `--settings '{\"hooks\":{…}}'`; (2) `--plugin-dir` с плагином того же имени, что установленный (forge), даёт CLAUDE_PLUGIN_ROOT установленной версии, а `enabledPlugins:{forge@forge-marketplace:false}` выключает и пробный — переименовать копию (name в plugin.json) или подключать скрипт хука напрямую. В stop_hook_summary видно, какие хуки сработали."
+    tags: [hooks, testing, claude-code, learning]
+    source: "Чекпоинт B задачи voice-notifications, 2026-10-23"

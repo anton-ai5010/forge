@@ -4,7 +4,7 @@ goal: "Плагин для Claude Code, автоматизирующий раб�
 stage: maintenance
 progress: 100%
 blocked: нет
-version: "7.13.1"
+version: "7.14.0"
 stack: [python, bash, markdown, claude-code-plugin]
 
 now:

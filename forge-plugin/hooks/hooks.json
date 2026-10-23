@@ -51,8 +51,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ -n \"$FORGE_NESTED\" ] || f=$(ls ${CLAUDE_PLUGIN_ROOT}/sounds/stop/*.mp3 2>/dev/null | sort -R | head -1) && { afplay -v 0.05 \"$f\" 2>/dev/null || paplay --volume 3277 \"$f\" 2>/dev/null || true; }",
-            "timeout": 10,
+            "command": "[ -n \"$FORGE_NESTED\" ] || python3 \"${CLAUDE_PLUGIN_ROOT}/voice/notify.py\" stop 2>/dev/null || { f=$(ls \"${CLAUDE_PLUGIN_ROOT}\"/sounds/stop/*.mp3 2>/dev/null | sort -R | head -1); afplay -v 0.05 \"$f\" 2>/dev/null || paplay --volume 3277 \"$f\" 2>/dev/null || true; }",
+            "timeout": 30,
             "async": true
           }
         ]
@@ -64,8 +64,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ -n \"$FORGE_NESTED\" ] || f=$(ls ${CLAUDE_PLUGIN_ROOT}/sounds/permission/*.mp3 2>/dev/null | sort -R | head -1) && { afplay -v 0.05 \"$f\" 2>/dev/null || paplay --volume 3277 \"$f\" 2>/dev/null || true; }",
-            "timeout": 5,
+            "command": "[ -n \"$FORGE_NESTED\" ] || python3 \"${CLAUDE_PLUGIN_ROOT}/voice/notify.py\" permission 2>/dev/null || { f=$(ls \"${CLAUDE_PLUGIN_ROOT}\"/sounds/permission/*.mp3 2>/dev/null | sort -R | head -1); afplay -v 0.05 \"$f\" 2>/dev/null || paplay --volume 3277 \"$f\" 2>/dev/null || true; }",
+            "timeout": 30,
             "async": true
           }
         ]
