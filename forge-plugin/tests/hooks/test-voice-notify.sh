@@ -246,6 +246,35 @@ reset_d
 job 1 "Дом: собрал БОРМОТАНИЕ" stop 0 1; daemon_once
 check "should replace a mumbled live phrase with «готово»" "$(tr '\n' '|' < "$T/dplayed.log")" "say Дом: готово|"
 
+dur() { python3 -c 'import sys,wave; w=wave.open(sys.argv[1]); print("%.1f" % (w.getnframes()/w.getframerate()))' "$1"; }
+cache_of() { python3 -c 'import hashlib,sys; print(sys.argv[2]+"/cache/"+hashlib.sha1(sys.argv[1].encode()).hexdigest()+".wav")' "$1" "$DH"; }
+reset_d
+job 1 "Дом: есть вопрос ХВОСТ" stop 1 1; daemon_once
+d=$(dur "$(cache_of 'Дом: есть вопрос ХВОСТ')")   # речь ~2.0 с, пауза 0.3 с, шум 2.5 с
+python3 -c 'import sys; assert 1.9 <= float(sys.argv[1]) <= 2.3' "$d" && ok "should cut the noise the model adds after the phrase" || bad "should cut the noise the model adds after the phrase — got [$d]"
+reset_d
+job 1 "Дом: две части ДВЕЧАСТИ речи" stop 1 1; daemon_once
+d=$(dur "$(cache_of 'Дом: две части ДВЕЧАСТИ речи')")   # речь 2.5 с, пауза 0.3 с, речь 1.9 с той же громкости
+check "should not cut real speech after a pause" "$d" "4.7"
+reset_d
+job 1 "Дом: тихий ДЛИННАЯПАУЗА хвост" stop 1 1; daemon_once
+d=$(dur "$(cache_of 'Дом: тихий ДЛИННАЯПАУЗА хвост')")   # речь 2.6 с, пауза 0.6 с, тихий шорох 1.5 с
+python3 -c 'import sys; assert 2.5 <= float(sys.argv[1]) <= 2.8' "$d" && ok "should cut a quiet tail after a long pause" || bad "should cut a quiet tail after a long pause — got [$d]"
+reset_d
+job 1 "Дом: ТИШИНАСНАЧАЛА и потом обычная речь" stop 1 1; daemon_once
+check "should never leave only the leading silence" "$(dur "$(cache_of 'Дом: ТИШИНАСНАЧАЛА и потом обычная речь')")" "6.0"
+reset_d
+printf '{"/x/dom": "Дом"}' > "$DH/names.json"; mkdir -p "$DH/cache"
+python3 - "$(cache_of 'Дом: готово')" <<'PY'
+import sys, wave
+with wave.open(sys.argv[1], "wb") as w:   # речь 1 с, пауза 0.3 с, шум 2.5 с
+    w.setnchannels(1); w.setsampwidth(2); w.setframerate(8000)
+    tone = lambda s, a: b"".join(((a if (i // 20) % 2 else -a).to_bytes(2, "little", signed=True)) for i in range(int(8000 * s)))
+    w.writeframes(tone(1.0, 4000) + b"\0\0" * 2400 + tone(2.5, 16000))
+PY
+daemon_once
+check "should trim old cached phrases with a noisy tail at start" "$(dur "$(cache_of 'Дом: готово')")" "1.1"
+
 reset_d
 job 1 "Дом: СБОЙ" stop 0 1; daemon_once
 grep -q "sounds/stop/" "$T/dplayed.log" && grep -q "СБОЙ" "$DH/voiced.log" && ok "should fall back to mp3 and log when generation fails" || bad "should fall back to mp3 and log when generation fails"

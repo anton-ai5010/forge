@@ -8,6 +8,7 @@ voiced.py --say ТЕКСТ — сказать одну фразу и выйти 
 из фраз одного проекта — только последняя; старше 5 минут — выброс. Постоянные фразы — в кэше,
 в простое заготавливаются на все проекты из names.json. Сбой — mp3 из задания и строка в voiced.log.
 """
+import array
 import fcntl
 import glob
 import hashlib
@@ -137,12 +138,27 @@ class Fake:
             f.write("gen " + text + "\n")
         if "СБОЙ" in text:
             raise RuntimeError("учебный сбой генерации: " + text)
-        seconds = 20 + 0.5 * len(text) if "БОРМОТАНИЕ" in text else 0.05 * len(text)
+
+        def tone(seconds, amp):                            # «звук» без пауз
+            return b"".join((amp if (i // 20) % 2 else -amp).to_bytes(2, "little", signed=True)
+                            for i in range(int(8000 * seconds)))
+        if "БОРМОТАНИЕ" in text:
+            frames = tone(20 + 0.5 * len(text), 8000)
+        elif "ХВОСТ" in text:                             # речь, пауза, шум после фразы
+            frames = tone(0.09 * len(text), 4000) + b"\0\0" * 2400 + tone(2.5, 16000)
+        elif "ДВЕЧАСТИ" in text:                          # медленная речь с паузой — не хвост
+            frames = tone(0.09 * len(text), 6000) + b"\0\0" * 2400 + tone(1.9, 6000)
+        elif "ТИШИНАСНАЧАЛА" in text:                     # тишина, потом речь — резать нечего
+            frames = b"\0\0" * 24000 + tone(3.0, 6000)
+        elif "ДЛИННАЯПАУЗА" in text:                      # речь, долгая тишина, тихий шорох
+            frames = tone(0.09 * len(text), 6000) + b"\0\0" * 4800 + tone(1.5, 1500)
+        else:
+            frames = b"\0\0" * int(8000 * 0.05 * len(text))
         with wave.open(out, "wb") as w:
             w.setnchannels(1)
             w.setsampwidth(2)
             w.setframerate(8000)
-            w.writeframes(b"\0\0" * int(8000 * seconds))
+            w.writeframes(frames)
 
 
 def load_engine():
@@ -168,8 +184,85 @@ def duration(wav_path):
 
 
 def mumbled(wav_path, spoken):
-    """Зациклилась модель: настоящая речь VASKO на темпе 0.9 — ~0.18 с на символ («Плагин: голос установлен» — 4.3 с)."""
-    return duration(wav_path) > 0.35 * len(spoken) + 3
+    """Зациклилась модель: настоящая речь VASKO на темпе 0.9 — ~0.09 с на символ («Плагин: есть вопрос к тебе» — 2.2 с)."""
+    return duration(wav_path) > 0.2 * len(spoken) + 2
+
+
+def trim_tail(wav_path, spoken):
+    """Модель иногда дописывает шум после фразы (речь, пауза, громкий хвост). Запись длиннее ожидаемого —
+    режем по первой паузе ≥ 150 мс после 60% ожидаемой длины, если пауза ≥ 0.4 с (внутри фразы таких нет)
+    или после неё ≥ 1 с звука заметно громче речи (настоящий хвост: −6…−10 дБ против −17…−24). True — обрезано."""
+    with wave.open(wav_path) as w:
+        sr, n, sw, ch = w.getframerate(), w.getnframes(), w.getsampwidth(), w.getnchannels()
+        frames = w.readframes(n)
+    expected = 0.11 * len(spoken) + 0.4
+    if sw != 2 or ch != 1 or n / sr <= expected + 0.8:
+        return False
+    a = array.array("h")
+    a.frombytes(frames)
+    win = max(int(sr * 0.05), 1)
+    level = [math.sqrt(sum(x * x for x in a[i:i + win]) / max(len(a[i:i + win]), 1)) for i in range(0, n, win)]
+
+    def loudness(ws):                                      # средняя громкость звучащих окон
+        ws = [x for x in ws if x >= 328]
+        return sum(ws) / len(ws) if ws else 0.0
+    run = 0
+    for k in range(int(0.6 * expected / 0.05), len(level)):
+        run = run + 1 if level[k] < 328 else 0             # −40 дБ — пауза
+        if run < 3:
+            continue
+        gap = k - run + 1
+        end = k
+        while end + 1 < len(level) and level[end + 1] < 328:
+            end += 1
+        before, after = level[:gap], level[end + 1:]
+        if loudness(before) == 0:
+            return False                                   # до паузы тишина — отрезали бы саму речь
+        long_pause = (end - gap + 1) * 0.05 >= 0.4        # внутри фразы пауз такой длины не бывает
+        loud_tail = len(after) * 0.05 >= 1.0 and loudness(after) >= 1.4 * loudness(before)
+        if not (long_pause or loud_tail):
+            return False                                   # дальше обычная речь, а не шум — не трогаем
+        cut = (gap + 1) * win                              # пауза — первые 50 мс оставляем
+        fade = min(int(sr * 0.03), cut)
+        for i in range(fade):
+            a[cut - fade + i] = int(a[cut - fade + i] * (fade - i) / fade)
+        tmp = wav_path + ".trim.tmp.wav"
+        with wave.open(tmp, "wb") as w:
+            w.setnchannels(1)
+            w.setsampwidth(2)
+            w.setframerate(sr)
+            w.writeframes(a[:cut].tobytes())
+        os.replace(tmp, wav_path)                          # кэш не остаётся полузаписанным
+        return True
+    return False
+
+
+def trim_safe(wav_path, spoken):
+    """Обрезка — украшение: сбой не должен терять фразу."""
+    try:
+        return trim_tail(wav_path, spoken)
+    except Exception as e:
+        log("обрезка не вышла (%r): %s" % (e, wav_path))
+        return False
+
+
+def trim_cached():
+    """Записи, заготовленные до обрезки хвоста, — подрезать при старте (тексты известны: names.json × FIXED)."""
+    try:
+        with open(path("names.json"), encoding="utf-8") as f:
+            names = json.load(f)
+    except (OSError, ValueError):
+        return
+    for n in (names.values() if isinstance(names, dict) else []):
+        if not isinstance(n, str) or not n.strip():
+            continue
+        n = n[:1].upper() + n[1:]
+        for suffix in FIXED:
+            f = cache_file(n + ": " + suffix)
+            if os.path.exists(f):
+                if trim_safe(f, normalize(n + ": " + suffix)):
+                    log("обрезал хвост: " + n + ": " + suffix)
+        tick()
 
 
 def play_wav(wav_path, text):
@@ -215,6 +308,7 @@ def cached(engine, text):
         for _ in range(2):
             tick()
             engine.generate(spoken, tmp)
+            trim_safe(tmp, spoken)
             if not mumbled(tmp, spoken):
                 os.rename(tmp, out)
                 return out
@@ -248,6 +342,7 @@ def speak(engine, job):
         tick()
         t = time.time()
         engine.generate(spoken, tmp)
+        trim_safe(tmp, spoken)
         log("сказал «%s»: ждало %.0f с, делалось %.1f с, звучит %.1f с" % (text, job.get("_age", 0), time.time() - t, duration(tmp)))
         if mumbled(tmp, spoken):
             log("бормотание в живой фразе — говорю «готово»: " + text)
@@ -369,6 +464,7 @@ def daemon():
         sys.exit(1)
     remove(path("broken"))
     tick()
+    trim_cached()
     log("голос готов")
     failed = set()                                     # заготовки, которые не вышли, — до перезапуска не повторяем
     while not os.path.exists(path("restart")):
@@ -411,6 +507,7 @@ def main():
         try:
             t = time.time()
             engine.generate(normalize(text), tmp)
+            trim_safe(tmp, normalize(text))
             made = time.time() - t
             play_wav(tmp, text)
             print("загрузка %.1f с, фраза %.1f с, звучит %.1f с" % (loaded, made, duration(tmp)))
