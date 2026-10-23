@@ -40,3 +40,9 @@ entries:
     summary: "Слепой тест сжатия длинных выводов терминала (17 примеров из чатов integration, судьи Opus): Qwen 3.8 27B локально на маке (M5 Pro 48 ГБ, Ollama, think=false) — 3.88/5, лучше Haiku 4.5 (3.47, и Haiku выдумывал больше всех — 31 неверный факт против 14). Qwen 3.6 35B — 3.06, Gemma 4 26B — 2.94. Скорость на пример: Qwen 3.6 ~8с, Gemma ~10с, Haiku ~16с, Qwen 3.8 ~43с. Ни одна модель не держит 5/5 стабильно — пересказ лога это подсказка, сырой вывод должен оставаться доступен"
     tags: [models, cost, local-llm, ollama, benchmark, learning]
     source: "Сессия 2026-10-12: проверка «локальная модель vs Haiku» перед задачей экономии моделей"
+
+  - id: local-tts-macos-pitfalls
+    date: "2026-10-23"
+    summary: "Локальный русский TTS на маке (arm64): piper-tts из pip падает — espeak-ng-data ищется по пути сборщика (/Users/runner/...), wav выходит пустым; Chatterbox Multilingual — perth.PerthImplicitWatermarker = None (подменить на perth.DummyWatermarker), torch.load нужен map_location под mps, ударения — пакет russian_text_stresser из git+https://github.com/Vuizur/add-stress-to-epub (в PyPI нет); скорость — 12–27 с на фразу 60–90 символов. Rubberband в brew-ffmpeg нет — тембр через asetrate+aresample+atempo"
+    tags: [voice, tts, macos, learning]
+    source: "Проба голосов для задачи voice-notifications, 2026-10-23"

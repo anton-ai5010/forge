@@ -43,7 +43,7 @@ if [ -n "$rm_segs" ] \
 fi
 
 # 2. git push --force в main / master (флаг в любой позиции: -f, --force,
-# --force-with-lease — последний тоже переписывает историю, для не-кодера блокируем).
+# --force-with-lease — последний тоже переписывает историю, для пользователя без опыта git блокируем).
 # Как и у rm: проверяем только сегменты с git push (до ; & |), чтобы
 # `git rebase main && git push -f origin feature` не давал ложного срабатывания.
 push_segs=$(printf '%s' "$cmd" | grep -oE '(^|[;&|[:space:]])git[[:space:]]+push[[:space:]][^;&|]*' || true)

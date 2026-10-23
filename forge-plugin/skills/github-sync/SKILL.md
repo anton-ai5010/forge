@@ -5,9 +5,9 @@ description: "Use when a forge pipeline skill (new-task, critique, execute, road
 
 # GitHub Sync — внутренний скилл
 
-**Role:** Internal pipeline integration. Pushes task and project state to GitHub for visibility, lets Anton see a project map he can't lose track of.
+**Role:** Internal pipeline integration. Pushes task and project state to GitHub for visibility, lets the owner see a project map they can't lose track of.
 
-**Stakes:** Silent failure = Anton thinks GitHub is in sync when it's not, makes decisions on stale picture. Always be loud about auth/scope problems.
+**Stakes:** Silent failure = the owner thinks GitHub is in sync when it's not, makes decisions on stale picture. Always be loud about auth/scope problems.
 
 ## Что это
 
@@ -62,7 +62,7 @@ description: "Use when a forge pipeline skill (new-task, critique, execute, road
 ```bash
 bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh should-offer
 ```
-- Если `yes` — спроси Антона **одним вопросом простым языком**: "У тебя в этом проекте есть GitHub репо. Хочешь чтобы плагин писал задачи и карту проекта туда сам? (один раз спрашиваю)"
+- Если `yes` — спроси пользователя **одним вопросом простым языком**: "У тебя в этом проекте есть GitHub репо. Хочешь чтобы плагин писал задачи и карту проекта туда сам? (один раз спрашиваю)"
   - Ответ "да" / "ок" / "давай" → `bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh enable`
   - Ответ "нет" / "не надо" → `bash $CLAUDE_PLUGIN_ROOT/skills/github-sync/sync.sh disable` (запомнит явный отказ, больше не спросит)
 - Если `no` — пропусти этот пункт молча.
@@ -85,7 +85,7 @@ gh api 'repos/{owner}/{repo}/milestones?state=open&per_page=100' --jq '.[] | "\(
 ```
 Семантически сматчи задачу к подходящей цели:
 - Если есть явный кандидат (одна цель явно подходит по смыслу) — используй её номер
-- Если ни одна не подходит ИЛИ есть несколько похожих — **спроси Антона одной фразой**: "Привязываю к цели 'X' — или скажи 'к цели Y', или 'новая цель'."
+- Если ни одна не подходит ИЛИ есть несколько похожих — **спроси пользователя одной фразой**: "Привязываю к цели 'X' — или скажи 'к цели Y', или 'новая цель'."
 
 д) Создай Issue:
 ```bash

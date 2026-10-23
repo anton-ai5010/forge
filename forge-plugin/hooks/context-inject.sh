@@ -16,7 +16,9 @@ if [ -f ".forge/index.yml" ]; then
     # посередине буквы (битый UTF-8 уезжает в JSON). python3 выкидывает
     # неполный хвостовой символ; fallback на head -c если python3 сломан.
     # Секция dont:/constraints: (жёсткие «никогда») идёт первой и целиком,
-    # остальное режется в оставшийся бюджет 2500 байт.
+    # за ней — каталог памяти компактной строкой на секцию («catalog: map(теги) · …»; любая верхняя секция,
+    # у записей которой есть tags: — столбиком или { path, tags } в строку), чтобы длинный now.task его
+    # не вытеснил; остальное режется в оставшийся бюджет 2500 байт.
     index_content=$(python3 -c "
 import re
 raw = open('.forge/index.yml','rb').read().decode('utf-8','ignore')
@@ -28,7 +30,94 @@ for l in lines:
     elif inside and re.match(r'[^\\s#-]', l):
         inside = False
     (sec if inside else rest).append(l)
-head = ''.join(sec)
+
+def put(cur, k, v):
+    v = re.sub(r'\\s+#.*$', '', v.strip())   # хвостовой «# комментарий» — не часть пути и тегов
+    if k == 'path':
+        cur['path'] = v.strip('\"\\'')
+    else:
+        cur['tags'] += v.strip('[]').split(',')
+
+def compact(name, body):
+    items, cur, ind, intags = [], None, None, False
+    for l in body:
+        if not l.strip() or l.lstrip().startswith('#'):
+            continue
+        n = len(l) - len(l.lstrip())
+        if ind is None:
+            ind = n
+        s = l.strip()
+        if n == ind:
+            m = re.match(r'([^\\s:#][^:]*?):\\s*(\\{.*\\})?\\s*(#.*)?$', s)
+            if not m:
+                return None
+            cur = {'name': m.group(1), 'path': '', 'tags': []}
+            items.append(cur)
+            intags = False
+            for k, v in re.findall(r'(path|tags):\\s*(\\[[^\\]]*\\]|\"[^\"]*\"|[^,]+)', (m.group(2) or '').strip('{} ')):
+                put(cur, k, v)
+        elif cur is None:
+            continue
+        elif intags and s.startswith('- '):
+            cur['tags'].append(re.sub(r'\\s+#.*$', '', s[2:]))
+        else:
+            m = re.match(r'(path|tags):\\s*(.*)$', s)
+            intags = bool(m) and m.group(1) == 'tags' and not m.group(2).strip()
+            if m:
+                put(cur, m.group(1), m.group(2))
+    for i in items:
+        i['tags'] = [t.strip().strip('\"\\'') for t in i['tags'] if t.strip().strip('\"\\'')]
+    # каталог — это записи о файлах: путь есть у каждой; цели и задачи с тегами, но без пути, остаются текстом со всеми полями
+    if not items or not any(i['tags'] for i in items) or not all(i['path'] for i in items):
+        return None
+    out = []
+    for i in items:
+        p = i['path']
+        std = p.rstrip('/') == '.forge/' + i['name'] or re.fullmatch(r'\\.forge/' + re.escape(i['name']) + r'\\.\\w+', p)
+        out.append(i['name'] + ('' if std else '[' + p + ']') + ('(' + ','.join(i['tags']) + ')' if i['tags'] else ''))
+    return name, out
+
+cat, keep, cur = [], [], None
+for l in rest:
+    m = re.match(r'([\\w-]+):\\s*(#.*)?$', l)
+    if m:
+        cur = [m.group(1), [], l]
+        keep.append(cur)
+    elif re.match(r'[^\\s#-]', l):
+        cur = None
+        keep.append(l)
+    elif cur is not None:
+        cur[1].append(l)
+    else:
+        keep.append(l)
+rest = []
+for x in keep:
+    if isinstance(x, str):
+        rest.append(x)
+        continue
+    c = compact(x[0], x[1])
+    if c:
+        cat.append(c)
+    else:
+        rest.append(x[2])
+        rest.extend(x[1])
+# каталог без потолка вытеснил бы весь остаток L0 — до 1500 байт целыми записями, невлезшие — пометкой
+catline, used, dropped = '', 0, 0
+for name, ents in cat:
+    used += len((name + ': \n').encode('utf-8'))
+    took = []
+    for e in ents:
+        n = len((e + ' · ').encode('utf-8'))
+        if used + n > 1500:
+            dropped += 1
+            continue
+        took.append(e)
+        used += n
+    if took:
+        catline += name + ': ' + ' · '.join(took) + '\n'
+if dropped:
+    catline += '(ещё ' + str(dropped) + ' в каталоге — полный список в .forge/index.yml)\n'
+head = ''.join(sec) + catline
 budget = max(2500 - len(head.encode('utf-8')), 0)
 tail = ''.join(rest).encode('utf-8')[:budget].decode('utf-8','ignore')
 import sys

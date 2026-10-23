@@ -1,33 +1,26 @@
 {
-  "hooks": {
-    "UserPromptSubmit": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash /home/anton/.claude/plugins/marketplaces/forge-marketplace/forge-plugin/hooks/context-inject.sh"
-          }
-        ]
-      }
+  "permissions": {
+    "allow": [
+      "Bash(cat)",
+      "Bash(bash __TRACKED_VAR__/skills/github-sync/sync.sh create-task .forge/tasks/2026-07-07-confidence-in-memory.md 'Надёжность памяти проекта')"
     ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)"
+    ]
+  },
+  "hooks": {
     "PreToolUse": [
       {
         "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": "[ \"$(git branch --show-current)\" != \"main\" ] && [ \"$(git branch --show-current)\" != \"master\" ] || { echo 'BLOCKED: Do not edit files on main/master. Create a feature branch first.' >&2; exit 2; }"
+            "command": "f=$(sed -n 's/.*\"file_path\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/p' | head -n 1); [ -n \"$f\" ] || exit 0; case \"$f\" in /*) ;; *) f=\"$PWD/$f\" ;; esac; d=$(dirname \"$f\"); while [ ! -d \"$d\" ]; do d=$(dirname \"$d\"); done; b=$(git -C \"$d\" branch --show-current 2>/dev/null); case \"$b\" in main|master) ;; *) exit 0 ;; esac; r=\"$(git -C \"$d\" rev-parse --show-prefix 2>/dev/null)${f#\"$d\"/}\"; case \"/$r/\" in */../*) ;; *) case \"$r\" in .forge/*|.claude/*|CLAUDE.md|*/CLAUDE.md) exit 0 ;; esac ;; esac; echo \"BLOCKED: файл $r на основной ветке $b. Код здесь не правим — заведи рабочую ветку (git switch -c feat/<задача>); память .forge, .claude и CLAUDE.md на основной ветке можно. Если пользователь явно просит править прямо здесь — скажи, что мешает защита в .claude/settings.json, и спроси, снять ли её.\" >&2; exit 2"
           }
         ]
       }
-    ]
-  },
-  "permissions": {
-    "deny": [
-      "Bash(rm -rf /)",
-      "Bash(git push --force*)",
-      "Bash(git reset --hard*)"
     ]
   },
   "language": "ru"

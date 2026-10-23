@@ -88,7 +88,7 @@ Analyze the project context and identify:
 ENTITIES (5-15): the building blocks of the system.
 For each entity:
 - icon, label (Russian), oneLiner (one sentence)
-- what: explain to a non-coder what this is (2-3 sentences)
+- what: explain in plain words (user level simple: no jargon) what this is (2-3 sentences)
 - benefit: why should I care? What does this give me?
 - howTo: 2-3 steps — how to use/interact with this
 - inside: 3-5 points about what's inside (expandable details)

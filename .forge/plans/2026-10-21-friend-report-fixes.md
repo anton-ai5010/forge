@@ -30,6 +30,7 @@
 
 **Файлы:**
 - `output-styles/forge-concise.md:10,18,23,38,49,53` — «You are talking to the user from the `USER:` line of the forge banner. `simple`: non-coder — plain language, no jargon, …; `technical`: terms fine, still concise. Voice input — if USER notes say so.»
+- Там же — «понял так»: если сообщение длинное или двусмысленное и за ним идёт действие, первой строкой ответа — «понял так: …» (одна строка, своими словами) и сразу делать, не ждать подтверждения; короткие и ясные — без этой строки. Правило для любого уровня, не только голосового ввода.
 - «Антон / Anton» → «владелец» / «пользователь»: `project-unblocker/SKILL.md:40-48` (портрет «Кто перед тобой» → «см. строку USER; при simple — …»; сам портрет ушёл в notes владельца), `:61`; `roadmap/SKILL.md` (9); `github-sync/SKILL.md:8,10,65,88`; `github-sync/sync.sh:34`; `hookify/SKILL.md` (9); `evolve/SKILL.md` (9, путь `:26` → «папка памяти проекта в `~/.claude/projects/`»); `using-forge/SKILL.md:175`; `COMMANDS.md:745`; `evals/criteria/unblocker.yml:24`.
 - «пользователь — не-кодер» как факт → «если уровень пользователя simple»: `new-task:19,39`, `plan:45,183`, `refine-idea:15,27`, `critique:164,180,204`, `critique/codex-critic.md:12`, `execute:66`, `finishing:68,83,121`, `product-mapping:8,91`, `requesting-code-review/review-checklist.md:27,39`, `docs/delivery-bar.md:44`.
 - Помощники строку USER не видят: в `critique/SKILL.md` (общий список «Каждой персоне дай:») и `requesting-code-review/code-reviewer.md` (шаблон) — «Уровень пользователя: <из строки USER>», заполняет основной чат.

@@ -157,6 +157,156 @@ out=$(run_hook "$PAYLOAD")
 printf '%s' "$out" | grep -q "truncated" && is_json "$out"; check "should truncate as before when no dont/constraints section" $?
 mv .forge/index.yml.bak .forge/index.yml
 
+# --- (9г) каталог памяти доходит всегда: компактной строкой, даже за длинным now.task ---
+
+rm -f .forge/.inject-state
+mv .forge/index.yml .forge/index.yml.bak
+python3 - <<'PY'
+body = 'project: x\nnow:\n  task: "' + 'длинная задача ' * 220 + '"\n'
+body += 'catalog:\n  map:\n    path: .forge/map.yml\n    tags: [structure, files, navigate]\n\n'
+body += '  journal:\n    path: .forge/journal.yml\n    tags: [history, resume]\n'
+body += 'session:\n  goal: "y"\n'
+open('.forge/index.yml', 'w').write(body)
+PY
+out=$(run_hook "$PAYLOAD")
+printf '%s' "$out" | python3 -c "
+import json,sys
+ctx = json.load(sys.stdin)['hookSpecificOutput']['additionalContext']
+assert 'catalog: map(structure,files,navigate) · journal(history,resume)' in ctx, ctx[:300]
+assert 'path: .forge/map.yml' not in ctx, 'block catalog should be replaced by the compact line'
+" 2>/dev/null
+check "should put a compact catalog line into L0 even behind a 3KB now.task" $?
+mv .forge/index.yml.bak .forge/index.yml
+
+# --- (9д) формат mlfootball: секции docs:/specs: со строками { path, tags } после 2500-го байта ---
+
+rm -f .forge/.inject-state
+mv .forge/index.yml .forge/index.yml.bak
+python3 - <<'PY'
+body = 'project: y\nlast_session: "' + 'я' * 1400 + '"\n'
+body += 'docs:\n  map:         { path: .forge/map.yml,         tags: [structure, red-zones] }\n'
+body += '  product:     { path: .forge/product.md,      tags: [why, users] }\n\n'
+body += '# Session memory\nspecs:\n  ideas:      { path: Football predictor v3 ideas.MD,  tags: [decisions] }\n'
+open('.forge/index.yml', 'w').write(body)
+PY
+out=$(run_hook "$PAYLOAD")
+printf '%s' "$out" | python3 -c "
+import json,sys
+ctx = json.load(sys.stdin)['hookSpecificOutput']['additionalContext']
+assert 'docs: map(structure,red-zones) · product(why,users)' in ctx, ctx[:400]
+assert 'specs: ideas[Football predictor v3 ideas.MD](decisions)' in ctx, ctx[:400]
+assert 'path: .forge/map.yml' not in ctx, 'inline catalog should not stay in the text as well'
+" 2>/dev/null
+check "should compact inline { path, tags } catalog sections (docs:/specs:) past the 2500-byte cut" $?
+mv .forge/index.yml.bak .forge/index.yml
+
+# --- (9е) формат витрины: имена со слэшем, теги столбиком, «now: # комментарий» не теряется ---
+
+rm -f .forge/.inject-state
+mv .forge/index.yml .forge/index.yml.bak
+python3 - <<'PY'
+body = 'dont:\n  - НИКОГДА-не-пушить\nnow: # текущая\n  task: "' + 'з' * 1300 + '"\n'
+body += 'catalog:\n  library/prisma:\n    path: .forge/library/prisma/spec.yml\n    tags: [db, schema]\n'
+body += '  journal:\n    path: .forge/journal.yml\n    tags:\n      - history\n      - "resume"\n'
+open('.forge/index.yml', 'w').write(body)
+PY
+out=$(run_hook "$PAYLOAD")
+printf '%s' "$out" | python3 -c "
+import json,sys
+ctx = json.load(sys.stdin)['hookSpecificOutput']['additionalContext']
+assert 'catalog: library/prisma[.forge/library/prisma/spec.yml](db,schema) · journal(history,resume)' in ctx, ctx[:500]
+assert ctx.index('НИКОГДА-не-пушить') < ctx.index('catalog:'), 'dont: must stay first'
+assert 'now: # текущая' in ctx
+" 2>/dev/null
+check "should compact catalog entries with slashes and block-list tags, keep dont: first and section comments" $?
+mv .forge/index.yml.bak .forge/index.yml
+
+# --- (9ж) хвостовые «# комментарии», путь в кавычках с запятой, запись без тегов ---
+
+rm -f .forge/.inject-state
+mv .forge/index.yml .forge/index.yml.bak
+cat > .forge/index.yml <<'EOF'
+project: z
+catalog:
+  map:
+    path: .forge/map.yml   # main
+    tags: [a, b]  # t
+  extra:
+    path: notes/x.md
+  hist:
+    path: .forge/hist.yml
+    tags:
+      - one   # c
+specs:
+  q: { path: "a, b.md", tags: [z] }
+EOF
+out=$(run_hook "$PAYLOAD")
+printf '%s' "$out" | python3 -c "
+import json,sys
+ctx = json.load(sys.stdin)['hookSpecificOutput']['additionalContext']
+assert 'catalog: map(a,b) · extra[notes/x.md] · hist(one)' in ctx, ctx[:400]
+assert 'extra[notes/x.md]()' not in ctx, 'entry without tags should not get empty parens'
+assert 'specs: q[a, b.md](z)' in ctx, ctx[:400]
+" 2>/dev/null
+check "should drop trailing comments, keep quoted paths with commas and omit empty tag parens in the catalog line" $?
+mv .forge/index.yml.bak .forge/index.yml
+
+# --- (9з) секция с тегами, но без путей (цели/задачи) — не каталог: остаётся текстом со всеми полями ---
+
+rm -f .forge/.inject-state
+mv .forge/index.yml .forge/index.yml.bak
+cat > .forge/index.yml <<'EOF'
+project: g
+goals:
+  g1:
+    title: Запустить продажи
+    status: active
+    tags: [sales]
+catalog:
+  map:
+    path: .forge/map.yml
+    tags: [structure]
+  direction:
+    path: .forge/direction.yml
+    tags: [strategy]
+    note: "стратегический слой"
+EOF
+out=$(run_hook "$PAYLOAD")
+printf '%s' "$out" | python3 -c "
+import json,sys
+ctx = json.load(sys.stdin)['hookSpecificOutput']['additionalContext']
+assert 'title: Запустить продажи' in ctx and 'status: active' in ctx, ctx[:400]
+assert 'goals: g1' not in ctx, 'goals must not be collapsed into a catalog line'
+assert 'catalog: map(structure) · direction(strategy)' in ctx, ctx[:400]
+" 2>/dev/null
+check "should keep sections whose entries have tags but no path as text, and still compact file catalogs with note fields" $?
+mv .forge/index.yml.bak .forge/index.yml
+
+# --- (9и) большой каталог: до 1500 байт целыми записями, пометка о невлезших, L0 в бюджете 2500 байт ---
+
+rm -f .forge/.inject-state
+mv .forge/index.yml .forge/index.yml.bak
+python3 - <<'PY'
+body = 'project: big\nnow:\n  task: "' + 'ж' * 1600 + '"\ncatalog:\n'
+for i in range(60):
+    body += f'  file{i}:\n    path: .forge/file{i}.yml\n    tags: [тег-один, тег-два, тег-три]\n'
+open('.forge/index.yml', 'w').write(body)
+PY
+out=$(run_hook "$PAYLOAD")
+printf '%s' "$out" | python3 -c "
+import json,re,sys
+ctx = json.load(sys.stdin)['hookSpecificOutput']['additionalContext']
+assert '�' not in ctx, 'broken UTF-8 in the catalog cut'
+line = [l for l in ctx.splitlines() if l.startswith('catalog: ')][0]
+assert len(line.encode('utf-8')) <= 1500, len(line.encode('utf-8'))
+assert all(re.fullmatch(r'file\d+\(тег-один,тег-два,тег-три\)', e) for e in line[len('catalog: '):].split(' · ')), line[-200:]
+assert re.search(r'\(ещё \d+ в каталоге', ctx), 'dropped entries must be announced'
+part = ctx.split('FORGE L0 CONTEXT (auto-injected):\n\n', 1)[1].split('\n\n--- Branch', 1)[0]
+assert len(part.encode('utf-8')) <= 2500, len(part.encode('utf-8'))
+" 2>/dev/null
+check "should cut a large catalog by whole entries within 1500 bytes, announce the rest and keep L0 within 2500 bytes" $?
+mv .forge/index.yml.bak .forge/index.yml
+
 # --- (9) битый JSON на входе не роняет хук ---
 
 rm -f .forge/.inject-state

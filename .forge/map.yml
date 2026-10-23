@@ -35,6 +35,10 @@ directories:
     files: 1
     about: "project-map.md — шаблон карты проекта для Pinned Issue"
 
+  forge-plugin/skills/forge-context/project-hooks-fix.sh:
+    files: 1
+    about: "Хуки проекта в .claude/settings*.json — одна правда для init и старта сессии: install (защита main по пути файла + deny), check/apply/decline (старые копии подсказки плагина и старая защита main, только точное совпадение с шаблоном, резервная копия в ~/.claude/forge-state)"
+
   forge-plugin/skills/roadmap/:
     files: 1
     about: "Управление картой целей проекта (milestones) через человеческий язык"

@@ -31,7 +31,7 @@ check_enabled() {
     return 0
 }
 
-# Громкая диагностика: если флаг включён но что-то сломано — расскажи Антону
+# Громкая диагностика: если флаг включён но что-то сломано — расскажи пользователю
 diagnose() {
     [ -f ".forge/index.yml" ] || { echo "⚠ .forge/index.yml не найден — sync выключен (это нормально если ты не в forge-проекте)." >&2; return 1; }
     grep -q "^github_sync:[[:space:]]*true" .forge/index.yml || { echo "ℹ github_sync: true не выставлен в .forge/index.yml — sync выключен." >&2; return 1; }

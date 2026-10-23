@@ -193,6 +193,73 @@ valid_json "$out" && ! printf '%s' "$ctx" | grep -qi "доки:"
 check "should stay silent when there is no drift and no guide" $?
 cd / && rm -rf "$WORK" "$FAKE_HOME"
 
+# --- (10–14) кто пользователь: строка USER из ~/.claude/forge-user.yml, без файла — один раз спросить ---
+
+new_project
+UH=$(mktemp -d); mkdir -p "$UH/.claude"
+printf 'name: Антон\nlevel: simple\nnotes: "голосовой ввод — опечатки норма"\n' > "$UH/.claude/forge-user.yml"
+ctx=$(context_of "$(run_hook_home "$UH")")
+printf '%s' "$ctx" | grep -qx "USER: Антон · уровень: simple · голосовой ввод — опечатки норма"
+check "should put the USER line from forge-user.yml (name, level, notes)" $?
+printf '%s' "$ctx" | sed -n 2p | grep -q "^USER:"
+check "should put the USER line first in the intro" $?
+! printf '%s' "$ctx" | grep -q "Как к вам обращаться"
+check "should not ask who the user is when forge-user.yml exists" $?
+
+printf 'name: Друг\nlevel: Простой\n' > "$UH/.claude/forge-user.yml"
+context_of "$(run_hook_home "$UH")" | grep -qx "USER: Друг · уровень: simple"
+check "should normalize a Russian level («Простой») to simple" $?
+printf 'name: Друг\nlevel: простой\n' > "$UH/.claude/forge-user.yml"
+out=$(LC_ALL=C HOME="$UH" CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" bash "$HOOK" </dev/null 2>/dev/null)
+context_of "$out" | grep -qx "USER: Друг · уровень: simple"
+check "should normalize a Russian level to simple under LC_ALL=C too" $?
+printf 'level: что-то непонятное\n' > "$UH/.claude/forge-user.yml"
+context_of "$(run_hook_home "$UH")" | grep -qx "USER: пользователь · уровень: technical"
+check "should fall back to a neutral name and technical when level is garbage" $?
+printf 'name: "Б\033[0mоб"\nlevel: "simple"\nnotes: a\001b\r\n' > "$UH/.claude/forge-user.yml"
+out=$(run_hook_home "$UH")
+valid_json "$out" && context_of "$out" | grep -qx "USER: Б\[0mоб · уровень: simple · ab"
+check "should drop control characters from forge-user.yml and keep the JSON valid" $?
+
+UH2=$(mktemp -d); mkdir -p "$UH2/.claude"
+ctx=$(context_of "$(run_hook_home "$UH2")")
+printf '%s' "$ctx" | grep -q "Как к вам обращаться и как объяснять — простыми словами или с терминами" \
+  && printf '%s' "$ctx" | grep -q "В конце первого ответа" \
+  && printf '%s' "$ctx" | grep -qF "printf 'name: %s\nlevel: %s\n' \"\$FORGE_NAME\" \"\$FORGE_LEVEL\" > ~/.claude/forge-user.yml" \
+  && [ -e "$UH2/.claude/forge-state/user-asked" ]
+check "should ask once who the user is when there is no forge-user.yml (safe write command, mark set)" $?
+ctx=$(context_of "$(run_hook_home "$UH2")")
+! printf '%s' "$ctx" | grep -q "Как к вам обращаться" \
+  && printf '%s' "$ctx" | grep -q "^USER: пользователь · уровень: не задан (нейтрально: без имени"
+check "should not ask again and stay neutral on the second start without forge-user.yml" $?
+
+UH3=$(mktemp -d)
+out=$(HOME="$UH3" FORGE_NESTED=1 CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" bash "$HOOK" </dev/null 2>/dev/null)
+[ -z "$out" ] && [ ! -e "$UH3/.claude/forge-state/user-asked" ]
+check "should stay silent and not mark the question as asked when FORGE_NESTED=1" $?
+cd / && rm -rf "$WORK" "$UH" "$UH2" "$UH3"
+
+# --- (15–17) старая копия подсказки плагина в настройках проекта → строка раз в сутки, после «нет» — тишина ---
+
+new_project
+mkdir -p .claude
+printf '{\n  "hooks": {\n    "UserPromptSubmit": [\n      {\n        "matcher": "",\n        "hooks": [\n          {\n            "type": "command",\n            "command": "bash /old/forge/hooks/context-inject.sh"\n          }\n        ]\n      }\n    ]\n  }\n}\n' > .claude/settings.json
+HH=$(mktemp -d); mkdir -p "$HH/.claude"
+ctx=$(context_of "$(run_hook_home "$HH")")
+printf '%s' "$ctx" | grep -q "🧹.*лишняя копия подсказки плагина" \
+  && printf '%s' "$ctx" | grep -q "project-hooks-fix.sh apply" \
+  && printf '%s' "$ctx" | grep -q "project-hooks-fix.sh decline"
+check "should offer to clean an old plugin hook copy found in the project settings" $?
+ctx=$(context_of "$(run_hook_home "$HH")")
+! printf '%s' "$ctx" | grep -q "🧹"
+check "should offer the settings cleanup at most once a day" $?
+rm -f "$HH"/.claude/forge-state/*/hooks-fix-shown
+HOME="$HH" bash "$PLUGIN_ROOT/skills/forge-context/project-hooks-fix.sh" decline "$WORK" >/dev/null
+ctx=$(context_of "$(run_hook_home "$HH")")
+! printf '%s' "$ctx" | grep -q "🧹"
+check "should not offer the settings cleanup after the user declined" $?
+cd / && rm -rf "$WORK" "$HH"
+
 echo "---"
 if [ "$fails" -gt 0 ]; then
     echo "$fails test(s) FAILED"

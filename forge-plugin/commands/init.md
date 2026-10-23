@@ -683,60 +683,28 @@ If any check fails — fix before showing to user. Do not ask about validation �
 
 Set up Claude Code environment: hooks, permissions, rules, gitignore.
 
-### 15a: Find forge plugin path
+The L0 auto-inject hook (`context-inject.sh`) is already wired by the plugin itself (`hooks/hooks.json`) —
+do NOT copy it into the project settings: a copy injects L0 twice and dies on the next plugin update.
+
+### 15a–15b: Create/update .claude/settings.json
+
+One bash call (shell variables don't survive between calls):
 
 ```bash
-FORGE_HOOKS=$(find ~/.claude/plugins -path '*/forge*/hooks/context-inject.sh' 2>/dev/null | head -1)
-echo "Found: $FORGE_HOOKS"
+FIX=$(find ~/.claude/plugins -path '*/forge*/skills/forge-context/project-hooks-fix.sh' 2>/dev/null | sort -V | tail -1)
+[ -f "$FIX" ] || { echo "project-hooks-fix.sh not found"; exit 1; }
+bash "$FIX" install && grep -q BLOCKED .claude/settings.json && echo "guard: OK"
 ```
 
-### 15b: Create/update .claude/settings.json
+No `guard: OK` — tell the user in one line that the main-branch guard was not installed (plugin files not found), continue init without it.
 
-```bash
-mkdir -p .claude
-```
+The script MERGES into `.claude/settings.json` (creates it if missing), JSON stays valid:
+- `PreToolUse` `Edit|Write` — main-branch guard: code on main/master is blocked, `.forge/`, `.claude/`, `CLAUDE.md` and files outside the repo are allowed (checks the file path, not just the branch)
+- `permissions.deny` — `rm -rf /`, `git push --force*`, `git reset --hard*` (appended, no duplicates; `permissions.allow` untouched)
+- `language: ru` — only if not set
+- an old plugin hook copy / the old blanket guard, if present verbatim from an old init, are removed / replaced; anything the user changed by hand is kept
 
-Read existing `.claude/settings.json` if exists. MERGE (don't overwrite) these settings:
-
-```json
-{
-  "hooks": {
-    "UserPromptSubmit": [
-      {
-        "matcher": "",
-        "hooks": [{
-          "type": "command",
-          "command": "bash {FORGE_HOOKS_PATH}"
-        }]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [{
-          "type": "command",
-          "command": "[ \"$(git branch --show-current)\" != \"main\" ] && [ \"$(git branch --show-current)\" != \"master\" ] || { echo 'BLOCKED: Do not edit files on main/master. Create a feature branch first.' >&2; exit 2; }"
-        }]
-      }
-    ]
-  },
-  "permissions": {
-    "deny": [
-      "Bash(rm -rf /)",
-      "Bash(git push --force*)",
-      "Bash(git reset --hard*)"
-    ]
-  },
-  "language": "ru"
-}
-```
-
-**Merge rules:**
-- If `.claude/settings.json` exists — read first, preserve existing settings
-- If `hooks.UserPromptSubmit` already has FORGE hook — don't duplicate
-- Append to existing `permissions.deny`, don't replace
-- Don't overwrite user's `permissions.allow`
-- If `language` already set — keep user's choice
+Don't write these settings by hand — the guard text lives only in the script.
 
 ### 15c: Create .claude/rules/ (path-scoped instructions)
 
@@ -816,13 +784,16 @@ runtime-мусор отсечён через `.forge/.gitignore`. Секреты
 никогда — только названия записей Bitwarden. `.claude/settings.json` SHOULD be
 committed (team hooks/permissions). Only `.claude/settings.local.json` is personal.
 
-### 15e: Verify hook works
+### 15e: Verify the guard works
 
 ```bash
-echo '{"input":"test"}' | bash {FORGE_HOOKS_PATH}
+GUARD=$(python3 -c "import json; print([h['command'] for g in json.load(open('.claude/settings.json'))['hooks']['PreToolUse'] for h in g['hooks'] if 'BLOCKED' in h['command']][0])")
+printf '{"tool_input":{"file_path":"%s/.forge/index.yml"}}' "$PWD" | sh -c "$GUARD"; echo "memory: rc=$?"
+printf '{"tool_input":{"file_path":"%s/src/x.py"}}' "$PWD" | sh -c "$GUARD" 2>/dev/null; echo "code: rc=$?"
 ```
 
-If output contains `"FORGE L0 CONTEXT"` — hook is configured correctly.
+Memory must give `rc=0`. Code gives `rc=2` only on main/master (on a work branch — `rc=0`).
+L0 auto-inject needs no check here — it comes from the plugin, not from the project settings.
 
 ## Step 16: Configure GitHub Sync (optional)
 
@@ -891,7 +862,7 @@ Created:
 - .forge/library/ ({N} directories documented as L2)
 
 Configured:
-- .claude/settings.json — UserPromptSubmit hook (L0 auto-inject)
+- .claude/settings.json — main-branch guard (code only in a work branch; memory and settings allowed), deny list
 - GitHub sync — {включён: Issues + Pinned карта + README шапка / пропущен: нет remote или gh / отключён пользователем}
 
 Context budget: ~200 tok/prompt (L0) + ~500 tok on-demand (L1)

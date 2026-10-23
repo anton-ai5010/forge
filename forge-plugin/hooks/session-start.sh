@@ -111,8 +111,51 @@ elif git rev-parse --show-toplevel >/dev/null 2>&1; then
     fi
 fi
 
+# Старые копии подсказки плагина и старая защита main в .claude/settings*.json проекта —
+# предложить починку не чаще раза в сутки (отметка вне репо); «нет» → decline, больше не предлагаем
+hooks_warn=""
+ptop=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+if ls "$ptop"/.claude/settings*.json >/dev/null 2>&1; then
+    hmark="$HOME/.claude/forge-state/${ptop//\//-}/hooks-fix-shown"
+    if [ "$(cat "$hmark" 2>/dev/null)" != "$(date +%F)" ]; then
+        hfix="$plugin_root/skills/forge-context/project-hooks-fix.sh"
+        found=$(bash "$hfix" check "$ptop" 2>/dev/null || true)
+        # отметка — после любой проверки, не только при находке: иначе python3 запускается в каждом чате
+        mkdir -p "$(dirname "$hmark")" 2>/dev/null && date +%F > "$hmark" 2>/dev/null || true
+        if [ -n "$found" ]; then
+            hooks_warn=$'\n\n'"🧹 Настройки проекта: ${found//$'\n'/; }. Скажи пользователю одной строкой простыми словами, что это и что ничего не сломается (резервная копия — вне проекта), и спроси «убрать?»: да → \`bash $hfix apply '$ptop'\`, нет → \`bash $hfix decline '$ptop'\` (больше не предложу). Без ответа напомню завтра."
+        fi
+    fi
+fi
+
+# Кто пользователь — личный файл ~/.claude/forge-user.yml (name, level: simple|technical, notes; без PyYAML).
+# Файла нет — один раз за всё время (отметка в forge-state) просим Claude спросить; дальше нейтрально.
+# Отметка ставится при выдаче просьбы, а не после ответа: сессия без диалога (claude -p без FORGE_NESTED)
+# съест вопрос — осознанно, ради «спросить один раз»; человек всегда может попросить обращаться иначе.
+ufile="$HOME/.claude/forge-user.yml"
+# tr -d '\000-\037' — CR и любые управляющие символы: иначе escape_for_json отдаст невалидный JSON
+ukey() { { sed -n "s/^$1:[[:space:]]*//p" "$ufile" | head -1 | tr -d '\000-\037' | sed "s/^[\"']//; s/[\"'][[:space:]]*\$//"; } 2>/dev/null || true; }
+user_ask=""
+if [ -f "$ufile" ]; then
+    u_name=$(ukey name); u_level=$(ukey level); u_notes=$(ukey notes)
+    # кириллица — целыми словами, не [Пп]: классы символов в локали C сравниваются по байтам и не срабатывают
+    case "$u_level" in
+        simple*|Simple*|SIMPLE*|прост*|Прост*|ПРОСТ*) u_level=simple ;;
+        *) u_level=technical ;;
+    esac
+    user_line="USER: ${u_name:-пользователь} · уровень: ${u_level}${u_notes:+ · $u_notes}"
+else
+    user_line="USER: пользователь · уровень: не задан (нейтрально: без имени, термины можно, но каждый коротко поясняй; попросит обращаться иначе — запиши в ~/.claude/forge-user.yml)"
+    umark="$HOME/.claude/forge-state/user-asked"
+    if [ ! -e "$umark" ]; then
+        user_ask=$'\n\n'"👤 Кто пользователь — не задано. В конце первого ответа задай один вопрос: «Как к вам обращаться и как объяснять — простыми словами или с терминами?» Ответил — запиши, подставив значения: имени не назвал — FORGE_NAME=''; «попроще / простыми словами» → simple, «с терминами / как программисту» → technical; одинарные кавычки из имени убери: \`FORGE_NAME='<имя>' FORGE_LEVEL=<simple|technical>; printf 'name: %s\nlevel: %s\n' \"\$FORGE_NAME\" \"\$FORGE_LEVEL\" > ~/.claude/forge-user.yml\`. Не ответил или ответ непонятен — ничего не пиши и больше не спрашивай."
+        mkdir -p "$(dirname "$umark")" 2>/dev/null && touch "$umark" 2>/dev/null || true
+    fi
+fi
+
 # Короткое введение — что есть forge и как им пользоваться
 intro="<forge-plugin-loaded>
+${user_line}
 ${header}
 
 Доступен pipeline разработки:
@@ -132,7 +175,7 @@ MODELS: любой вызов Agent — с явной model или типом и
 
 ${doc_discipline}
 Для глубокого введения — Skill tool: forge:using-forge.
-$warning$mem_warn$report_warn$init_warn
+$warning$mem_warn$report_warn$init_warn$hooks_warn$user_ask
 </forge-plugin-loaded>"
 
 # Escape для JSON
