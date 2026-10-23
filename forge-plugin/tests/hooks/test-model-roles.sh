@@ -37,6 +37,10 @@ for f, anchor, model in rows('inventory'):
 for f in sorted({r[0] for r in rows('inventory')} - {'commands/sync.md'} - {r[0] for r in rows('inventory') if r[0].endswith('-prompt.md')}):
     check('docs/model-roles.md' in open(os.path.join(root, f)).read(), f'{f}: ссылка на docs/model-roles.md')
 
+check('## Когда отдавать помощнику' in doc, 'docs/model-roles.md: раздел «Когда отдавать помощнику»')
+for s in ('refine-idea', 'plan', 'problem-investigation', 'systematic-debugging', 'execute'):
+    check('Когда отдавать помощнику' in open(os.path.join(root, f'skills/{s}/SKILL.md')).read(), f'skills/{s}: ссылка на «Когда отдавать помощнику»')
+
 for name, model, effort, turns in rows('agents'):
     fm = open(os.path.join(root, f'agents/{name}.md')).read().split('\n---\n')[0]
     get = lambda k: (re.search(rf'^{k}:\s*(\S+)', fm, re.M) or [None, '—'])[1]

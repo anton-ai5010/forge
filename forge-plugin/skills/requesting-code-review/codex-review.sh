@@ -25,7 +25,7 @@ for c in ".forge/index.yml" \
   case "$c" in /.forge/*) continue;; esac
   [ -f "$c" ] && { IDX="$c"; break; }
 done
-[ -n "$IDX" ] && grep -qE '^codex_review:[[:space:]]*on' "$IDX" 2>/dev/null || { echo "SKIP: Codex выключен в этом проекте"; exit 0; }
+[ -n "$IDX" ] && grep -qE '^codex_review:[[:space:]]*on' "$IDX" 2>/dev/null || { echo "SKIP: Codex выключен в этом проекте (включить — строка «codex_review: on» в .forge/index.yml)"; exit 0; }
 case "$MODE" in
   review)   PROMPT_FILE="$DIR/review-checklist.md" ;;
   critique) PROMPT_FILE="$DIR/../critique/codex-critic.md" ;;

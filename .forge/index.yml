@@ -1,10 +1,11 @@
 project: forge-plugin
 github_sync: true
+codex_review: on
 goal: "Плагин для Claude Code, автоматизирующий рабочие процессы разработки через 7-фазный pipeline (0 unblocker → 1 new-task → 1.5 refine-idea → 2 plan → 3 critique → 4 execute → 5 guide) + систему скиллов + L0/L1/L2 контекст"
 stage: maintenance
 progress: 100%
 blocked: нет
-version: "7.14.2"
+version: "7.15.0"
 stack: [python, bash, markdown, claude-code-plugin]
 
 now:

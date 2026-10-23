@@ -69,6 +69,8 @@ printf '%s' "$ctx" | grep -q "WORKFLOWS:.*model.*effort.*model-roles.md" && prin
 check "intro should carry the workflow rule (model+effort per agent, review scheme) for ultracode" $?
 printf '%s' "$ctx" | grep -q "MODELS:.*forge:scout.*Explore"
 check "intro should forbid helpers without a model (search via forge:scout, Explore only with model)" $?
+printf '%s' "$ctx" | grep -q "ПОМОЩНИКИ:.*отдал помощнику (" && printf '%s' "$ctx" | grep -q "ПОМОЩНИКИ:.*model-roles.md"
+check "session start should inject the delegation rule (when to hand off, visible line, model-roles)" $?
 printf '%s' "$ctx" | grep -q "ROUTING:"
 check "project with .forge should get memory routing rules" $?
 
@@ -77,10 +79,13 @@ NOF=$(mktemp -d); ( cd "$NOF" && git init -q
   out=$(run_hook); c=$(context_of "$out")
   ! printf '%s' "$c" | grep -q "ROUTING:" && ! printf '%s' "$c" | grep -q "DOC DISCIPLINE" && printf '%s' "$c" | grep -q "/forge:init"
   echo "rc1=$?"
+  printf '%s' "$c" | grep -q "ПОМОЩНИКИ:.*отдал помощнику (" && printf '%s' "$c" | grep -q "ПОМОЩНИКИ:.*model-roles.md"
+  echo "rc3=$?"
   out=$(run_hook); c=$(context_of "$out")
   ! printf '%s' "$c" | grep -q "/forge:init"; echo "rc2=$?" ) > "$NOF/res"
 grep -q "rc1=0" "$NOF/res"; check "project without .forge: no memory rules, offers /forge:init" $?
 grep -q "rc2=0" "$NOF/res"; check "project without .forge: init offer only once" $?
+grep -q "rc3=0" "$NOF/res"; check "project without .forge: still gets the delegation rule" $?
 rm -rf "$NOF"
 
 # --- (2) без гайда — ни слова про него ---

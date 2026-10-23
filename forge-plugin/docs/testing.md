@@ -144,6 +144,8 @@ Analyze token usage from any Claude Code session:
 python3 tests/claude-code/analyze-token-usage.py ~/.claude/projects/<project-dir>/<session-id>.jsonl
 ```
 
+Режим `--run <run.json> --expect-version X [--expect-delegation-rule]`: принимает вывод `claude -p --output-format json`, сам находит транскрипт и субагентов, печатает контекст основного чата на последнем запросе, общий контекст, `total_cost_usd`, число субагентов; прогон без ровно одного `<forge-plugin-loaded>` с нужной версией — `ПРОГОН В БРАК`, код выхода 1.
+
 ### Finding Session Files
 
 Session transcripts are stored in `~/.claude/projects/` with the working directory path encoded:

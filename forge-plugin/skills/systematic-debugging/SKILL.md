@@ -37,7 +37,7 @@ Complete each phase before proceeding to the next.
 
 **BEFORE attempting ANY fix:**
 
-1. **Read errors carefully** — stack traces fully, line numbers, file paths, error codes. They often contain the solution.
+1. **Read errors carefully** — stack traces fully, line numbers, file paths, error codes. They often contain the solution. Long logs / wide code search — hand off per rule «Когда отдавать помощнику» (`$CLAUDE_PLUGIN_ROOT/docs/model-roles.md`).
 
 2. **Reproduce consistently** — exact steps? Every time? If not reproducible → gather more data, don't guess.
 
