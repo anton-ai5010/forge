@@ -264,6 +264,10 @@ reset_d
 job 1 "Дом: ТИШИНАСНАЧАЛА и потом обычная речь" stop 1 1; daemon_once
 check "should never leave only the leading silence" "$(dur "$(cache_of 'Дом: ТИШИНАСНАЧАЛА и потом обычная речь')")" "6.0"
 reset_d
+job 1 "Дом: после перезагрузки ШОРОХ всё в порядке" stop 1 1; daemon_once
+d=$(dur "$(cache_of 'Дом: после перезагрузки ШОРОХ всё в порядке')")   # речь 3.9 с, пауза 0.5 с, шорох 0.8 с — длина в пределах прежнего запаса
+python3 -c 'import sys; assert 3.8 <= float(sys.argv[1]) <= 4.1' "$d" && ok "should cut a short tail that fits the old length margin" || bad "should cut a short tail that fits the old length margin — got [$d]"
+reset_d
 printf '{"/x/dom": "Дом"}' > "$DH/names.json"; mkdir -p "$DH/cache"
 python3 - "$(cache_of 'Дом: готово')" <<'PY'
 import sys, wave

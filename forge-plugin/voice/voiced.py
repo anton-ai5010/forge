@@ -148,6 +148,8 @@ class Fake:
             frames = tone(0.09 * len(text), 4000) + b"\0\0" * 2400 + tone(2.5, 16000)
         elif "ДВЕЧАСТИ" in text:                          # медленная речь с паузой — не хвост
             frames = tone(0.09 * len(text), 6000) + b"\0\0" * 2400 + tone(1.9, 6000)
+        elif "ШОРОХ" in text:                     # хвост короче прежнего запаса по длине
+            frames = tone(0.09 * len(text), 6000) + b"\0\0" * 4000 + tone(0.8, 2000)
         elif "ТИШИНАСНАЧАЛА" in text:                     # тишина, потом речь — резать нечего
             frames = b"\0\0" * 24000 + tone(3.0, 6000)
         elif "ДЛИННАЯПАУЗА" in text:                      # речь, долгая тишина, тихий шорох
@@ -196,7 +198,8 @@ def trim_tail(wav_path, spoken):
         sr, n, sw, ch = w.getframerate(), w.getnframes(), w.getsampwidth(), w.getnchannels()
         frames = w.readframes(n)
     expected = 0.11 * len(spoken) + 0.4
-    if sw != 2 or ch != 1 or n / sr <= expected + 0.8:
+    # речь VASKO ~0.09 с/символ: длиннее — проверяем; от среза настоящей речи защищают правила паузы и громкости ниже
+    if sw != 2 or ch != 1 or n / sr <= 0.09 * len(spoken) + 0.5:
         return False
     a = array.array("h")
     a.frombytes(frames)
