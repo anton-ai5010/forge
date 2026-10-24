@@ -14,6 +14,7 @@
 |---|---|---|---|---|---|
 | разведчик: поиск / список / подсчёт | execute `[agent]`-поиск, unblocker-сканы, init-сканы, refine-idea grep, problem-investigation логи | 🟢 haiku (`forge:scout`) | low | 15 | механика, ошибка дешёвая и видна |
 | исследование с выводами | product-mapping (2), project-guide (6), session-insights (4), code-cleanup анализ, systematic-debugging | 🟡 sonnet | medium | — | здравый смысл, не глубина |
+| проход своей страницы в браузере | browser-walkthrough («прокликай»): невидимый Playwright, только своё (localhost) | 🟡 sonnet | medium | — | шаги по критерию, без правки кода; живой сайт — основной чат |
 | документация / структура | forge-documenter, structure-enforcer, init library-доки | 🟡 sonnet | low | — | по образцу |
 | проверяющий кода | `forge:code-reviewer` ×5 углов (логика / надёжность / тексты / интерфейс / тесты), на `[важное]` — два круга; оба проверяющих в subagent-driven-development | 🟡 sonnet | medium | 30 | ищет по диффу; один «на всё» пропускает тексты, сбои и тесты; Codex — второй взгляд |
 | второй взгляд другой семьи | Codex: проверка кода, 5-й критик плана | ⚪ codex (модель из `~/.codex/config.toml` или легче) | medium | — | ошибки GPT и Claude мало совпадают; лимит Claude не тратит |
@@ -77,6 +78,7 @@
 | skills/subagent-driven-development/implementer-prompt.md | Agent tool (general-purpose): | sonnet |
 | skills/subagent-driven-development/spec-reviewer-prompt.md | Agent tool (general-purpose): | sonnet |
 | skills/subagent-driven-development/code-quality-reviewer-prompt.md | Agent tool (subagent_type: forge:code-reviewer): | sonnet |
+| skills/browser-walkthrough/SKILL.md | **Своё — помощник** | sonnet |
 | commands/sync.md | subagent_type: forge:structure-enforcer | sonnet |
 | commands/sync.md | subagent_type: forge:forge-documenter | sonnet |
 <!-- inventory:end -->

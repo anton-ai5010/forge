@@ -18,6 +18,7 @@ SKILLS=(
     "requesting-code-review"
     "project-unblocker"
     "project-guide"
+    "browser-walkthrough"
 )
 
 echo "=== Running Skill Triggering Tests ==="

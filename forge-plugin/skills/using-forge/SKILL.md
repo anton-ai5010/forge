@@ -119,6 +119,7 @@ If `.forge/graph.json` exists — the project has a code knowledge graph built b
 | forge:critique | Phase 3 — 4 персоны рвут план |
 | forge:execute | Run plans with review checkpoints |
 | forge:project-guide | Phase 5 — гайд по проекту (`/forge:guide`): суть, устройство, решения с кодами, риски, план — HTML+PDF из последнего .forge/guide/vX.Y.json, версии в docs/guide/. Триггеры: «собери гайд», «открой гайд» (без пересборки), «это версия 2», ответы кодами «A2 ок» / «B1 — переделать: …» |
+| forge:browser-walkthrough | «прокликай» / «проверь в браузере» — проход страницы как пользователь по критерию задачи, починка с повтором, страничка снимков; только по слову владельца |
 | forge:dispatching-parallel-agents | Parallel dispatch of 2+ independent tasks |
 | forge:subagent-driven-development | Execute plans via fresh subagent per task with two-stage review |
 | forge:systematic-debugging | 4-phase root cause investigation |

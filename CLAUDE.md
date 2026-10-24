@@ -17,7 +17,7 @@ forge-plugin/              — корневая директория плаги�
   hooks/                   — bash хуки (session-start, context-inject, bash-safety, statusline)
   agents/                  — промпт-шаблоны субагентов
   commands/                — slash-команды (MD файлы)
-  skills/                  — 35 скиллов (SKILL.md + поддержка)
+  skills/                  — 36 скиллов (SKILL.md + поддержка)
   output-styles/           — нативный Output Style "Forge Concise" (auto-activated)
   evals/                   — каркас Hamel-style eval-сетапа (корпус пуст, ни одного прогона)
   voice/                   — голос уведомлений: notify.py (хуки Stop / PermissionRequest), voiced.py (фоновый голос), install.sh
@@ -172,6 +172,7 @@ Projects v2 board не используется — Pinned Issue + README пок
 - **Codex** (`skills/requesting-code-review/codex-review.sh`) — включается в проекте строкой `codex_review: on` в `.forge/index.yml` (по умолчанию выкл). Получает только дифф/план и задачу: пустая временная папка, отдельный CODEX_HOME без глобальных инструкций, песочница `codex.sb` закрывает домашнюю папку, секреты → SKIP.
 - **Когда отдавать помощнику** — раздел в `forge-plugin/docs/model-roles.md`: точечно — сам, много целиком — помощнику; в чат строка «отдал помощнику (<модель>): …», ответ помощника до 25 строк. Напоминание инжектится в `hooks/session-start.sh` строкой `ПОМОЩНИКИ:`.
 - **Мера «по делу»** — `forge-plugin/docs/delivery-bar.md`.
+- **Прокликай** (`skills/browser-walkthrough`, v7.16.0): только по слову владельца («прокликай», «проверь в браузере»); своё — помощник Sonnet в невидимом Playwright, живой сайт — основной чат в Chrome; «Стоп» перед оплатой / отправкой / удалением везде, не только на живом сайте; починка + повтор до 3 кругов (живой сайт — после выката); страничка снимков `shots-page.py` → `~/.claude/forge-logs/<проект>/` (600); execute подсказывает строкой.
 
 ## Расход основного чата (v7.11.0)
 
