@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>День проекта</title>
+<style>
+  :root { --bg:#f7f6f2; --ink:#1f1f1f; --muted:#6b6b6b; --line:#d9d6ce; --you:#f2c94c; --work:#8fcf9f; --wait:#e9b7b7; --merge:#8fb8e8; --card:#fff; }
+  body { margin:0; padding:24px 16px; background:var(--bg); color:var(--ink); font:16px/1.4 -apple-system,Segoe UI,sans-serif; max-width:960px; margin:0 auto; }
+  h1 { font-size:26px; margin:0 0 4px; }
+  h2 { font-size:18px; margin:28px 0 10px; }
+  .sub { color:var(--muted); margin-bottom:20px; }
+  .row { display:grid; grid-template-columns:140px 1fr; gap:10px; align-items:center; margin:8px 0; }
+  .label { font-weight:600; }
+  .bar { display:flex; gap:3px; height:34px; }
+  .seg { display:flex; align-items:center; justify-content:center; font-size:12px; border-radius:6px; color:#1f1f1f; white-space:nowrap; overflow:hidden; }
+  .work { background:var(--work); } .wait { background:var(--wait); } .you { background:var(--you); } .merge { background:var(--merge); } .idle { background:transparent; }
+  .scale { display:grid; grid-template-columns:140px 1fr; gap:10px; color:var(--muted); font-size:12px; }
+  .scale .ticks { display:flex; justify-content:space-between; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin:10px 0; }
+  .legend { display:flex; flex-wrap:wrap; gap:14px; font-size:13px; color:var(--muted); margin-top:8px; }
+  .legend span::before { content:""; display:inline-block; width:14px; height:14px; border-radius:4px; vertical-align:-2px; margin-right:6px; }
+  .legend .l-you::before { background:var(--you);} .legend .l-work::before { background:var(--work);} .legend .l-wait::before { background:var(--wait);} .legend .l-merge::before { background:var(--merge);}
+  .big { font-size:32px; font-weight:700; }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:640px) { .two { grid-template-columns:1fr; } .row, .scale { grid-template-columns:90px 1fr; } }
+  ol { padding-left:20px; } li { margin:6px 0; }
+  .dept { font-size:13px; color:var(--muted); }
+</style>
+</head>
+<body>
+<h1>День проекта — на примере integration</h1>
+<div class="sub">12 задач для Claude. Как сейчас — и как за один день.</div>
+
+<div class="two">
+  <div class="card">
+    <div class="big">~2 недели</div>
+    <b>Сейчас: по одной задаче.</b><br>
+    Одна задача = 2,5 часа работы Claude + 6 часов ожидания тебя (вопросы по одному, ты отошёл). Следующая — только после этой.
+    <div class="row" style="margin-top:12px">
+      <div class="label">задача 1</div>
+      <div class="bar"><div class="seg work" style="flex:2.5">работа</div><div class="seg wait" style="flex:6">ждёт тебя</div></div>
+    </div>
+    <div class="row">
+      <div class="label">задача 2</div>
+      <div class="bar"><div class="seg idle" style="flex:8.5"></div><div class="seg work" style="flex:2.5">работа</div><div class="seg wait" style="flex:6">ждёт</div></div>
+    </div>
+    <div class="dept">… и так 12 раз подряд</div>
+  </div>
+  <div class="card">
+    <div class="big">1 день</div>
+    <b>День проекта: пять конвейеров сразу.</b><br>
+    Работы столько же, но ожидание убрано: все вопросы — одной пачкой утром, а задачи идут в пяти чатах параллельно.
+    <div class="legend">
+      <span class="l-you">ты</span><span class="l-work">Claude работает</span><span class="l-wait">ждёт тебя</span><span class="l-merge">влито в main</span>
+    </div>
+  </div>
+</div>
+
+<h2>Как выглядит день</h2>
+<div class="card">
+  <div class="scale"><div></div><div class="ticks"><span>9:00</span><span>10:00</span><span>11:00</span><span>12:00</span><span>13:00</span><span>14:00</span><span>15:00</span><span>16:00</span><span>17:00</span></div></div>
+
+  <div class="row"><div class="label">Ты</div>
+    <div class="bar">
+      <div class="seg you" style="flex:1">«вливай» 2 ветки</div>
+      <div class="seg you" style="flex:1">отвечаешь на ~30 вопросов</div>
+      <div class="seg idle" style="flex:1"></div>
+      <div class="seg you" style="flex:5; opacity:.5">свободен, иногда вопрос с доски</div>
+    </div>
+  </div>
+
+  <div class="row"><div class="label">Диспетчер<div class="dept">главный чат</div></div>
+    <div class="bar">
+      <div class="seg work" style="flex:1">доска, 5 отделов</div>
+      <div class="seg work" style="flex:7; opacity:.6">следит, обновляет доску, вливает готовое</div>
+    </div>
+  </div>
+
+  <div class="row"><div class="label">Бот заказов<div class="dept">задачи 1, 17, 18</div></div>
+    <div class="bar">
+      <div class="seg work" style="flex:1">вопросы</div><div class="seg wait" style="flex:1"></div><div class="seg work" style="flex:1">план+критика</div>
+      <div class="seg work" style="flex:1.6">зад. 1</div><div class="seg merge" style="flex:.2"></div>
+      <div class="seg work" style="flex:1.6">зад. 17</div><div class="seg merge" style="flex:.2"></div>
+      <div class="seg work" style="flex:1.2">зад. 18 →</div>
+    </div>
+  </div>
+
+  <div class="row"><div class="label">Поставщики<div class="dept">задачи 2, 20, 22, 27</div></div>
+    <div class="bar">
+      <div class="seg work" style="flex:1">вопросы</div><div class="seg wait" style="flex:1"></div><div class="seg work" style="flex:1">план+критика</div>
+      <div class="seg work" style="flex:1.3">зад. 2</div><div class="seg merge" style="flex:.2"></div>
+      <div class="seg work" style="flex:1.3">зад. 20</div><div class="seg merge" style="flex:.2"></div>
+      <div class="seg work" style="flex:1.3">зад. 22</div><div class="seg merge" style="flex:.2"></div>
+      <div class="seg idle" style="flex:.5"></div>
+    </div>
+  </div>
+
+  <div class="row"><div class="label">Экономика<div class="dept">задачи 19, 28, 29, 30</div></div>
+    <div class="bar">
+      <div class="seg work" style="flex:1">вопросы</div><div class="seg wait" style="flex:1"></div><div class="seg work" style="flex:1">план+критика</div>
+      <div class="seg work" style="flex:1.2">зад. 19</div><div class="seg merge" style="flex:.2"></div>
+      <div class="seg work" style="flex:1.2">зад. 28</div><div class="seg merge" style="flex:.2"></div>
+      <div class="seg work" style="flex:1.2">зад. 29</div><div class="seg merge" style="flex:.2"></div>
+      <div class="seg idle" style="flex:.8"></div>
+    </div>
+  </div>
+
+  <div class="row"><div class="label">Платформа<div class="dept">задачи 21, 23, 31, 32</div></div>
+    <div class="bar">
+      <div class="seg work" style="flex:1">вопросы</div><div class="seg wait" style="flex:1"></div><div class="seg work" style="flex:1">план+критика</div>
+      <div class="seg work" style="flex:1.5">зад. 21</div><div class="seg merge" style="flex:.2"></div>
+      <div class="seg work" style="flex:1.5">зад. 23</div><div class="seg merge" style="flex:.2"></div>
+      <div class="seg work" style="flex:1.2">зад. 31</div><div class="seg merge" style="flex:.2"></div>
+      <div class="seg idle" style="flex:.4"></div>
+    </div>
+  </div>
+
+  <div class="row"><div class="label">Сайт<div class="dept">задачи 5, 34</div></div>
+    <div class="bar">
+      <div class="seg work" style="flex:1">вопросы</div><div class="seg wait" style="flex:1"></div><div class="seg work" style="flex:.7">план</div>
+      <div class="seg work" style="flex:1.5">зад. 5</div><div class="seg merge" style="flex:.2"></div>
+      <div class="seg work" style="flex:1.5">зад. 34</div><div class="seg merge" style="flex:.2"></div>
+      <div class="seg idle" style="flex:1.9"></div>
+    </div>
+  </div>
+</div>
+
+<h2>Три слова, которые я использовал</h2>
+<div class="card">
+  <b>Отдел</b> — группа задач, которые живут в одном углу кода (например, всё про бота). Их ведёт один чат, по очереди, потому что они правят одни и те же файлы — вместе нельзя. Разные отделы файлы друг друга не трогают, поэтому идут одновременно.<br><br>
+  <b>Пачка вопросов</b> — каждый отдел с утра собирает все свои «а как ты хочешь?» на доску. Ты отвечаешь на всё за час, а не по одному вопросу раз в 6 часов. Это и есть главное ускорение.<br><br>
+  <b>Критика по отделу</b> — критики смотрят план отдела целиком (его 3–4 задачи), а не каждую задачу отдельно: 5 критик вместо 12. Качество то же — задачи одного отдела всё равно связаны.
+</div>
+
+<h2>Почему быстрее — три причины</h2>
+<div class="card">
+  <ol>
+    <li><b>Ожидание тебя убрано из цепочки.</b> Было 6 часов на задачу — стал один час утром на всё.</li>
+    <li><b>Пять конвейеров вместо одного.</b> Работы те же 30 часов, но они идут в пять рук.</li>
+    <li><b>Готовое сразу в main.</b> Не копится хвост в 454 коммита, который потом страшно вливать.</li>
+  </ol>
+  Честно: 12 задач за день — впритык. Реально 9–10, отдел бота (три задачи по очереди, ~4 часа) может доделать утром.
+</div>
+</body>
+</html>
