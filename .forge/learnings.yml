@@ -52,3 +52,10 @@ entries:
     summary: "Живые проверки хуков через `claude -p`: (1) асинхронные хуки (`async: true`) обрываются, когда `-p` завершается — их результата нет в журнале сессии; проверять такой хук — синхронной копией через `--settings '{\"hooks\":{…}}'`; (2) `--plugin-dir` с плагином того же имени, что установленный (forge), даёт CLAUDE_PLUGIN_ROOT установленной версии, а `enabledPlugins:{forge@forge-marketplace:false}` выключает и пробный — переименовать копию (name в plugin.json) или подключать скрипт хука напрямую. В stop_hook_summary видно, какие хуки сработали."
     tags: [hooks, testing, claude-code, learning]
     source: "Чекпоинт B задачи voice-notifications, 2026-10-23"
+
+  - id: claude-in-chrome-permissions-and-testing
+    date: "2026-10-24"
+    summary: "Claude Code 2.1.309 и Claude in Chrome: allow на весь mcp__claude-in-chrome__* игнорируется намеренно; разрешение сайта — ClaudeInChromeDomain(<точный host>, без *); режим расширения — env CLAUDE_CHROME_PERMISSION_MODE (ask / skip_all_permission_checks / follow_a_plan), с skip_all отказов нет и в -p. `claude -p` без `--chrome` не получает инструментов Chrome (модель уходит в WebFetch/Playwright) — живые проверки только с `--chrome`. Каждая сессия — своя группа вкладок, чужую группу новая сессия не видит; AppleScript эти группы тоже не видит (count windows = 1). Признак полу-зависшего Chrome: navigate «Navigated to …», а через секунду url пустой / chrome://newtab/, read_page «Can't interact with browser-internal…», AppleScript висит — лечится перезапуском Chrome. `pgrep -x \"Google Chrome\"` ловит и Playwright/скрапер-Chrome — Chrome владельца = процесс без флагов (`pgrep -f 'Google Chrome.app/Contents/MacOS/Google Chrome$'`). Playwright MCP не открывает file:// — свой HTML через http.server; env из settings.json (PLAYWRIGHT_MCP_HEADLESS/ISOLATED) доходит до серверов MCP."
+    tags: [chrome, playwright, permissions, testing, claude-code, learning]
+    source: "Выполнение задачи one-chrome, 2026-10-24"
+
